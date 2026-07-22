@@ -241,6 +241,9 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
           <div class="chip" data-sat="clay" onclick="setSatLayer('clay',this)">🟫 Clay / alteration</div>
           <div class="chip" data-sat="ndvi" onclick="setSatLayer('ndvi',this)">🌿 Veg gaps</div>
           <div class="chip" data-sat="radar" onclick="setSatLayer('radar',this)">📡 Radar (cloud-proof)</div>
+          <div class="chip" data-sat="ironratio" onclick="setSatLayer('ironratio',this)">🟠 Iron ratio</div>
+          <div class="chip" data-sat="ferrous" onclick="setSatLayer('ferrous',this)">🔶 Ferrous iron</div>
+          <div class="chip" data-sat="alteration" onclick="setSatLayer('alteration',this)">🌈 Alteration composite</div>
         </div>
       </details>
       <div class="hint" id="satMsg" style="margin-top:10px"></div>
@@ -392,6 +395,17 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <div class="kb"><h3>Weathered granite / laterite</h3><div class="mineral">→ ion-adsorption REE</div><p>Deeply weathered granite can concentrate rare earths in clay. No reliable visual signature — sample clay-rich saprolite and assay.</p></div>
     <div class="kb"><h3>Limestone / marble contacts (skarn)</h3><div class="mineral">→ iron, copper, gems</div><p>Intrusion–limestone contacts (Kinta Valley, Langkawi) can host skarn minerals and corundum.</p></div>
     <div class="callout" style="margin-top:6px"><b>⚠ Reality check.</b> None of these confirm an economic deposit. They tell you where to take a proper sample for lab geochemistry (ICP / fire assay). Field work narrows targets — assays and drilling prove them.</div>
+  </div>
+  <div class="card">
+    <h2>🛰️ Reading the satellite layers</h2>
+    <p class="hint">What each Map-tab layer shows and how to read it. All are hints that narrow where to walk — never proof. Cloud blocks the optical ones; radar always works.</p>
+    <div class="kb"><h3>🌍 Satellite photo / True colour</h3><div class="mineral">→ the lie of the land</div><p>Real imagery. Spot bare rock, rivers, tracks, old workings and access routes. Your planning base layer.</p></div>
+    <div class="kb"><h3>🟠 Iron ratio</h3><div class="mineral">→ gossans, iron staining (gold pathfinder)</div><p>Bright red-orange = rusty, iron-stained ground. Gossans cap many gold and base-metal deposits, so bright patches are priority spots to sample.</p></div>
+    <div class="kb"><h3>🔶 Ferrous iron</h3><div class="mineral">→ a second iron signature</div><p>Picks up different iron minerals than the iron ratio. When both light up in the same place, the signal is stronger.</p></div>
+    <div class="kb"><h3>🟫 Clay / SWIR & 🌈 Alteration composite</h3><div class="mineral">→ hydrothermal alteration</div><p>Clays and altered rock surround many ore bodies. On the composite, reddish-yellow = iron + clay together, the classic alteration signature. Investigate where iron and clay overlap.</p></div>
+    <div class="kb"><h3>📡 Radar</h3><div class="mineral">→ faults & structure (vein control)</div><p>Sees through cloud. Straight bright/dark lines = ridges and faults. Gold veins often follow faults, so trace these lineaments — especially where they cross an iron/alteration patch.</p></div>
+    <div class="kb"><h3>🌿 Veg gaps</h3><div class="mineral">→ where rock is exposed</div><p>Orange/tan = bare or rocky ground you can actually inspect on foot. Green = jungle hiding the geology.</p></div>
+    <div class="callout" style="margin-top:6px"><b>The strongest target</b> is where several layers agree: an iron + clay patch, on or near a radar fault line, on bare ground. That's the spot to sample first. At 20 m resolution these find districts, not single veins — and only a lab assay confirms anything.</div>
   </div>
   <div class="card">
     <h2>⚖️ Before you dig — protocol</h2>
@@ -685,7 +699,7 @@ function setSatLayer(kind,chip){
     const today=new Date().toISOString().slice(0,10);
     // Map each chip to a REAL layer name that exists in the Copernicus config
     // (these are the standard template layers; the instance's own visualization is used).
-    const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1'};
+    const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
     const layerName=LAYERMAP[kind]||'TRUE-COLOR-S2L2A';
     satLayer=L.tileLayer.wms(base,{
       layers:layerName,
@@ -701,7 +715,7 @@ function setSatLayer(kind,chip){
       else msg.innerHTML='⚠ Optical tiles didn\'t load — likely cloud over this spot (common here). Try 📡 Radar, or pan to a clearer area.';
     });
     satLayer.addTo(map);
-    const labels={truecolor:'True-colour Sentinel-2. Real ground imagery.',iron:'Geology layer (highlights mineral/rock differences incl. iron). Ground-check.',clay:'SWIR layer — sensitive to clays / alteration minerals. Ground-check.',ndvi:'Vegetation index: low/bare = orange-ish, where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'};
+    const labels={truecolor:'True-colour Sentinel-2. Real ground imagery.',iron:'Geology layer (highlights mineral/rock differences incl. iron). Ground-check.',clay:'SWIR layer — sensitive to clays / alteration minerals. Ground-check.',ndvi:'Vegetation index: low/bare = orange-ish, where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.',ironratio:'Iron-oxide ratio (B04/B02): bright = rusty, iron-stained ground & gossans — a gold/base-metal pathfinder. Ground-check.',ferrous:'Ferrous-iron ratio (B11/B08): bright = a different iron mineralogy; use alongside the oxide ratio.',alteration:'Alteration composite: false-colour combo where hydrothermally altered ground stands out. Reddish/yellow patches worth investigating. Ground-check.'};
     msg.textContent=labels[kind]+(isRadar?' Works in cloud & at night. Zoom in if blank.':' Zoom into a town; if blank it\'s cloud — try Radar.');
   }catch(err){
     msg.innerHTML='⚠ Error starting that layer: '+(err&&err.message?err.message:err)+'. Tap “Test my ID” to diagnose.';
