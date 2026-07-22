@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1410">
+<title>ProspectField · 地质勘探记录</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --bg:#17110c;--bg2:#1f1811;--panel:#251d15;--panel2:#2e241a;--line:#3a2e21;
+  --ore:#d9a441;--ore2:#b8842c;--copper:#c07b4a;--malachite:#4a9d7f;
+  --ink:#f0e6d6;--ink2:#c4b39a;--ink3:#8a7a63;--warn:#d16b4a;--ok:#4a9d7f;
+  --shadow:0 8px 28px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;padding-bottom:78px;overscroll-behavior-y:contain}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:.2px}
+.mono{font-family:'SF Mono',ui-monospace,'Roboto Mono',monospace}
+header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#1f1811,#17110c);border-bottom:1px solid var(--line);padding:14px 16px 12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{font-size:26px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.brand h1{font-size:19px;background:linear-gradient(90deg,var(--ore),var(--copper));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .sub{font-size:11px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+.gpsbar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px}
+.gpsdot{width:8px;height:8px;border-radius:50%;background:var(--ink3);transition:.3s}
+.gpsdot.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.gpsdot.hunting{background:var(--ore);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+main{padding:16px}
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h2{font-size:15px;color:var(--ore);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card .hint{font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.45}
+label{display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
+input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ore2)}
+textarea{resize:vertical;min-height:70px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+button{cursor:pointer;font-family:inherit;border:none}
+.btn{width:100%;background:linear-gradient(180deg,var(--ore),var(--ore2));color:#1a1207;font-weight:700;font-size:16px;padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(217,164,65,.28);letter-spacing:.3px}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.sm{width:auto;padding:9px 14px;font-size:13px;border-radius:9px}
+.coordbox{background:var(--bg2);border:1px dashed var(--ore2);border-radius:12px;padding:14px;text-align:center;margin-bottom:6px}
+.coordbox .big{font-size:22px;font-weight:700;color:var(--ore)}
+.coordbox .meta{font-size:12px;color:var(--ink3);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{padding:8px 13px;border-radius:20px;background:var(--bg2);border:1px solid var(--line);font-size:13px;color:var(--ink2);transition:.15s}
+.chip.on{background:var(--copper);border-color:var(--copper);color:#fff;font-weight:600}
+.score-wrap{text-align:center;padding:10px 0}
+.score-ring{width:130px;height:130px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:conic-gradient(var(--ore) var(--pct,0%),var(--bg2) 0);transition:1s}
+.score-inner{width:104px;height:104px;border-radius:50%;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-inner .n{font-size:34px;font-weight:800;color:var(--ore)}
+.score-inner .l{font-size:11px;color:var(--ink3);letter-spacing:1px}
+.verdict{margin-top:12px;font-size:14px;font-weight:600}
+.samp{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:10px}
+.samp .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.samp .id{font-weight:700;color:var(--ore);font-size:14px}
+.samp .co{font-size:12px;color:var(--ink3);margin-top:2px}
+.samp .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.samp .tg{font-size:11px;padding:3px 8px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
+.samp .note{font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.45}
+.samp .del{background:none;color:var(--ink3);font-size:12px;padding:4px}
+.samp .acts{display:flex;gap:8px;margin-top:10px}
+.samp .acts button{font-size:12px;padding:6px 11px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
+.samp .photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.samp .photos img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.empty{text-align:center;padding:40px 20px;color:var(--ink3)}
+.empty .ic{font-size:40px;opacity:.5}
+.kb{border-left:3px solid var(--copper);padding:10px 0 10px 14px;margin-bottom:16px}
+.kb h3{font-size:14px;color:var(--ink);margin-bottom:4px}
+.kb p{font-size:13px;color:var(--ink2);margin:0}
+.kb .mineral{font-size:12px;color:var(--malachite);font-weight:600}
+.callout{background:rgba(209,107,74,.12);border:1px solid var(--warn);border-radius:10px;padding:12px;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.callout b{color:var(--warn)}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:linear-gradient(180deg,#1f1811,#140f0a);border-top:1px solid var(--line);display:flex;padding:8px 2px 10px}
+nav button{flex:1;background:none;color:var(--ink3);font-size:9.5px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px}
+nav button .ic{font-size:19px;transition:.15s}
+nav button.on{color:var(--ore)}
+nav button.on .ic{transform:translateY(-1px);filter:drop-shadow(0 2px 5px rgba(217,164,65,.5))}
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ok);color:#0c1a14;padding:11px 20px;border-radius:24px;font-weight:600;font-size:13px;opacity:0;transition:.3s;z-index:100;pointer-events:none;box-shadow:var(--shadow);max-width:88%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.warn{background:var(--warn);color:#fff}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.stat .n{font-size:24px;font-weight:800;color:var(--ore)}
+.stat .l{font-size:11px;color:var(--ink3);margin-top:2px}
+details{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:10px}
+summary{font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
+#map{height:60vh;min-height:340px;border-radius:14px;border:1px solid var(--line);background:#0d0a07;z-index:1}
+.leaflet-container{background:#0d0a07;font-family:inherit}
+.map-tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.netpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);color:var(--ink2)}
+.dlbar{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin-top:8px;display:none}
+.dlbar.on{display:block}
+.dlbar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ore),var(--copper));transition:.2s}
+.pin-num{background:var(--ore);color:#1a1207;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #1a1207;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.pin-num.flag{background:var(--warn);color:#fff}
+.leaflet-popup-content-wrapper{background:var(--panel);color:var(--ink);border-radius:10px}
+.leaflet-popup-tip{background:var(--panel)}
+.leaflet-popup-content{margin:10px 12px;font-size:13px}
+.leaflet-popup-content b{color:var(--ore)}
+.thumbstrip{display:flex;gap:8px;overflow-x:auto;padding:4px 0;margin-top:8px}
+.thumbstrip .th{position:relative;flex:0 0 auto}
+.thumbstrip img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.thumbstrip .rm{position:absolute;top:-6px;right:-6px;background:var(--warn);color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center}
+/* compass */
+.compass-wrap{text-align:center;padding:6px 0}
+.compass{position:relative;width:230px;height:230px;margin:6px auto;border-radius:50%;background:radial-gradient(circle at 50% 45%,#221a12,#140f0a);border:2px solid var(--line);box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
+.compass .ring-lbl{position:absolute;font-size:12px;color:var(--ink3);font-weight:700}
+.compass .n{top:8px;left:50%;transform:translateX(-50%);color:var(--warn)}
+.compass .s{bottom:8px;left:50%;transform:translateX(-50%)}
+.compass .e{right:10px;top:50%;transform:translateY(-50%)}
+.compass .w{left:10px;top:50%;transform:translateY(-50%)}
+.needle{position:absolute;top:50%;left:50%;width:0;height:0;transform-origin:center;transition:transform .18s ease-out}
+.needle .arrow{position:absolute;left:-13px;top:-92px;width:26px;height:92px;
+  background:linear-gradient(180deg,var(--ore),var(--ore2));clip-path:polygon(50% 0,100% 100%,50% 78%,0 100%);
+  filter:drop-shadow(0 2px 6px rgba(217,164,65,.5))}
+.compass .hub{position:absolute;top:50%;left:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;background:var(--ore);border:3px solid #140f0a;z-index:2}
+.nav-readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.nav-readout .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.nav-readout .box .n{font-size:26px;font-weight:800;color:var(--ore)}
+.nav-readout .box .l{font-size:11px;color:var(--ink3);margin-top:2px}
+.arrived{background:rgba(74,157,127,.15);border:1px solid var(--ok);color:var(--ok);border-radius:10px;padding:10px;text-align:center;font-weight:700;margin-top:12px;display:none}
+.arrived.on{display:block}
+/* trail */
+.trail-status{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.ts-dot{width:14px;height:14px;border-radius:50%;background:var(--ink3);flex:0 0 auto}
+.ts-dot.rec{background:var(--warn);box-shadow:0 0 10px var(--warn);animation:pulse 1.1s infinite}
+.ts-main{font-weight:700;font-size:15px}
+.ts-sub{font-size:12px;color:var(--ink3);margin-top:1px}
+.trail-line{stroke:#4a9d7f;stroke-width:4;fill:none;opacity:.9}
+.batt-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--ink2);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.batt-ic{font-size:16px}
+.batt-low{color:var(--warn);font-weight:700}
+.share-panel{margin-top:16px;padding:14px;background:var(--bg2);border:1px solid var(--malachite);border-radius:12px}
+.sat-box{margin-top:14px;padding:14px;background:var(--bg2);border:1px solid var(--ore2);border-radius:12px}
+.sat-legend{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3);margin-top:8px}
+.sat-legend .sw{width:14px;height:14px;border-radius:3px}
+.sat-redfilter{filter:saturate(2.4) contrast(1.25) brightness(1.05) hue-rotate(-12deg)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="logo">⛏️</span>
+    <div><h1>ProspectField</h1><div class="sub">地质勘探 · Field Recon</div></div>
+  </div>
+  <div class="gpsbar">
+    <span class="gpsdot" id="gpsDot"></span>
+    <span id="gpsTxt" class="mono" style="color:var(--ink3)">GPS idle — tap Locate on a sample</span>
+  </div>
+</header>
+
+<main>
+
+<section class="view active" id="v-survey">
+  <div class="card">
+    <h2>🎯 Site potential estimator</h2>
+    <p class="hint">A field checklist, not an assay. Tick surface indicators you actually observe. Score suggests whether a spot is worth a proper sample + lab test — it never confirms a deposit.</p>
+    <label>What are you scouting for?</label>
+    <select id="target" onchange="renderIndicators()">
+      <option value="gold">Gold (placer / lode)</option>
+      <option value="ree">Rare earth elements (REE)</option>
+      <option value="tin">Tin (cassiterite)</option>
+      <option value="ironmang">Iron / Manganese</option>
+      <option value="gem">Gemstones (corundum, quartz)</option>
+    </select>
+    <label>Surface indicators observed</label>
+    <div class="chips" id="indChips"></div>
+    <div class="score-wrap" style="margin-top:18px">
+      <div class="score-ring" id="ring"><div class="score-inner"><div class="n" id="scoreN">0</div><div class="l">POTENTIAL</div></div></div>
+      <div class="verdict" id="verdict" style="color:var(--ink3)">Select indicators above</div>
+    </div>
+  </div>
+  <div class="card"><h2>📋 Next step guidance</h2><div id="guidance" class="hint" style="margin-bottom:0">Complete the estimator to see recommended field actions.</div></div>
+</section>
+
+<section class="view" id="v-sample">
+  <div class="card">
+    <h2>➕ Log a sample</h2>
+    <p class="hint">Capture location, material, indicators and photos on the spot. Stored on THIS device only — nothing is uploaded.</p>
+    <div class="coordbox">
+      <div class="big mono" id="capLat">— . —</div>
+      <div class="big mono" id="capLon" style="font-size:16px">tap to capture</div>
+      <div class="meta" id="capMeta">no fix yet</div>
+    </div>
+    <button class="btn ghost sm" style="width:100%" onclick="captureGPS()">📍 Locate me (GPS)</button>
+    <label>Sample ID</label>
+    <input id="sId" placeholder="auto — e.g. SMP-001">
+    <div class="row">
+      <div><label>Material</label><select id="sMat"><option>Stream sediment</option><option>Soil</option><option>Rock / outcrop</option><option>Panned concentrate</option><option>Float / loose rock</option><option>Weathered laterite</option></select></div>
+      <div><label>Depth</label><select id="sDepth"><option>Surface</option><option>0–20 cm</option><option>20–50 cm</option><option>&gt;50 cm</option></select></div>
+    </div>
+    <label>Field observations</label>
+    <textarea id="sNote" placeholder="e.g. reddish iron staining on quartz vein, gossan-like; panned 3 fine gold colours"></textarea>
+    <label>Photos <span style="color:var(--ink3);font-weight:400">(stored in device database — no fixed limit)</span></label>
+    <input type="file" id="sPhoto" accept="image/*" capture="environment" multiple onchange="addPhotos(this)" style="padding:9px">
+    <div class="thumbstrip" id="thumbs"></div>
+    <label>Quick tags</label>
+    <div class="chips" id="sTags"></div>
+    <button class="btn" style="margin-top:16px" onclick="saveSample()">Save sample</button>
+  </div>
+</section>
+
+<section class="view" id="v-map">
+  <div class="card">
+    <h2>🗺️ Sample map</h2>
+    <p class="hint">Online it shows real terrain (auto-cached as you pan). Offline it loads cached tiles; anything uncached falls back to a plain grid so your pins always show.</p>
+    <div class="map-tools">
+      <span class="netpill" id="netPill"><span class="gpsdot" id="netDot"></span><span id="netTxt">checking…</span></span>
+      <button class="btn ghost sm" onclick="fitPins()">⊹ Fit pins</button>
+      <button class="btn ghost sm" onclick="locateOnMap()">📍 My position</button>
+    </div>
+    <div id="map"></div>
+    <div class="sat-box">
+      <label style="margin-top:0">🛰️ Satellite view — works right away <span style="color:var(--ink3);font-weight:400">(needs signal)</span></label>
+      <p class="hint" style="margin-bottom:8px">No setup needed. Shows real satellite imagery of the ground so you can spot bare/rocky areas, rivers, tracks, old workings and access routes before you walk in. The reddish-ground filter is a rough hint toward possible iron staining — not proof.</p>
+      <div class="chips" id="satBasicChips">
+        <div class="chip on" data-sat="off" onclick="setSatLayer('off',this)">Off (map only)</div>
+        <div class="chip" data-sat="esri" onclick="setSatLayer('esri',this)">🌍 Satellite photo</div>
+        <div class="chip" data-sat="esrired" onclick="setSatLayer('esrired',this)">🟥 Reddish-ground hint</div>
+      </div>
+
+      <details style="margin-top:14px;background:transparent;border:1px dashed var(--ore2);padding:12px 13px">
+        <summary style="color:var(--ore)">🔬 Advanced analysis layers (one-time setup)</summary>
+        <p class="hint" style="margin:10px 0 8px">These do real satellite band-math — genuine iron, clay/alteration and cloud-proof radar analysis. They need a free Copernicus instance ID (see the Guide tab for step-by-step). Paste it once and it's saved on your phone.</p>
+        <input id="satId" placeholder="paste Copernicus instance ID" onchange="saveSatId()" style="margin-bottom:10px">
+        <button class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="testSatId()">🔎 Test my ID (check connection)</button>
+        <div class="chips" id="satChips">
+          <div class="chip" data-sat="truecolor" onclick="setSatLayer('truecolor',this)">🌍 True colour</div>
+          <div class="chip" data-sat="iron" onclick="setSatLayer('iron',this)">🟥 Iron oxide</div>
+          <div class="chip" data-sat="clay" onclick="setSatLayer('clay',this)">🟫 Clay / alteration</div>
+          <div class="chip" data-sat="ndvi" onclick="setSatLayer('ndvi',this)">🌿 Veg gaps</div>
+          <div class="chip" data-sat="radar" onclick="setSatLayer('radar',this)">📡 Radar (cloud-proof)</div>
+        </div>
+      </details>
+      <div class="hint" id="satMsg" style="margin-top:10px"></div>
+    </div>
+    <div style="margin-top:14px">
+      <label style="margin-top:0">Pre-download this region for offline use</label>
+      <p class="hint" style="margin-bottom:8px">On wifi before heading out: pan/zoom to your licence block, then download. Grabs tiles for the current view across working zoom levels.</p>
+      <button class="btn ghost sm" style="width:100%" onclick="downloadRegion()" id="dlBtn">⬇ Download current view for offline</button>
+      <div class="dlbar" id="dlBar"><i id="dlFill"></i></div>
+      <div class="hint" id="dlMsg" style="margin:8px 0 0"></div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-nav">
+  <div class="card">
+    <h2>🧭 Walk back to a pin</h2>
+    <p class="hint">Pick a saved sample and follow the arrow. It points from where you're standing toward that pin, with live distance. Hold the phone flat.</p>
+    <label>Target sample</label>
+    <select id="navTarget" onchange="setNavTarget()"><option value="">— choose a geolocated sample —</option></select>
+    <div class="compass-wrap">
+      <div class="compass" id="compass">
+        <span class="ring-lbl n">N</span><span class="ring-lbl e">E</span><span class="ring-lbl s">S</span><span class="ring-lbl w">W</span>
+        <div class="needle" id="needle"><div class="arrow"></div></div>
+        <div class="hub"></div>
+      </div>
+      <div class="nav-readout">
+        <div class="box"><div class="n" id="navDist">—</div><div class="l">DISTANCE</div></div>
+        <div class="box"><div class="n" id="navBear">—</div><div class="l">BEARING TO PIN</div></div>
+      </div>
+      <div class="arrived" id="arrived">✓ You're within 15 m — you're basically on it</div>
+      <div class="hint" id="navMsg" style="margin-top:12px">Choose a target to begin. Needs GPS on; compass rotation needs device orientation permission (tap Enable if prompted).</div>
+      <button class="btn ghost sm" id="orientBtn" style="width:100%;margin-top:10px;display:none" onclick="enableOrientation()">Enable compass rotation</button>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-trail">
+  <div class="card">
+    <h2>🥾 Breadcrumb trail</h2>
+    <p class="hint">Start tracking when you leave your vehicle or trailhead. The app drops a breadcrumb every few metres and saves the whole path on your phone — it survives a restart. When you're ready to leave, tap Retrace to be guided back along your exact route.</p>
+
+    <div class="trail-status" id="trailStatus">
+      <div class="ts-dot" id="tsDot"></div>
+      <div>
+        <div class="ts-main" id="tsMain">Not tracking</div>
+        <div class="ts-sub" id="tsSub">Start a track before heading in</div>
+      </div>
+    </div>
+
+    <button class="btn" id="trackBtn" style="margin-top:14px" onclick="toggleTrack()">▶ Start tracking</button>
+
+    <label style="margin-top:16px">GPS sampling mode <span style="color:var(--ink3);font-weight:400">— affects battery</span></label>
+    <select id="trackMode" onchange="changeTrackMode()">
+      <option value="continuous">Precise — continuous GPS (most detail, heaviest drain)</option>
+      <option value="15" selected>Balanced — sample every 15 s (recommended)</option>
+      <option value="30">Saver — sample every 30 s (light drain)</option>
+      <option value="60">Max saver — sample every 60 s (sparser path)</option>
+    </select>
+    <div class="batt-row" id="battRow"><span class="batt-ic" id="battIc">🔋</span><span id="battTxt">battery status unavailable on this device</span></div>
+
+    <div class="stat-grid" style="margin-top:12px">
+      <div class="stat"><div class="n" id="trPts">0</div><div class="l">breadcrumbs</div></div>
+      <div class="stat"><div class="n" id="trLen">0 m</div><div class="l">path length</div></div>
+    </div>
+    <div class="stat-grid" style="margin-top:10px">
+      <div class="stat"><div class="n" id="trBack">—</div><div class="l">straight line to start</div></div>
+      <div class="stat"><div class="n" id="trTime">—</div><div class="l">tracking time</div></div>
+    </div>
+
+    <button class="btn" id="retraceBtn" style="margin-top:14px;background:linear-gradient(180deg,#4a9d7f,#3a7d64);color:#06140e" onclick="retraceTrail()">🧭 Retrace to start</button>
+
+    <div class="share-panel" id="sharePanel">
+      <h3 style="font-size:14px;color:var(--ore);margin-bottom:4px;display:flex;align-items:center;gap:7px">📲 Tell someone where you are</h3>
+      <p class="hint" style="margin-bottom:10px">Set this before you head in. It sends your start point and return time to a trusted person, so someone knows where to send help if you're overdue. The most important safety step in this whole app.</p>
+      <div class="row">
+        <div><label style="margin-top:0">Their WhatsApp number</label><input id="scNum" placeholder="e.g. 60123456789" inputmode="tel" onchange="saveShareCfg()"></div>
+        <div><label style="margin-top:0">Their name</label><input id="scName" placeholder="e.g. Ah Hock" onchange="saveShareCfg()"></div>
+      </div>
+      <label>Expected return time</label>
+      <input id="scReturn" type="time" onchange="saveShareCfg()">
+      <button class="btn" style="margin-top:14px;background:linear-gradient(180deg,#25d366,#1da851);color:#04120a" onclick="shareHeadingIn()">🟢 Send “heading in” to WhatsApp</button>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost sm" style="width:100%" onclick="shareImOut()">✅ I'm out safe</button>
+        <button class="btn ghost sm" style="width:100%" onclick="shareCheckin()">📍 Live check-in</button>
+      </div>
+      <div class="hint" id="shareMsg" style="margin-top:10px"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn ghost sm" style="width:100%" onclick="exportTrail()">⬇ Export GPX</button>
+      <button class="btn ghost sm" style="width:100%" onclick="clearTrail()">🗑 Clear trail</button>
+    </div>
+    <div class="callout" style="margin-top:14px"><b>⚠ Safety.</b> This is a backup aid, not a lifeline. Phone GPS can fail under dense canopy and batteries die. Still carry a power bank, tell someone your route and return time, and bring a real compass. Don't rely on the phone alone deep in the jungle.</div>
+    <details style="margin-top:12px"><summary>🔋 Stretch your battery further</summary><p>Biggest savers, in order: switch this app to <b>Saver</b> mode above; turn on the phone's <b>Airplane mode</b> once your offline map tiles are downloaded (GPS still works without signal, but the phone stops burning power hunting for a tower); drop screen brightness and let it auto-lock — tracking keeps running with the screen off; close other apps; keep the phone warm (cold kills battery fast). A cheap 10,000 mAh power bank roughly triples your safe time in the field.</p></details>
+  </div>
+</section>
+
+<section class="view" id="v-log">
+  <div class="card">
+    <h2>🗂️ Sample log</h2>
+    <div class="stat-grid" style="margin-bottom:14px">
+      <div class="stat"><div class="n" id="stCount">0</div><div class="l">samples</div></div>
+      <div class="stat"><div class="n" id="stFlag">0</div><div class="l">high-interest</div></div>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn ghost sm" style="width:100%" onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn ghost sm" style="width:100%" onclick="exportData()">⬇ JSON</button>
+    </div>
+    <div class="row">
+      <button class="btn ghost sm" style="width:100%" onclick="backup()">💾 Backup (w/ photos)</button>
+      <button class="btn ghost sm" style="width:100%" onclick="document.getElementById('restoreFile').click()">♻ Restore</button>
+    </div>
+    <input type="file" id="restoreFile" accept="application/json" style="display:none" onchange="restore(this)">
+    <p class="hint" style="margin:10px 0 0">Backup writes one file (samples + photos) you can email to yourself or your partner — so the phone isn't the only copy.</p>
+  </div>
+  <div id="sampList"></div>
+</section>
+
+<section class="view" id="v-guide">
+  <div class="card">
+    <h2>🚀 Quick start</h2>
+    <p class="hint">The whole workflow, in order. Do the one-time setup at home on wifi.</p>
+
+    <details open><summary>① Right away (no setup): satellite photo</summary><p>Open the <b>Map</b> tab and tap <b>Satellite photo</b> — real imagery of the ground, no account needed. Use it to see bare/rocky areas, rivers, tracks, old workings and how to get in. The <b>Reddish-ground hint</b> roughly highlights rusty patches (possible iron — but ground-check).</p></details>
+
+    <details><summary>② Optional upgrade: real analysis layers</summary><p>For genuine iron/clay/radar band-math, you need a free Copernicus instance ID (one-time, ~10 min at home). Go to <b>dataspace.copernicus.eu</b> → <b>Register</b> (top right) → confirm the email. Then log in to the <b>Dashboard</b> → <b>Configuration Utility</b> → use the ready-made "Simple WMS Instance" or make a new one from the "Simple WMS template". Copy its <b>instance ID</b> (long code) → Map tab → open <b>Advanced analysis layers</b> → paste it. For radar, add a layer named <b>SENTINEL-1</b> to that configuration.</p></details>
+
+    <details><summary>③ At home on wifi: scout from space</summary><p>On the <b>Map</b> tab, pan to your partner's licence block. With the advanced layers on: <b>Iron</b> and <b>Clay</b> show possible targets, <b>Radar</b> shows faults through cloud, <b>Veg gaps</b> finds bare ground you can inspect. Note the promising spots. (No Copernicus ID yet? The plain satellite photo still helps you plan.)</p></details>
+
+    <details><summary>④ Still on wifi: download the map</summary><p>Same Map tab → pan/zoom to your target area → <b>Download current view for offline</b>. Now the map works with no signal in the field. Do this for every area you plan to walk.</p></details>
+
+    <details><summary>⑤ Before you walk in: tell someone</summary><p><b>Trail</b> tab → set your contact's WhatsApp number, name, and return time → tap <b>“Heading in”</b> while you still have signal (usually at the vehicle). This is the most important step. Then tap <b>Start tracking</b> and pick <b>Balanced</b> battery mode.</p></details>
+
+    <details><summary>⑥ On site: estimate, sample, photograph</summary><p>At a promising spot, use the <b>Estimate</b> tab to score it. Worth sampling? <b>Sample</b> tab → capture GPS, add photos, tag what you see. High-scoring spots are the ones to send for lab assay later.</p></details>
+
+    <details><summary>⑦ Getting out: retrace & check in</summary><p><b>Trail</b> tab → <b>Retrace to start</b> follows your exact breadcrumb path back. When you reach the vehicle and have signal, tap <b>“I'm out safe”</b> to stand your contact down.</p></details>
+
+    <details><summary>⑧ After: confirm with a lab</summary><p>Satellite hints and field scores are not proof. Send your best samples to an accredited lab (JMG or a commercial assay lab). Positive results → bring in a licensed exploration geologist and follow the official protocol with your partner.</p></details>
+
+    <div class="callout" style="margin-top:6px"><b>⚠ Cloud warning.</b> Malaysia's constant cloud often blocks the optical layers (iron, clay, veg). Radar always works. If an optical layer looks blank, that's cloud — try radar or check back another day.</div>
+  </div>
+
+  <div class="card">
+    <h2>📖 Malaysian field indicators</h2>
+    <p class="hint">Surface clues and the minerals they point to in Malaysian geology.</p>
+    <div class="kb"><h3>Gossan / iron capping</h3><div class="mineral">→ gold, base metals</div><p>Rusty red-brown weathered rock (oxidised sulphides). Classic pathfinder over buried mineralisation. Sample it and nearby quartz veins.</p></div>
+    <div class="kb"><h3>Quartz veins at granite/schist contact</h3><div class="mineral">→ lode gold, tungsten</div><p>The Central Gold Belt (Pahang–Kelantan–Terengganu) hosts gold in quartz veins near granite margins. Look for milky-grey vuggy quartz.</p></div>
+    <div class="kb"><h3>Black heavy sand in stream traps</h3><div class="mineral">→ tin (cassiterite), gold, monazite (REE)</div><p>Pan the concentrate. Alluvial cassiterite is widespread; monazite in the black-sand fraction carries rare earths.</p></div>
+    <div class="kb"><h3>Weathered granite / laterite</h3><div class="mineral">→ ion-adsorption REE</div><p>Deeply weathered granite can concentrate rare earths in clay. No reliable visual signature — sample clay-rich saprolite and assay.</p></div>
+    <div class="kb"><h3>Limestone / marble contacts (skarn)</h3><div class="mineral">→ iron, copper, gems</div><p>Intrusion–limestone contacts (Kinta Valley, Langkawi) can host skarn minerals and corundum.</p></div>
+    <div class="callout" style="margin-top:6px"><b>⚠ Reality check.</b> None of these confirm an economic deposit. They tell you where to take a proper sample for lab geochemistry (ICP / fire assay). Field work narrows targets — assays and drilling prove them.</div>
+  </div>
+  <div class="card">
+    <h2>⚖️ Before you dig — protocol</h2>
+    <details><summary>Licensing & land</summary><p>Confirm your partner's licence covers the exact block you're on. Mineral rights sit with state authorities (State Director of Lands & Mines / JMG). Sampling outside the licensed area can be an offence.</p></details>
+    <details><summary>Keeping it quiet, safely</summary><p>Solo recon is fine for finding targets, but tell one trusted person your daily route and expected return. Remote sites, rivers and old workings are genuinely dangerous — discretion should never mean nobody knows where you are.</p></details>
+    <details><summary>When you find something</summary><p>Don't over-collect or start earthworks. Record location + photos, take a representative sample, send to an accredited lab (JMG or commercial). Positive results → bring in a licensed exploration geologist and follow official reporting with your partner.</p></details>
+    <details><summary>Old mine hazards</summary><p>Abandoned tin/gold workings have collapse, deep water, and sometimes mercury/arsenic. Don't enter shafts or adits alone.</p></details>
+  </div>
+</section>
+
+</main>
+
+<nav>
+  <button class="on" data-v="survey" onclick="nav('survey',this)"><span class="ic">🎯</span>Estimate</button>
+  <button data-v="sample" onclick="nav('sample',this)"><span class="ic">➕</span>Sample</button>
+  <button data-v="map" onclick="nav('map',this)"><span class="ic">🗺️</span>Map</button>
+  <button data-v="nav" onclick="nav('nav',this)"><span class="ic">🧭</span>Navigate</button>
+  <button data-v="trail" onclick="nav('trail',this)"><span class="ic">🥾</span>Trail</button>
+  <button data-v="log" onclick="nav('log',this)"><span class="ic">🗂️</span>Log</button>
+  <button data-v="guide" onclick="nav('guide',this)"><span class="ic">📖</span>Guide</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============ IndexedDB photo store ============ */
+let db=null;
+function idbOpen(){
+  return new Promise(function(res,rej){
+    const rq=indexedDB.open('prospectfield',1);
+    rq.onupgradeneeded=function(e){const d=e.target.result;if(!d.objectStoreNames.contains('photos'))d.createObjectStore('photos');};
+    rq.onsuccess=function(e){db=e.target.result;res(db);};
+    rq.onerror=function(e){rej(e);};
+  });
+}
+function idbPut(key,val){return new Promise(function(res,rej){const tx=db.transaction('photos','readwrite');tx.objectStore('photos').put(val,key);tx.oncomplete=function(){res();};tx.onerror=function(e){rej(e);};});}
+function idbGet(key){return new Promise(function(res){const tx=db.transaction('photos','readonly');const rq=tx.objectStore('photos').get(key);rq.onsuccess=function(){res(rq.result||null);};rq.onerror=function(){res(null);};});}
+function idbDel(key){return new Promise(function(res){const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(key);tx.oncomplete=function(){res();};tx.onerror=function(){res();};});}
+
+/* ============ storage ============ */
+const KEY='prospectfield_v2';
+let samples=JSON.parse(localStorage.getItem(KEY)||'[]');
+const save=function(){try{localStorage.setItem(KEY,JSON.stringify(samples));}catch(e){toast('Metadata storage full — export a backup',true);}};
+
+/* ============ indicators ============ */
+const IND={
+  gold:[['Quartz veins',3],['Gossan / iron staining',3],['Panned gold colours',4],['Black heavy sand',2],['Granite–schist contact',2],['Old workings nearby',2],['Sulphide minerals',2]],
+  ree:[['Weathered granite/laterite',3],['Monazite in black sand',4],['Clay-rich saprolite',2],['Elevated radiometrics*',3],['Carbonatite / alkaline rock',3],['Old tin tailings',2]],
+  tin:[['Black heavy sand',4],['Cassiterite grains',4],['Alluvial gravel in valley',3],['Granite source upstream',2],['Old tin workings',2]],
+  ironmang:[['Heavy dark/rusty rock',3],['Laterite capping',3],['Black manganese coating',3],['Magnetic response',3],['Banded outcrop',2]],
+  gem:[['Marble / limestone contact',3],['Corundum crystals',4],['Alluvial gem gravel',3],['Pegmatite',2],['Well-formed crystals',2]]
+};
+const QUICKTAGS=['Gossan','Quartz vein','Black sand','Gold colour','Laterite','Sulphides','Magnetic','Old working','Contact zone'];
+let picked=new Set(),sampleTags=new Set(),pendingPhotos=[];
+
+function renderIndicators(){
+  const t=document.getElementById('target').value;picked.clear();
+  const wrap=document.getElementById('indChips');wrap.innerHTML='';
+  IND[t].forEach(function(pair){const name=pair[0];const c=document.createElement('div');c.className='chip';c.textContent=name;
+    c.onclick=function(){c.classList.toggle('on');c.classList.contains('on')?picked.add(name):picked.delete(name);scoreNow(t);};wrap.appendChild(c);});
+  scoreNow(t);
+}
+function scoreNow(t){
+  const max=IND[t].reduce(function(s,p){return s+p[1];},0);let got=0;IND[t].forEach(function(p){if(picked.has(p[0]))got+=p[1];});
+  const pct=Math.round(got/max*100);
+  document.getElementById('ring').style.setProperty('--pct',pct+'%');
+  document.getElementById('scoreN').textContent=pct;
+  const v=document.getElementById('verdict'),g=document.getElementById('guidance');
+  let txt,col,guide;
+  if(picked.size===0){txt='Select indicators above';col='var(--ink3)';guide='Complete the estimator to see recommended field actions.';}
+  else if(pct<30){txt='Low — likely not worth deep work';col='var(--ink3)';guide='Few surface cues. Note the location and move on, or check upstream/upslope where indicators may concentrate. Not worth a lab sample yet.';}
+  else if(pct<60){txt='Moderate — worth a sample';col='var(--copper)';guide='Enough cues to justify a proper sample. Go to the <b>Sample</b> tab, capture GPS, collect a representative specimen and note everything. Compare nearby spots before spending on assay.';}
+  else{txt='High interest — sample & assay';col='var(--ore)';guide='Strong surface signature. Take a careful representative sample, photograph in place, mark GPS, prioritise for lab geochemistry. Do <b>not</b> start earthworks — follow the protocol in the Guide tab first.';}
+  v.textContent=txt;v.style.color=col;
+  g.innerHTML=guide+'<div class="callout" style="margin-top:12px"><b>Note:</b> field triage on visible clues only. Confirmation always needs an accredited lab assay.</div>';
+}
+
+/* ============ GPS ============ */
+let lastFix=null;
+function captureGPS(){
+  const dot=document.getElementById('gpsDot'),txt=document.getElementById('gpsTxt');
+  dot.className='gpsdot hunting';txt.textContent='acquiring satellites…';txt.style.color='var(--ore)';
+  if(!navigator.geolocation){txt.textContent='no GPS on this device';return;}
+  navigator.geolocation.getCurrentPosition(function(p){
+    lastFix={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,alt:p.coords.altitude};
+    document.getElementById('capLat').textContent=lastFix.lat.toFixed(6)+'°';
+    const lon=document.getElementById('capLon');lon.textContent=lastFix.lon.toFixed(6)+'°';lon.style.fontSize='22px';
+    document.getElementById('capMeta').textContent='±'+Math.round(lastFix.acc)+'m'+(lastFix.alt?' · '+Math.round(lastFix.alt)+'m elev':'');
+    dot.className='gpsdot live';txt.textContent='fix ±'+Math.round(lastFix.acc)+'m';txt.style.color='var(--ok)';
+  },function(){dot.className='gpsdot';txt.textContent='GPS failed — enable location';txt.style.color='var(--warn)';toast('GPS unavailable — check permission',true);},
+  {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+
+/* ============ photos (pending, in-memory until save) ============ */
+function addPhotos(input){
+  const files=[].slice.call(input.files);input.value='';
+  files.forEach(function(f){
+    const r=new FileReader();
+    r.onload=function(e){const img=new Image();img.onload=function(){
+      const max=1000,sc=Math.min(1,max/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      pendingPhotos.push(cv.toDataURL('image/jpeg',0.62));renderThumbs();
+    };img.src=e.target.result;};
+    r.readAsDataURL(f);
+  });
+}
+function renderThumbs(){
+  const w=document.getElementById('thumbs');w.innerHTML='';
+  pendingPhotos.forEach(function(p,i){const d=document.createElement('div');d.className='th';
+    d.innerHTML='<img src="'+p+'"><div class="rm" onclick="pendingPhotos.splice('+i+',1);renderThumbs()">✕</div>';w.appendChild(d);});
+}
+
+/* ============ tags ============ */
+function renderSampleTags(){
+  const w=document.getElementById('sTags');w.innerHTML='';
+  QUICKTAGS.forEach(function(t){const c=document.createElement('div');c.className='chip';c.textContent=t;
+    c.onclick=function(){c.classList.toggle('on');c.classList.contains('on')?sampleTags.add(t):sampleTags.delete(t);};w.appendChild(c);});
+}
+
+/* ============ save ============ */
+async function saveSample(){
+  const id=document.getElementById('sId').value.trim()||('SMP-'+String(samples.length+1).padStart(3,'0'));
+  const t=Date.now();
+  const photoKeys=[];
+  for(let i=0;i<pendingPhotos.length;i++){
+    const key='ph_'+t+'_'+i;
+    try{await idbPut(key,pendingPhotos[i]);photoKeys.push(key);}catch(e){toast('Photo store failed',true);}
+  }
+  const s={id:id,t:t,lat:lastFix?lastFix.lat:null,lon:lastFix?lastFix.lon:null,acc:lastFix?lastFix.acc:null,
+    mat:document.getElementById('sMat').value,depth:document.getElementById('sDepth').value,
+    note:document.getElementById('sNote').value.trim(),tags:[].slice.call(sampleTags),photoKeys:photoKeys,
+    target:document.getElementById('target').value};
+  s.flag=s.tags.some(function(x){return['Gossan','Gold colour','Sulphides','Black sand','Quartz vein'].indexOf(x)>-1;});
+  samples.unshift(s);save();
+  document.getElementById('sId').value='';document.getElementById('sNote').value='';
+  sampleTags.clear();renderSampleTags();pendingPhotos=[];renderThumbs();lastFix=null;
+  document.getElementById('capLat').textContent='— . —';
+  const lon=document.getElementById('capLon');lon.textContent='tap to capture';lon.style.fontSize='16px';
+  document.getElementById('capMeta').textContent='no fix yet';
+  toast('Sample '+s.id+' saved');renderLog();refreshMarkers();rebuildNavOptions();
+  nav('log',document.querySelector('nav button[data-v=log]'));
+}
+
+/* ============ log ============ */
+async function renderLog(){
+  document.getElementById('stCount').textContent=samples.length;
+  document.getElementById('stFlag').textContent=samples.filter(function(s){return s.flag;}).length;
+  const w=document.getElementById('sampList');
+  if(!samples.length){w.innerHTML='<div class="empty"><div class="ic">🪨</div><p>No samples yet.<br>Log your first find in the Sample tab.</p></div>';return;}
+  w.innerHTML='';
+  for(let i=0;i<samples.length;i++){
+    const s=samples[i];
+    const d=document.createElement('div');d.className='samp';
+    const co=(s.lat!=null)?s.lat.toFixed(5)+', '+s.lon.toFixed(5)+' (±'+Math.round(s.acc)+'m)':'no GPS';
+    const date=new Date(s.t).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const nphoto=(s.photoKeys||[]).length;
+    d.innerHTML='<div class="top"><div><span class="id">'+s.id+'</span>'+(s.flag?' <span style="color:var(--ore)">★</span>':'')+
+      '<div class="co mono">📍 '+co+'</div><div class="co">'+s.mat+' · '+s.depth+' · '+date+'</div></div>'+
+      '<button class="del" onclick="delSample('+i+')">✕</button></div>'+
+      (s.tags.length?'<div class="tags">'+s.tags.map(function(t){return'<span class="tg">'+t+'</span>';}).join('')+'</div>':'')+
+      (s.note?'<div class="note">'+s.note.replace(/</g,'&lt;')+'</div>':'')+
+      '<div class="photos" id="ph-'+i+'"></div>'+
+      (s.lat!=null?'<div class="acts"><button onclick="navigateTo(\''+s.id+'\')">🧭 Walk back</button></div>':'');
+    w.appendChild(d);
+    if(nphoto){const holder=d.querySelector('#ph-'+i);
+      for(let k=0;k<s.photoKeys.length;k++){const data=await idbGet(s.photoKeys[k]);
+        if(data){const im=document.createElement('img');im.src=data;im.onclick=(function(dd){return function(){viewPhoto(dd);};})(data);holder.appendChild(im);}}
+    }
+  }
+}
+function viewPhoto(data){const w=window.open();if(w)w.document.write('<img src="'+data+'" style="max-width:100%">');}
+async function delSample(i){
+  if(!confirm('Delete '+samples[i].id+'?'))return;
+  const keys=samples[i].photoKeys||[];
+  for(let k=0;k<keys.length;k++){await idbDel(keys[k]);}
+  samples.splice(i,1);save();renderLog();refreshMarkers();rebuildNavOptions();
+}
+
+/* ============ export / backup ============ */
+function dl(name,content,type){const b=new Blob([content],{type:type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+function exportData(){if(!samples.length)return toast('Nothing to export',true);
+  const meta=samples.map(function(o){const c=Object.assign({},o);delete c.photoKeys;return c;});
+  dl('prospectfield_'+Date.now()+'.json',JSON.stringify(meta,null,2),'application/json');toast('Exported JSON');}
+function exportCSV(){if(!samples.length)return toast('Nothing to export',true);
+  const head=['id','datetime','lat','lon','accuracy_m','material','depth','target','tags','notes','photos'];
+  const rows=samples.map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
+  dl('prospectfield_'+Date.now()+'.csv',head.join(',')+'\n'+rows.join('\n'),'text/csv');toast('Exported CSV');}
+async function backup(){
+  if(!samples.length)return toast('Nothing to back up',true);
+  toast('Bundling photos…');
+  const out=[];
+  for(let i=0;i<samples.length;i++){
+    const s=Object.assign({},samples[i]);const photos=[];
+    for(let k=0;k<(s.photoKeys||[]).length;k++){const data=await idbGet(s.photoKeys[k]);if(data)photos.push(data);}
+    s.photos=photos;out.push(s);
+  }
+  dl('prospectfield_backup_'+Date.now()+'.json',JSON.stringify({app:'ProspectField',v:2,exported:Date.now(),samples:out}),'application/json');
+  toast('Backup saved — email it to yourself');
+}
+function restore(input){
+  const f=input.files[0];input.value='';if(!f)return;
+  const r=new FileReader();
+  r.onload=async function(e){try{
+    const data=JSON.parse(e.target.result);
+    const incoming=Array.isArray(data)?data:data.samples;
+    if(!Array.isArray(incoming))throw 0;
+    const ids=new Set(samples.map(function(s){return s.id+s.t;}));let added=0;
+    for(let j=0;j<incoming.length;j++){
+      const s=Object.assign({},incoming[j]);
+      if(ids.has(s.id+s.t))continue;
+      const keys=[];
+      if(s.photos&&s.photos.length){
+        for(let k=0;k<s.photos.length;k++){const key='ph_'+s.t+'_'+k;await idbPut(key,s.photos[k]);keys.push(key);}
+      }
+      delete s.photos;s.photoKeys=keys;samples.push(s);added++;
+    }
+    samples.sort(function(a,b){return b.t-a.t;});save();renderLog();refreshMarkers();rebuildNavOptions();
+    toast('Restored — '+added+' new sample'+(added===1?'':'s')+' merged');
+  }catch(_){toast('Could not read that backup file',true);}};
+  r.readAsText(f);
+}
+
+/* ============ MAP ============ */
+let map,markerLayer,onlineTiles,meMarker;
+const TILE='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+function initMap(){
+  if(map)return;
+  map=L.map('map',{zoomControl:true,attributionControl:false}).setView([4.2,102.0],7);
+  onlineTiles=L.tileLayer(TILE,{maxZoom:18,crossOrigin:true,
+    errorTileUrl:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#140f0a"/><g stroke="#3a2e21" stroke-width="1"><line x1="0" y1="64" x2="256" y2="64"/><line x1="0" y1="128" x2="256" y2="128"/><line x1="0" y1="192" x2="256" y2="192"/><line x1="64" y1="0" x2="64" y2="256"/><line x1="128" y1="0" x2="128" y2="256"/><line x1="192" y1="0" x2="192" y2="256"/></g><text x="128" y="132" fill="#8a7a63" font-size="12" text-anchor="middle" font-family="monospace">no tile (offline)</text></svg>')
+  }).addTo(map);
+  markerLayer=L.layerGroup().addTo(map);
+  refreshMarkers();fitPins();updateNet();
+  restoreSatUI();
+}
+
+/* ============ SATELLITE PROSPECTING LAYERS (Sentinel-2 via Copernicus WMS) ============ */
+let satLayer=null,satId=localStorage.getItem('pf_sat_id')||'';
+/* Documented Sentinel-2 band-math. Each returns an RGB image the eye can read. */
+const EVALSCRIPTS={
+  truecolor:'//VERSION=3\nfunction setup(){return{input:["B02","B03","B04"],output:{bands:3}};}function evaluatePixel(s){return[2.5*s.B04,2.5*s.B03,2.5*s.B02];}',
+  // iron oxide / gossan: red band over blue band ratio — high where iron staining
+  iron:'//VERSION=3\nfunction setup(){return{input:["B02","B04"],output:{bands:3}};}function evaluatePixel(s){var r=s.B04/(s.B02+1e-6);var v=(r-0.9)/1.6;v=Math.max(0,Math.min(1,v));return[0.15+0.85*v,0.15*(1-v),0.1*(1-v)];}',
+  // clay / hydroxyl alteration: SWIR ratio B11/B12 — bright where clays/altered
+  clay:'//VERSION=3\nfunction setup(){return{input:["B11","B12"],output:{bands:3}};}function evaluatePixel(s){var r=s.B11/(s.B12+1e-6);var v=(r-1.0)/0.6;v=Math.max(0,Math.min(1,v));return[0.25+0.75*v,0.18+0.55*v,0.1];}',
+  // NDVI: find vegetation GAPS — bare/rocky ground (low NDVI) is where you can actually see geology
+  ndvi:'//VERSION=3\nfunction setup(){return{input:["B04","B08"],output:{bands:3}};}function evaluatePixel(s){var n=(s.B08-s.B04)/(s.B08+s.B04+1e-6);if(n<0.2)return[0.8,0.5,0.15];if(n<0.4)return[0.6,0.6,0.2];return[0.1,0.4,0.15];}',
+  // Sentinel-1 radar: VV/VH backscatter — texture & structural edges show through cloud. Bright lineaments often = faults/ridges controlling veins.
+  radar:'//VERSION=3\nfunction setup(){return{input:["VV","VH"],output:{bands:3}};}function evaluatePixel(s){var vv=Math.max(0,Math.min(1,s.VV*2.2));var vh=Math.max(0,Math.min(1,s.VH*6.0));return[vv,0.5*vv+0.5*vh,vh];}'
+};
+function b64(str){return btoa(unescape(encodeURIComponent(str)));}
+function saveSatId(){satId=(document.getElementById('satId').value||'').trim();localStorage.setItem('pf_sat_id',satId);if(satId){document.getElementById('satMsg').textContent='✓ Instance ID saved. The advanced layers below will work now.';}}
+function restoreSatUI(){const el=document.getElementById('satId');if(el)el.value=satId;}
+
+const ESRI_IMAGERY='https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+function clearAllSatChips(){document.querySelectorAll('#satBasicChips .chip, #satChips .chip').forEach(function(c){c.classList.remove('on');});}
+
+function setSatLayer(kind,chip){
+  clearAllSatChips();chip.classList.add('on');
+  if(satLayer){map.removeLayer(satLayer);satLayer=null;}
+  const msg=document.getElementById('satMsg');
+  if(kind==='off'){msg.textContent='';return;}
+  if(!navigator.onLine){msg.textContent='⚠ You are offline — satellite view needs signal. Use it before heading in, then download the area for offline.';}
+
+  // ---- No-signup layers: Esri World Imagery ----
+  if(kind==='esri'||kind==='esrired'){
+    satLayer=L.tileLayer(ESRI_IMAGERY,{maxZoom:18,opacity:1,crossOrigin:true,
+      className:(kind==='esrired'?'sat-redfilter':'')});
+    satLayer.addTo(map);
+    msg.innerHTML=(kind==='esrired')
+      ? 'Reddish-ground hint: rusty/red-brown patches are pushed brighter. A <b>rough</b> steer toward possible iron staining — could also be red soil or a roof. Ground-check.'
+      : 'Real satellite photo. Spot bare ground, rivers, tracks and old workings to plan your route. High-res where available.';
+    return;
+  }
+
+  // ---- Advanced layers: Copernicus Sentinel band-math ----
+  // read the ID live from the box (phone paste may not have fired onchange yet)
+  const idEl=document.getElementById('satId');
+  if(idEl&&idEl.value.trim())satId=idEl.value.trim();
+  if(!satId){msg.innerHTML='⚠ These need a free Copernicus instance ID. Paste it in the box above, then tap the layer again. The instant layers above work with no setup.';return;}
+  try{
+    // Sentinel data won't serve when zoomed too far out (>~1500 m/pixel). Auto-zoom in.
+    if(map.getZoom()<11){
+      map.setZoom(12);
+      msg.innerHTML='🔍 Zoomed in for you — satellite data needs a closer view than the whole-country scale. Loading '+kind+'…';
+    }
+    const base='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId;
+    const isRadar=(kind==='radar');
+    const script=EVALSCRIPTS[kind];
+    const today=new Date().toISOString().slice(0,10);
+    satLayer=L.tileLayer.wms(base,{
+      layers:isRadar?'SENTINEL-1':'SENTINEL-2-L2A',
+      format:'image/png',transparent:true,version:'1.1.1',tileSize:512,
+      maxcc:isRadar?100:80,opacity:isRadar?0.8:0.85,minZoom:11,
+      time:'2023-01-01/'+today,
+      attribution:''
+    });
+    const orig=satLayer.getTileUrl.bind(satLayer);
+    satLayer.getTileUrl=function(coords){return orig(coords)+'&evalscript='+encodeURIComponent(b64(script));};
+    let errShown=false;
+    satLayer.on('tileerror',function(){
+      if(errShown)return;errShown=true;
+      if(isRadar)msg.innerHTML='⚠ Radar tiles didn\'t load. If you see a "meters per pixel exceeds limit" note on the map, zoom in more. Otherwise check signal.';
+      else msg.innerHTML='⚠ Optical tiles didn\'t load. Zoom in closer (satellite data needs it), or it\'s cloud over this spot — try 📡 Radar.';
+    });
+    satLayer.addTo(map);
+    const labels={truecolor:'True-colour Sentinel-2 (clearest image from the last 2 years).',iron:'Iron-oxide band-math: reddish = possible iron staining / gossans. Ground-check.',clay:'Clay/alteration band-math: brighter = possible hydrothermal alteration. Ground-check.',ndvi:'Vegetation-gap layer: orange/tan = bare/rocky ground where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'};
+    msg.textContent=labels[kind]+(isRadar?' Works in cloud & at night. Zoom in if blank.':' Showing the least-cloudy pass. Zoom into a town-sized area; if still blank this spot is always cloudy — use Radar.');
+  }catch(err){
+    msg.innerHTML='⚠ Error starting that layer: '+(err&&err.message?err.message:err)+'. Tap “Test my ID” to diagnose.';
+  }
+}
+
+/* One-shot diagnostic: fetch a single tile and report exactly what Copernicus says */
+async function testSatId(){
+  const msg=document.getElementById('satMsg');
+  const idEl=document.getElementById('satId');
+  if(idEl&&idEl.value.trim())satId=idEl.value.trim();
+  if(!satId){msg.innerHTML='⚠ Paste your instance ID first.';return;}
+  if(!navigator.onLine){msg.innerHTML='⚠ You are offline — connect to wifi/data to test.';return;}
+  msg.textContent='Fetching a real Sentinel-2 tile over your map centre…';
+  // Use the CURRENT map centre so the test matches what you're looking at.
+  const c=map?map.getCenter():{lat:3.14,lng:101.7};
+  const d=0.05; // ~5km box
+  const today=new Date().toISOString().slice(0,10);
+  // WMS 1.1.1 uses EPSG:4326 lon,lat order in BBOX — simplest, least ambiguous.
+  const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
+    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=SENTINEL-2-L2A'+
+    '&SRS=EPSG:4326&BBOX='+(c.lng-d)+','+(c.lat-d)+','+(c.lng+d)+','+(c.lat+d)+
+    '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC=80&TIME=2023-01-01/'+today;
+  try{
+    const res=await fetch(url);
+    const ct=res.headers.get('content-type')||'';
+    if(res.ok&&ct.indexOf('image')===0){
+      // Show the actual returned tile so you can SEE it (image or an error painted as image)
+      const blob=await res.blob();const u=URL.createObjectURL(blob);
+      msg.innerHTML='Server returned an image — here it is (if it\'s mostly one colour it\'s cloud/blank; if it shows text it\'s a server note):<br><img src="'+u+'" style="width:100%;max-width:280px;border-radius:8px;margin-top:8px;border:1px solid #3a2e21">';
+    }else if(res.ok){
+      const txt=await res.text();
+      msg.innerHTML='⚠ Server sent text, not an image: '+txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300);
+    }else{
+      const txt=await res.text();
+      msg.innerHTML='⚠ Error '+res.status+': '+(txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300)||'(no detail)');
+    }
+  }catch(e){
+    msg.innerHTML='⚠ Couldn\'t reach Copernicus: '+(e&&e.message?e.message:e);
+  }
+}
+
+function pinIcon(n,flag){return L.divIcon({html:'<div class="pin-num'+(flag?' flag':'')+'">'+n+'</div>',className:'',iconSize:[26,26],iconAnchor:[13,13]});}
+function refreshMarkers(){
+  if(!markerLayer)return;markerLayer.clearLayers();
+  samples.forEach(function(s){
+    if(s.lat==null)return;
+    const num=samples.length-samples.indexOf(s);
+    const m=L.marker([s.lat,s.lon],{icon:pinIcon(num,s.flag)});
+    m.bindPopup('<b>'+s.id+'</b><br>'+s.mat+' · '+s.depth+'<br>'+(s.tags.join(', ')||'—'));
+    markerLayer.addLayer(m);
+  });
+}
+function fitPins(){
+  const g=samples.filter(function(s){return s.lat!=null;});if(!map)return;
+  if(!g.length){toast('No geolocated samples yet');return;}
+  if(g.length===1){map.setView([g[0].lat,g[0].lon],15);return;}
+  map.fitBounds(L.latLngBounds(g.map(function(s){return[s.lat,s.lon];})).pad(0.2));
+}
+function locateOnMap(){
+  if(!navigator.geolocation)return toast('No GPS',true);
+  toast('Locating…');
+  navigator.geolocation.getCurrentPosition(function(p){
+    const ll=[p.coords.latitude,p.coords.longitude];
+    if(meMarker)map.removeLayer(meMarker);
+    meMarker=L.circleMarker(ll,{radius:8,color:'#4a9d7f',fillColor:'#4a9d7f',fillOpacity:.9}).addTo(map);
+    map.setView(ll,15);
+  },function(){toast('GPS failed — check permission',true);},{enableHighAccuracy:true,timeout:15000});
+}
+function updateNet(){
+  const on=navigator.onLine;
+  document.getElementById('netDot').className='gpsdot'+(on?' live':'');
+  document.getElementById('netTxt').textContent=on?'online — tiles live + caching':'offline — cached tiles only';
+}
+window.addEventListener('online',updateNet);window.addEventListener('offline',updateNet);
+
+async function downloadRegion(){
+  if(!map)return;
+  if(!navigator.onLine)return toast('Go online first to download tiles',true);
+  const b=map.getBounds(),z0=Math.max(10,map.getZoom()),z1=Math.min(16,z0+3);
+  const subs=['a','b','c'];let urls=[];
+  for(let z=z0;z<=z1;z++){
+    const min=deg2tile(b.getNorth(),b.getWest(),z),max=deg2tile(b.getSouth(),b.getEast(),z);
+    for(let x=min.x;x<=max.x;x++)for(let y=min.y;y<=max.y;y++)
+      urls.push(TILE.replace('{s}',subs[(x+y)%3]).replace('{z}',z).replace('{x}',x).replace('{y}',y));
+  }
+  if(urls.length>1500)return toast('Region too big ('+urls.length+' tiles) — zoom in a bit',true);
+  const bar=document.getElementById('dlBar'),fill=document.getElementById('dlFill'),msg=document.getElementById('dlMsg'),btn=document.getElementById('dlBtn');
+  bar.classList.add('on');btn.style.opacity=.5;let done=0,ok=0;
+  msg.textContent='Downloading '+urls.length+' tiles…';
+  const cache=('caches'in window)?await caches.open('pf-tiles'):null;
+  for(let i=0;i<urls.length;i++){
+    try{const res=await fetch(urls[i],{mode:'no-cors'});if(cache)await cache.put(urls[i],res.clone());ok++;}catch(e){}
+    done++;fill.style.width=(done/urls.length*100)+'%';
+  }
+  msg.textContent='Cached '+ok+' / '+urls.length+' tiles for offline use.';
+  btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1500);
+  toast('Region cached — works offline now');
+}
+function deg2tile(lat,lon,z){const n=Math.pow(2,z);return{x:Math.floor((lon+180)/360*n),y:Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*n)};}
+
+/* ============ NAVIGATE: compass + distance ============ */
+let navTargetSample=null,navWatchId=null,curHeading=0,curPos=null;
+function rebuildNavOptions(){
+  const sel=document.getElementById('navTarget');const prev=sel.value;
+  sel.innerHTML='<option value="">— choose a geolocated sample —</option>';
+  samples.forEach(function(s){if(s.lat==null)return;
+    const o=document.createElement('option');o.value=s.id+'|'+s.t;o.textContent=s.id+(s.flag?' ★':'')+' · '+s.mat;sel.appendChild(o);});
+  sel.value=prev;
+}
+function navigateTo(id){
+  const s=samples.filter(function(x){return x.id===id&&x.lat!=null;})[0];
+  if(!s)return toast('That sample has no GPS fix',true);
+  nav('nav',document.querySelector('nav button[data-v=nav]'));
+  document.getElementById('navTarget').value=s.id+'|'+s.t;setNavTarget();
+}
+function setNavTarget(){
+  const val=document.getElementById('navTarget').value;
+  if(!val){navTargetSample=null;stopNavWatch();document.getElementById('navMsg').textContent='Choose a target to begin.';return;}
+  const parts=val.split('|');
+  navTargetSample=samples.filter(function(s){return s.id===parts[0]&&String(s.t)===parts[1];})[0]||null;
+  retracing=false;
+  startNavWatch();
+}
+function startNavWatch(){
+  if(!navigator.geolocation)return toast('No GPS',true);
+  document.getElementById('navMsg').textContent='Getting your position…';
+  stopNavWatch();
+  navWatchId=navigator.geolocation.watchPosition(function(p){
+    curPos={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};updateNavReadout();
+  },function(){document.getElementById('navMsg').textContent='GPS failed — check location permission.';},
+  {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+  // orientation
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    document.getElementById('orientBtn').style.display='block';
+  }else{
+    window.addEventListener('deviceorientationabsolute',onOrient,true);
+    window.addEventListener('deviceorientation',onOrient,true);
+  }
+}
+function stopNavWatch(){
+  if(navWatchId!=null){navigator.geolocation.clearWatch(navWatchId);navWatchId=null;}
+  // release the orientation sensor too — it keeps firing and drains battery otherwise
+  window.removeEventListener('deviceorientationabsolute',onOrient,true);
+  window.removeEventListener('deviceorientation',onOrient,true);
+}
+function enableOrientation(){
+  DeviceOrientationEvent.requestPermission().then(function(r){
+    if(r==='granted'){window.addEventListener('deviceorientation',onOrient,true);document.getElementById('orientBtn').style.display='none';}
+    else toast('Compass permission denied',true);
+  }).catch(function(){toast('Compass unavailable',true);});
+}
+function onOrient(e){
+  let h=null;
+  if(e.webkitCompassHeading!=null)h=e.webkitCompassHeading;         // iOS: degrees from north
+  else if(e.alpha!=null)h=360-e.alpha;                               // Android approx
+  if(h!=null){curHeading=h;updateNeedle();}
+}
+function haversine(a,b,c,d){
+  const R=6371000,toR=Math.PI/180;
+  const dLat=(c-a)*toR,dLon=(d-b)*toR;
+  const x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a*toR)*Math.cos(c*toR)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function bearing(a,b,c,d){
+  const toR=Math.PI/180,toD=180/Math.PI;
+  const y=Math.sin((d-b)*toR)*Math.cos(c*toR);
+  const x=Math.cos(a*toR)*Math.sin(c*toR)-Math.sin(a*toR)*Math.cos(c*toR)*Math.cos((d-b)*toR);
+  return (Math.atan2(y,x)*toD+360)%360;
+}
+let targetBearing=0;
+function updateNavReadout(){
+  if(!navTargetSample||!curPos){return;}
+  const dist=haversine(curPos.lat,curPos.lon,navTargetSample.lat,navTargetSample.lon);
+  targetBearing=bearing(curPos.lat,curPos.lon,navTargetSample.lat,navTargetSample.lon);
+  document.getElementById('navDist').textContent=dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(2)+' km';
+  document.getElementById('navBear').textContent=Math.round(targetBearing)+'°';
+  document.getElementById('arrived').className='arrived'+(dist<=15?' on':'');
+  document.getElementById('navMsg').textContent='Live — GPS ±'+Math.round(curPos.acc)+'m. Arrow points toward '+navTargetSample.id+'. Move a few metres if the arrow seems stuck (needs motion to orient).';
+  updateNeedle();
+}
+function updateNeedle(){
+  // arrow should point toward target relative to where phone faces: bearing - heading
+  const rot=(targetBearing-curHeading+360)%360;
+  document.getElementById('needle').style.transform='rotate('+rot+'deg)';
+}
+
+/* ============ BREADCRUMB TRAIL ============ */
+const TKEY='prospectfield_trail';
+let trail=JSON.parse(localStorage.getItem(TKEY)||'null')||{active:false,start:null,pts:[],startedAt:null};
+let trackWatchId=null,trackTimer=null,trailLayer=null,trailStartMarker=null,retracing=false;
+const MIN_STEP=8; // metres between logged breadcrumbs
+if(!trail.mode)trail.mode='15'; // default sampling mode persists across restarts
+
+function saveTrail(){try{localStorage.setItem(TKEY,JSON.stringify(trail));}catch(e){toast('Trail storage full — export GPX & clear',true);}}
+
+function changeTrackMode(){
+  trail.mode=document.getElementById('trackMode').value;saveTrail();
+  if(trail.active){startTrackWatch();toast('Sampling mode changed');}
+}
+
+let battRef=null;
+function initBattery(){
+  if(!navigator.getBattery)return;
+  navigator.getBattery().then(function(b){
+    battRef=b;renderBattery();
+    b.addEventListener('levelchange',renderBattery);
+    b.addEventListener('chargingchange',renderBattery);
+  }).catch(function(){});
+}
+function renderBattery(){
+  if(!battRef)return;
+  const el=document.getElementById('battTxt'),ic=document.getElementById('battIc');if(!el)return;
+  const pct=Math.round(battRef.level*100);
+  ic.textContent=battRef.charging?'⚡':(pct<=20?'🪫':'🔋');
+  let msg=pct+'%'+(battRef.charging?' · charging':'');
+  if(!battRef.charging&&trail.active){
+    // rough remaining-time hint based on mode
+    const drain={continuous:14,'15':8,'30':5,'60':3.5}[trail.mode]||8; // %/hour ballpark while tracking
+    const hrs=pct/drain;
+    msg+=' · ~'+(hrs<1?Math.round(hrs*60)+' min':hrs.toFixed(1)+' h')+' of tracking left (est.)';
+  }
+  el.textContent=msg;
+  el.className=(!battRef.charging&&pct<=20)?'batt-low':'';
+  if(!battRef.charging&&pct<=15&&trail.active&&!battRef._warned){battRef._warned=true;toast('Battery low — consider retracing now',true);}
+  if(battRef.charging)battRef._warned=false;
+}
+
+function toggleTrack(){
+  if(trail.active){
+    trail.active=false;saveTrail();stopTrackWatch();updateTrailUI();
+    toast('Tracking paused — trail kept');
+  }else{
+    if(!navigator.geolocation)return toast('No GPS on this device',true);
+    trail.active=true;if(!trail.startedAt)trail.startedAt=Date.now();saveTrail();
+    startTrackWatch();updateTrailUI();
+    toast('Tracking on — walk your route');
+  }
+}
+function logFix(p){
+  const pt={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()};
+  if(pt.acc>50)return; // ignore very poor fixes so the trail stays honest
+  if(!trail.start){trail.start=pt;}
+  const last=trail.pts[trail.pts.length-1];
+  if(!last||haversine(last.lat,last.lon,pt.lat,pt.lon)>=MIN_STEP){
+    trail.pts.push(pt);saveTrail();updateTrailUI();drawTrail();
+  }
+}
+function gpsLost(){document.getElementById('tsSub').textContent='GPS lost — hold still or move to open sky';}
+function startTrackWatch(){
+  stopTrackWatch();
+  if(trail.mode==='continuous'){
+    // continuous watch: most detail, radio stays on
+    trackWatchId=navigator.geolocation.watchPosition(logFix,gpsLost,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+  }else{
+    // interval sampling: take one fix, then let the GPS radio sleep between samples
+    const sec=parseInt(trail.mode,10);
+    const tick=function(){navigator.geolocation.getCurrentPosition(logFix,gpsLost,{enableHighAccuracy:true,maximumAge:0,timeout:Math.min(sec*1000,20000)});};
+    tick(); // immediate first fix
+    trackTimer=setInterval(tick,sec*1000);
+  }
+}
+function stopTrackWatch(){
+  if(trackWatchId!=null){navigator.geolocation.clearWatch(trackWatchId);trackWatchId=null;}
+  if(trackTimer!=null){clearInterval(trackTimer);trackTimer=null;}
+}
+
+function trailLength(){let d=0;for(let i=1;i<trail.pts.length;i++)d+=haversine(trail.pts[i-1].lat,trail.pts[i-1].lon,trail.pts[i].lat,trail.pts[i].lon);return d;}
+function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(2)+' km';}
+
+function updateTrailUI(){
+  const sel=document.getElementById('trackMode');if(sel&&trail.mode)sel.value=trail.mode;
+  const dot=document.getElementById('tsDot'),main=document.getElementById('tsMain'),sub=document.getElementById('tsSub'),btn=document.getElementById('trackBtn');
+  if(trail.active){dot.className='ts-dot rec';main.textContent='Tracking…';sub.textContent='Recording breadcrumbs every '+MIN_STEP+' m';btn.textContent='⏸ Pause tracking';btn.style.background='linear-gradient(180deg,#d16b4a,#b0512f)';btn.style.color='#fff';}
+  else{dot.className='ts-dot';main.textContent=trail.pts.length?'Trail saved (paused)':'Not tracking';sub.textContent=trail.pts.length?'Resume, retrace, or export':'Start a track before heading in';btn.textContent=trail.pts.length?'▶ Resume tracking':'▶ Start tracking';btn.style.background='';btn.style.color='';}
+  document.getElementById('trPts').textContent=trail.pts.length;
+  document.getElementById('trLen').textContent=fmtDist(trailLength());
+  if(trail.start&&trail.pts.length){const cur=trail.pts[trail.pts.length-1];document.getElementById('trBack').textContent=fmtDist(haversine(cur.lat,cur.lon,trail.start.lat,trail.start.lon));}
+  else document.getElementById('trBack').textContent='—';
+  if(trail.startedAt){const mins=Math.round((Date.now()-trail.startedAt)/60000);document.getElementById('trTime').textContent=mins<60?mins+' min':(mins/60).toFixed(1)+' h';}
+  else document.getElementById('trTime').textContent='—';
+}
+
+function drawTrail(){
+  if(!map)return;
+  if(trailLayer){map.removeLayer(trailLayer);trailLayer=null;}
+  if(trailStartMarker){map.removeLayer(trailStartMarker);trailStartMarker=null;}
+  if(trail.pts.length>1){
+    trailLayer=L.polyline(trail.pts.map(function(p){return[p.lat,p.lon];}),{color:'#4a9d7f',weight:4,opacity:.9,dashArray:'1,0'}).addTo(map);
+  }
+  if(trail.start){
+    trailStartMarker=L.marker([trail.start.lat,trail.start.lon],{icon:L.divIcon({html:'<div style="background:#4a9d7f;color:#06140e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid #06140e">▲</div>',className:'',iconSize:[28,28],iconAnchor:[14,14]})}).bindPopup('<b>Trailhead</b><br>where you started').addTo(map);
+  }
+}
+
+/* ============ SHARE TRAILHEAD / LIVE STATUS ============ */
+const SKEY='prospectfield_share';
+let shareCfg=JSON.parse(localStorage.getItem(SKEY)||'null')||{num:'',name:'',ret:''};
+function loadShareCfg(){
+  const n=document.getElementById('scNum'),nm=document.getElementById('scName'),r=document.getElementById('scReturn');
+  if(n)n.value=shareCfg.num||'';if(nm)nm.value=shareCfg.name||'';if(r)r.value=shareCfg.ret||'';
+}
+function saveShareCfg(){
+  shareCfg.num=(document.getElementById('scNum').value||'').replace(/[^0-9]/g,'');
+  shareCfg.name=document.getElementById('scName').value||'';
+  shareCfg.ret=document.getElementById('scReturn').value||'';
+  localStorage.setItem(SKEY,JSON.stringify(shareCfg));
+}
+function mapsLink(lat,lon){return 'https://maps.google.com/?q='+lat.toFixed(6)+','+lon.toFixed(6);}
+function openWhatsApp(text){
+  const num=shareCfg.num;
+  const url=(num?'https://wa.me/'+num+'?text=':'https://wa.me/?text=')+encodeURIComponent(text);
+  window.open(url,'_blank');
+}
+function shareFallback(text){
+  // copy to clipboard as a backup if WhatsApp doesn't open
+  if(navigator.clipboard)navigator.clipboard.writeText(text).catch(function(){});
+}
+function shareHeadingIn(){
+  saveShareCfg();
+  if(!trail.start&&!curPos){
+    // no fix yet — grab one
+    if(!navigator.geolocation)return toast('No GPS to share a location',true);
+    toast('Getting your location…');
+    navigator.geolocation.getCurrentPosition(function(p){
+      trail.start=trail.start||{lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()};
+      saveTrail();buildHeadingIn();
+    },function(){toast('Couldn’t get location — try again in the open',true);},{enableHighAccuracy:true,timeout:15000});
+    return;
+  }
+  buildHeadingIn();
+}
+function buildHeadingIn(){
+  const p=trail.start||curPos;
+  const who=shareCfg.name?shareCfg.name+', ':'';
+  const ret=shareCfg.ret?shareCfg.ret:'(no time set)';
+  const msg=who+'I\'m heading into the field alone to check a site.\n\n'+
+    'My start point: '+mapsLink(p.lat,p.lon)+'\n'+
+    'Expected back by: '+ret+'\n\n'+
+    'If you don\'t hear from me by then, please call me. If you still can\'t reach me, share this location with the authorities. I\'ll message you when I\'m out. Thanks 🙏';
+  shareFallback(msg);openWhatsApp(msg);
+  document.getElementById('shareMsg').innerHTML='Opening WhatsApp with your start point and return time. If it didn\'t open, the message is copied — paste it to '+(shareCfg.name||'your contact')+'.';
+}
+function shareCheckin(){
+  saveShareCfg();
+  if(!navigator.geolocation)return toast('No GPS',true);
+  toast('Getting your location…');
+  navigator.geolocation.getCurrentPosition(function(p){
+    const who=shareCfg.name?shareCfg.name+', ':'';
+    const msg=who+'quick check-in — I\'m OK. Current location: '+mapsLink(p.coords.latitude,p.coords.longitude)+'\n\nStill out in the field, will update you.';
+    shareFallback(msg);openWhatsApp(msg);
+  },function(){toast('Couldn’t get location',true);},{enableHighAccuracy:true,timeout:15000});
+}
+function shareImOut(){
+  saveShareCfg();
+  const who=shareCfg.name?shareCfg.name+', ':'';
+  const msg=who+'I\'m out safe ✅ — back from the field. No need to worry. Thanks for keeping an eye out.';
+  shareFallback(msg);openWhatsApp(msg);
+  document.getElementById('shareMsg').textContent='Sent the all-clear. Always good to stand your contact down so the next alert is taken seriously.';
+}
+
+function retraceTrail(){
+  if(trail.pts.length<2)return toast('No trail to retrace yet',true);
+  // build a synthetic "sample" at the trailhead and hand it to the compass navigator
+  retracing=true;
+  navRetraceTarget={id:'⌂ TRAILHEAD',lat:trail.start.lat,lon:trail.start.lon,mat:'start point',flag:false,t:0};
+  navTargetSample=navRetraceTarget;
+  nav('nav',document.querySelector('nav button[data-v=nav]'));
+  document.getElementById('navMsg').textContent='Retrace mode — arrow points back toward your trailhead. Follow your breadcrumb line on the Map tab to stay on the exact route.';
+  // add trailhead into the dropdown selection state visually
+  const sel=document.getElementById('navTarget');sel.value='';
+  startNavWatch();updateNavReadout();
+  toast('Retrace on — head toward the arrow');
+}
+let navRetraceTarget=null;
+
+function exportTrail(){
+  if(!trail.pts.length)return toast('No trail to export',true);
+  let gpx='<?xml version="1.0"?>\n<gpx version="1.1" creator="ProspectField"><trk><name>ProspectField trail</name><trkseg>\n';
+  trail.pts.forEach(function(p){gpx+='<trkpt lat="'+p.lat+'" lon="'+p.lon+'"><time>'+new Date(p.t).toISOString()+'</time></trkpt>\n';});
+  gpx+='</trkseg></trk></gpx>';
+  dl('prospectfield_trail_'+Date.now()+'.gpx',gpx,'application/gpx+xml');
+  toast('Trail exported as GPX');
+}
+function clearTrail(){
+  if(!trail.pts.length)return toast('No trail to clear',true);
+  if(!confirm('Clear the whole breadcrumb trail? This cannot be undone.'))return;
+  trail.active=false;stopTrackWatch();
+  if(trailLayer&&map){map.removeLayer(trailLayer);trailLayer=null;}
+  if(trailStartMarker&&map){map.removeLayer(trailStartMarker);trailStartMarker=null;}
+  trail={active:false,start:null,pts:[],startedAt:null};saveTrail();updateTrailUI();
+  toast('Trail cleared');
+}
+
+/* if tracking was on when the app closed/restarted, resume automatically */
+if(trail.active){startTrackWatch();}
+
+/* ============ nav / toast ============ */
+function nav(v,btn){
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active');});
+  document.getElementById('v-'+v).classList.add('active');
+  document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');
+  if(v==='log')renderLog();
+  if(v==='map'){setTimeout(function(){initMap();map.invalidateSize();refreshMarkers();drawTrail();updateNet();},60);}
+  if(v==='nav'){rebuildNavOptions();if(navTargetSample)startNavWatch();}else{stopNavWatch();}
+  if(v==='trail'){updateTrailUI();renderBattery();loadShareCfg();}
+  window.scrollTo(0,0);
+}
+let tTimer;function toast(msg,warn){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(warn?' warn':'');clearTimeout(tTimer);tTimer=setTimeout(function(){t.className='toast'+(warn?' warn':'');},2800);}
+
+/* ============ init ============ */
+idbOpen().then(function(){renderLog();}).catch(function(){toast('Photo database unavailable',true);});
+renderIndicators();renderSampleTags();rebuildNavOptions();initBattery();
+
+if('serviceWorker' in navigator){
+  const sw="const TILES='pf-tiles';"+
+    "self.addEventListener('install',function(e){self.skipWaiting();});"+
+    "self.addEventListener('activate',function(e){self.clients.claim();});"+
+    "self.addEventListener('fetch',function(e){var u=e.request.url;"+
+    "if(u.indexOf('tile.openstreetmap.org')>-1){e.respondWith((async function(){"+
+    "var c=await caches.open(TILES);var hit=await c.match(e.request);if(hit)return hit;"+
+    "try{var res=await fetch(e.request);c.put(e.request,res.clone());return res;}catch(err){return hit||Response.error();}})());}});";
+  const blob=new Blob([sw],{type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function(){});
+}
+</script>
+</body>
+</html>
