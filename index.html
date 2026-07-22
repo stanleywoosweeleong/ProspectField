@@ -682,26 +682,27 @@ function setSatLayer(kind,chip){
     }
     const base='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId;
     const isRadar=(kind==='radar');
-    const script=EVALSCRIPTS[kind];
     const today=new Date().toISOString().slice(0,10);
+    // Map each chip to a REAL layer name that exists in the Copernicus config
+    // (these are the standard template layers; the instance's own visualization is used).
+    const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1'};
+    const layerName=LAYERMAP[kind]||'TRUE-COLOR-S2L2A';
     satLayer=L.tileLayer.wms(base,{
-      layers:isRadar?'SENTINEL-1':'SENTINEL-2-L2A',
+      layers:layerName,
       format:'image/png',transparent:true,version:'1.1.1',tileSize:512,
-      maxcc:isRadar?100:80,opacity:isRadar?0.8:0.85,minZoom:11,
+      maxcc:isRadar?100:80,opacity:isRadar?0.85:0.9,minZoom:11,
       time:'2023-01-01/'+today,
       attribution:''
     });
-    const orig=satLayer.getTileUrl.bind(satLayer);
-    satLayer.getTileUrl=function(coords){return orig(coords)+'&evalscript='+encodeURIComponent(b64(script));};
     let errShown=false;
     satLayer.on('tileerror',function(){
       if(errShown)return;errShown=true;
       if(isRadar)msg.innerHTML='⚠ Radar tiles didn\'t load. If you see a "meters per pixel exceeds limit" note on the map, zoom in more. Otherwise check signal.';
-      else msg.innerHTML='⚠ Optical tiles didn\'t load. Zoom in closer (satellite data needs it), or it\'s cloud over this spot — try 📡 Radar.';
+      else msg.innerHTML='⚠ Optical tiles didn\'t load — likely cloud over this spot (common here). Try 📡 Radar, or pan to a clearer area.';
     });
     satLayer.addTo(map);
-    const labels={truecolor:'True-colour Sentinel-2 (clearest image from the last 2 years).',iron:'Iron-oxide band-math: reddish = possible iron staining / gossans. Ground-check.',clay:'Clay/alteration band-math: brighter = possible hydrothermal alteration. Ground-check.',ndvi:'Vegetation-gap layer: orange/tan = bare/rocky ground where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'};
-    msg.textContent=labels[kind]+(isRadar?' Works in cloud & at night. Zoom in if blank.':' Showing the least-cloudy pass. Zoom into a town-sized area; if still blank this spot is always cloudy — use Radar.');
+    const labels={truecolor:'True-colour Sentinel-2. Real ground imagery.',iron:'Geology layer (highlights mineral/rock differences incl. iron). Ground-check.',clay:'SWIR layer — sensitive to clays / alteration minerals. Ground-check.',ndvi:'Vegetation index: low/bare = orange-ish, where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'};
+    msg.textContent=labels[kind]+(isRadar?' Works in cloud & at night. Zoom in if blank.':' Zoom into a town; if blank it\'s cloud — try Radar.');
   }catch(err){
     msg.innerHTML='⚠ Error starting that layer: '+(err&&err.message?err.message:err)+'. Tap “Test my ID” to diagnose.';
   }
@@ -721,7 +722,7 @@ async function testSatId(){
   const today=new Date().toISOString().slice(0,10);
   // WMS 1.1.1 uses EPSG:4326 lon,lat order in BBOX — simplest, least ambiguous.
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
-    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=SENTINEL-2-L2A'+
+    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=NATURAL-COLOR'+
     '&SRS=EPSG:4326&BBOX='+(c.lng-d)+','+(c.lat-d)+','+(c.lng+d)+','+(c.lat+d)+
     '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC=80&TIME=2023-01-01/'+today;
   try{
