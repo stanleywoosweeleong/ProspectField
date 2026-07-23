@@ -5,7 +5,7 @@
    - Everything else: network-first, falling back to cache.
    Bump SW_VERSION when the app changes so users get the new build.
 */
-const SW_VERSION = 'pf-v2';
+const SW_VERSION = 'pf-v3';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const TILE_CACHE  = 'pf-tiles';          // shared with the in-app region downloader
 const RUNTIME     = SW_VERSION + '-runtime';
