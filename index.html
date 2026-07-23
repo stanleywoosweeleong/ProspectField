@@ -156,7 +156,11 @@ nav button.on .ic{transform:translateY(-1px)}
 details{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:10px}
 summary{font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
 details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
-.map-wrap{position:relative}
+.map-wrap{position:relative;
+  /* The map sits inside a padded card, so the card background showed as darker
+     strips down each side. Pull the wrapper out to the card edges. */
+  margin-left:-16px;margin-right:-16px}
+.map-wrap #map{border-radius:0;border-left:0;border-right:0}
 #map{height:60vh;min-height:340px;border-radius:14px;border:1px solid var(--line);background:#0d0a07;z-index:1}
 /* Scroll rails. On a phone the map fills the width, so a vertical swipe anywhere over
    it pans the map and the page cannot be scrolled past. These narrow strips down each
@@ -164,7 +168,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
    Fully transparent: they exist only to catch touch. The target scanner analyses a
    freshly fetched Copernicus image, never the rendered map, so they cannot affect it. */
 .map-wrap{position:relative}
-.map-rail{position:absolute;top:0;bottom:0;width:30px;z-index:5;
+.map-rail{position:absolute;top:0;bottom:0;width:34px;z-index:5;
   background:none;border:0;outline:0;box-shadow:none;
   touch-action:pan-y;-webkit-tap-highlight-color:transparent;
   /* nothing may render here — these strips exist only to catch touch */
@@ -188,6 +192,14 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .map-rail-r{background:linear-gradient(270deg,rgba(23,17,12,.45),rgba(23,17,12,0))}
 @media (min-width:700px){ .map-rail{display:none} }
 .leaflet-container{background:#0d0a07;font-family:inherit}
+/* Sub-pixel tile-seam fix. On phones with a fractional devicePixelRatio, adjacent
+   Leaflet tiles land on non-integer boundaries and the browser leaves ~1px gaps that
+   expose the dark map background as faint grid lines (mostly read as horizontal).
+   Enlarging each tile by half a CSS pixel makes neighbours overlap so no gap shows.
+   Scoped per tile size so 256- and 512-px layers each overlap by the same tiny amount
+   and stay aligned. Positioning is via transform on the tile, so we only touch size. */
+.pf-seamless-256 .leaflet-tile{width:256.5px!important;height:256.5px!important}
+.pf-seamless-512 .leaflet-tile{width:512.5px!important;height:512.5px!important}
 .map-tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .netpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);color:var(--ink2)}
 .dlbar{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin-top:8px;display:none}
@@ -1773,7 +1785,7 @@ function initMap(){
     return;
   }
   map=L.map('map',{zoomControl:true,attributionControl:false}).setView([4.2,102.0],7);
-  onlineTiles=L.tileLayer(TILE,{maxZoom:18,crossOrigin:true,
+  onlineTiles=L.tileLayer(TILE,{maxZoom:18,crossOrigin:true,className:'pf-seamless-256',
     errorTileUrl:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#140f0a"/><g stroke="#3a2e21" stroke-width="1"><line x1="0" y1="64" x2="256" y2="64"/><line x1="0" y1="128" x2="256" y2="128"/><line x1="0" y1="192" x2="256" y2="192"/><line x1="64" y1="0" x2="64" y2="256"/><line x1="128" y1="0" x2="128" y2="256"/><line x1="192" y1="0" x2="192" y2="256"/></g><text x="128" y="132" fill="#8a7a63" font-size="12" text-anchor="middle" font-family="monospace">no tile (offline)</text></svg>')
   }).addTo(map);
   markerLayer=L.layerGroup().addTo(map);
@@ -2175,7 +2187,7 @@ function setSatLayer(kind,chip){
   // ---- No-signup layers: Esri World Imagery ----
   if(kind==='esri'||kind==='esrired'){
     satLayer=L.tileLayer(ESRI_IMAGERY,{maxZoom:18,opacity:1,crossOrigin:true,
-      className:(kind==='esrired'?'sat-redfilter':'')});
+      className:(kind==='esrired'?'sat-redfilter pf-seamless-256':'pf-seamless-256')});
     satLayer.addTo(map);
     msg.innerHTML=(kind==='esrired')
       ? 'Reddish-ground hint: rusty/red-brown patches are pushed brighter. A <b>rough</b> steer toward possible iron staining — could also be red soil or a roof. Ground-check.'
@@ -2203,7 +2215,7 @@ function setSatLayer(kind,chip){
     const layerName=LAYERMAP[kind]||'TRUE-COLOR-S2L2A';
     satLayer=L.tileLayer.wms(base,{
       layers:layerName,
-      format:'image/png',transparent:true,version:'1.1.1',tileSize:512,
+      format:'image/png',transparent:true,version:'1.1.1',tileSize:512,className:'pf-seamless-512',
       maxcc:isRadar?100:maxCC(),opacity:1.0,minZoom:11,
       time:'2023-01-01/'+today,
       attribution:''
