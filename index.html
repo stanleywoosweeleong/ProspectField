@@ -287,6 +287,10 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
         <input id="satId" aria-label="Copernicus instance ID" placeholder="paste Copernicus instance ID" onchange="saveSatId()" style="margin-bottom:10px">
         <button class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="testSatId()">🔎 Test my ID (check connection)</button>
         <div class="tile-grid" id="satChips"></div>
+        <div class="tile-head" id="cloudHead" onclick="toggleCloudMode()" style="margin-top:12px">
+          <span>☁️ Image quality <b id="cloudCurrent">Clear scenes only</b></span><span class="caret" style="transform:none">⇄</span>
+        </div>
+        <p class="hint" id="cloudHint" style="margin-top:6px">Only accepting near cloud-free imagery. A deposit doesn't move, so an older clear image beats a recent cloudy one. Tap to allow cloudier scenes if nothing loads.</p>
       </details>
       <div class="hint" id="satMsg" style="margin-top:10px"></div>
     </div>
@@ -412,6 +416,17 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     </div>
     <input type="file" id="restoreFile" aria-label="Restore samples from a backup file" accept="application/json" style="display:none" onchange="restore(this)">
     <p class="hint" style="margin:10px 0 0">Backup writes one file (samples + photos) you can email to yourself or your partner — so the phone isn't the only copy.</p>
+    <div class="tile-head" id="logViewHead" onclick="toggleTrashView()" style="margin-top:12px">
+      <span id="logViewLabel">Showing active samples</span><span class="caret" style="transform:none">⇄</span>
+    </div>
+    <div id="trashActions" style="display:none">
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn ghost sm" style="width:100%" onclick="restoreAllDeleted()">↩ Restore all</button>
+        <button class="btn ghost sm" style="width:100%;color:var(--warn);border-color:var(--warn)" onclick="purgeDeleted()">🗑 Purge permanently</button>
+      </div>
+      <p class="hint" style="margin:0 0 10px">Deleted samples stay here until purged, so a mis-tap in the field is recoverable. Purging frees up storage and cannot be undone.</p>
+    </div>
+    <div class="hint" id="storageInfo" style="margin-top:8px"></div>
   </div>
   <div id="sampList"></div>
 </section>
@@ -514,7 +529,8 @@ function evaluatePixel(s) {
 }</textarea>
       <button class="btn ghost sm" style="width:100%;margin-top:6px" onclick="copyScript('scriptAlter',this)">📋 Copy ALTERATION script</button>
       <p style="margin-top:10px" class="hint">Tap a Copy button, then paste into the matching layer's Custom script box in Copernicus. (You can also tap a script box to select it manually.)</p>
-      <div class="callout" style="margin-top:10px"><b>Why these look clearer than plain band ratios.</b> In Malaysia jungle covers most ground, and vegetation reflects light in a way that makes a plain iron ratio glow reddish everywhere — the whole image turns to muddy mid-red haze and real targets disappear into it. These scripts <b>mask out vegetation and water first</b> (jungle renders flat dark grey-green, water dark blue) and colour only <b>exposed ground</b>, with a tighter contrast stretch. Targets stand out roughly a third more against the background.<br><br><b>Reading them:</b> dark grey-green = jungle, ignore it. Dark blue = water. Bright colour = exposed ground with a real signal. If almost the whole screen is dark, that area simply has no rock showing — try the Veg gaps layer to find where it does.</div>
+      <div class="callout" style="margin-top:10px"><b>Why these look clearer than plain band ratios.</b> In Malaysia jungle covers most ground, and vegetation reflects light in a way that makes a plain iron ratio glow reddish everywhere — the whole image turns to muddy mid-red haze and real targets disappear into it. These scripts <b>mask out vegetation and water first</b> (jungle renders flat dark grey-green, water dark blue) and colour only <b>exposed ground</b>, with a tighter contrast stretch.<br><br><b>Reading them:</b> dark grey-green = jungle, ignore it. Dark blue = water. Bright colour = exposed ground with a real signal. If almost the whole screen is dark, that area simply has no rock showing — try the Veg gaps layer to find where it does.</div>
+      <div class="callout" style="margin-top:10px"><b>☁️ About cloud — and why old images are fine.</b> Sentinel-2 passes over roughly every 5 days, and the app searches back through 2 years of those passes. So what matters is not today's weather but whether <b>any</b> past pass caught your area clear. You can be under blue sky and still get a cloudy image, or scan during a storm and see a clear one from months ago.<br><br><b>Old imagery is not a problem for prospecting.</b> A deposit formed millions of years ago hasn't moved — an older cloud-free image shows the same rock as a recent one, only better. That's why the app defaults to <b>Clear scenes only</b> (≤10% cloud). If a spot never loads, switch to Allow cloudy, or use radar which ignores cloud entirely.<br><br>Malaysia's drier months tend to give more cloud-free passes, so the archive is richer for those periods.</div>
     </details>
 
     <details><summary>③ At home on wifi: scout from space</summary><p>On the <b>Map</b> tab, pan to your partner's licence block. With the advanced layers on: <b>Iron</b> and <b>Clay</b> show possible targets, <b>Radar</b> shows faults through cloud, <b>Veg gaps</b> finds bare ground you can inspect. Note the promising spots. (No Copernicus ID yet? The plain satellite photo still helps you plan.)</p></details>
@@ -637,6 +653,17 @@ function evaluatePixel(s) {
 </nav>
 
 <div class="toast" id="toast"></div>
+
+<div class="def-modal" id="confirmModal">
+  <div class="def-box" onclick="event.stopPropagation()">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmBody"></p>
+    <div class="row" style="margin-top:16px">
+      <button class="btn ghost sm" style="width:100%" onclick="closeConfirm(false)">Cancel</button>
+      <button class="btn sm" id="confirmOk" style="width:100%" onclick="closeConfirm(true)">Delete</button>
+    </div>
+  </div>
+</div>
 
 <div class="def-modal" id="defModal" onclick="hideDef()">
   <div class="def-box" onclick="event.stopPropagation()">
@@ -806,6 +833,26 @@ function makeTile(icon,title,sub,onTap){
   }
   return d;
 }
+/* In-app confirmation dialog — matches the app styling and works reliably on mobile,
+   unlike native confirm() which some browsers block or render awkwardly. */
+let _confirmResolve=null;
+function askConfirm(title,body,okLabel,danger){
+  return new Promise(function(resolve){
+    _confirmResolve=resolve;
+    document.getElementById('confirmTitle').textContent=title;
+    document.getElementById('confirmBody').textContent=body;
+    const ok=document.getElementById('confirmOk');
+    ok.textContent=okLabel||'Confirm';
+    if(danger===false){ok.style.background='';ok.style.color='';}
+    else{ok.style.background='linear-gradient(180deg,#d16b4a,#b0512f)';ok.style.color='#fff';}
+    document.getElementById('confirmModal').classList.add('on');
+  });
+}
+function closeConfirm(val){
+  document.getElementById('confirmModal').classList.remove('on');
+  if(_confirmResolve){_confirmResolve(val);_confirmResolve=null;}
+}
+
 function showDef(term){
   document.getElementById('defTitle').textContent=term;
   document.getElementById('defBody').textContent=DEFS[term]||'No description available.';
@@ -1010,54 +1057,132 @@ async function saveSample(){
   nav('log',document.querySelector('nav button[data-v=log]'));
 }
 
-/* ============ log ============ */
+/* ============ log (with soft delete) ============ */
+let showTrash=false;
+function activeSamples(){return samples.filter(function(s){return !s.deleted;});}
+function deletedSamples(){return samples.filter(function(s){return s.deleted;});}
+
+function toggleTrashView(){
+  showTrash=!showTrash;
+  document.getElementById('logViewLabel').textContent=showTrash?'Showing deleted (trash)':'Showing active samples';
+  document.getElementById('trashActions').style.display=showTrash?'block':'none';
+  renderLog();
+}
+
 async function renderLog(){
-  document.getElementById('stCount').textContent=samples.length;
-  document.getElementById('stFlag').textContent=samples.filter(function(s){return s.flag;}).length;
+  const act=activeSamples(),del=deletedSamples();
+  document.getElementById('stCount').textContent=act.length;
+  document.getElementById('stFlag').textContent=act.filter(function(s){return s.flag;}).length;
+  const lbl=document.getElementById('logViewLabel');
+  if(lbl)lbl.textContent=showTrash?('Showing deleted ('+del.length+')'):('Showing active samples'+(del.length?' · '+del.length+' in trash':''));
+  updateStorageInfo();
+  const list=showTrash?del:act;
   const w=document.getElementById('sampList');
-  if(!samples.length){w.innerHTML='<div class="empty"><div class="ic">🪨</div><p>No samples yet.<br>Log your first find in the Sample tab.</p></div>';return;}
+  if(!list.length){
+    w.innerHTML='<div class="empty"><div class="ic">'+(showTrash?'🗑':'🪨')+'</div><p>'+
+      (showTrash?'Trash is empty.':'No samples yet.<br>Log your first find in the Sample tab.')+'</p></div>';
+    return;
+  }
   w.innerHTML='';
-  for(let i=0;i<samples.length;i++){
-    const s=samples[i];
+  for(let i=0;i<list.length;i++){
+    const s=list[i];
+    const idx=samples.indexOf(s);
     const d=document.createElement('div');d.className='samp';
-    const co=(s.lat!=null)?s.lat.toFixed(5)+', '+s.lon.toFixed(5)+' (±'+Math.round(s.acc)+'m)':'no GPS';
+    if(s.deleted)d.style.opacity='0.65';
+    const co=(s.lat!=null)?s.lat.toFixed(5)+', '+s.lon.toFixed(5)+' (\u00b1'+Math.round(s.acc)+'m)':'no GPS';
     const date=new Date(s.t).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
     const nphoto=(s.photoKeys||[]).length;
-    d.innerHTML='<div class="top"><div><span class="id">'+s.id+'</span>'+(s.flag?' <span style="color:var(--ore)">★</span>':'')+
-      '<div class="co mono">📍 '+co+'</div><div class="co">'+s.mat+' · '+s.depth+' · '+date+'</div></div>'+
-      '<button class="del" onclick="delSample('+i+')">✕</button></div>'+
+    let acts='';
+    if(s.deleted){
+      acts='<div class="acts"><button onclick="restoreSample('+idx+')">\u21a9 Restore</button>'+
+           '<button style="color:var(--warn)" onclick="purgeSample('+idx+')">\ud83d\uddd1 Delete forever</button></div>';
+    }else{
+      acts='<div class="acts">'+(s.lat!=null?'<button onclick="navigateTo(\''+s.id+'\')">\ud83e\udded Walk back</button>':'')+
+           '<button onclick="delSample('+idx+')">\ud83d\uddd1 Delete</button></div>';
+    }
+    d.innerHTML='<div class="top"><div><span class="id">'+s.id+'</span>'+(s.flag?' <span style="color:var(--ore)">\u2605</span>':'')+
+      '<div class="co mono">\ud83d\udccd '+co+'</div><div class="co">'+s.mat+' \u00b7 '+s.depth+' \u00b7 '+date+
+      (nphoto?' \u00b7 '+nphoto+' photo'+(nphoto===1?'':'s'):'')+'</div></div></div>'+
       (s.tags.length?'<div class="tags">'+s.tags.map(function(t){return'<span class="tg">'+t+'</span>';}).join('')+'</div>':'')+
       (s.note?'<div class="note">'+s.note.replace(/</g,'&lt;')+'</div>':'')+
-      '<div class="photos" id="ph-'+i+'"></div>'+
-      (s.lat!=null?'<div class="acts"><button onclick="navigateTo(\''+s.id+'\')">🧭 Walk back</button></div>':'');
+      '<div class="photos" id="ph-'+i+'"></div>'+acts;
     w.appendChild(d);
-    if(nphoto){const holder=d.querySelector('#ph-'+i);
+    if(nphoto&&!s.deleted){const holder=d.querySelector('#ph-'+i);
       for(let k=0;k<s.photoKeys.length;k++){const data=await idbGet(s.photoKeys[k]);
         if(data){const im=document.createElement('img');im.src=data;im.onclick=(function(dd){return function(){viewPhoto(dd);};})(data);holder.appendChild(im);}}
     }
   }
 }
 function viewPhoto(data){const w=window.open();if(w)w.document.write('<img src="'+data+'" style="max-width:100%">');}
-async function delSample(i){
-  if(!confirm('Delete '+samples[i].id+'?'))return;
-  const keys=samples[i].photoKeys||[];
+
+/* soft delete — recoverable, photos kept until purge */
+function delSample(i){
+  const s=samples[i];if(!s)return;
+  s.deleted=Date.now();save();renderLog();refreshMarkers();rebuildNavOptions();
+  toast(s.id+' moved to trash \u2014 restore it from the Log');
+}
+function restoreSample(i){
+  const s=samples[i];if(!s)return;
+  delete s.deleted;save();renderLog();refreshMarkers();rebuildNavOptions();
+  toast(s.id+' restored');
+}
+async function purgeSample(i){
+  const s=samples[i];if(!s)return;
+  const ok=await askConfirm('Delete forever?','This permanently removes '+s.id+' and its photos. It cannot be undone.','Delete forever');
+  if(!ok)return;
+  const keys=s.photoKeys||[];
   for(let k=0;k<keys.length;k++){await idbDel(keys[k]);}
   samples.splice(i,1);save();renderLog();refreshMarkers();rebuildNavOptions();
+  toast('Deleted permanently');
+}
+function restoreAllDeleted(){
+  const d=deletedSamples();if(!d.length)return toast('Trash is empty');
+  d.forEach(function(s){delete s.deleted;});
+  save();renderLog();refreshMarkers();rebuildNavOptions();
+  toast('Restored '+d.length+' sample'+(d.length===1?'':'s'));
+}
+async function purgeDeleted(){
+  const d=deletedSamples();if(!d.length)return toast('Trash is empty');
+  const ok=await askConfirm('Empty the trash?','This permanently removes '+d.length+' sample'+(d.length===1?'':'s')+' and all their photos, freeing storage. It cannot be undone.','Purge '+d.length);
+  if(!ok)return;
+  for(let j=0;j<d.length;j++){
+    const keys=d[j].photoKeys||[];
+    for(let k=0;k<keys.length;k++){await idbDel(keys[k]);}
+  }
+  samples=samples.filter(function(s){return !s.deleted;});
+  save();renderLog();refreshMarkers();rebuildNavOptions();
+  toast('Purged '+d.length+' sample'+(d.length===1?'':'s')+' \u2014 storage freed');
+}
+
+/* rough storage usage so the user can see when a purge is worthwhile */
+async function updateStorageInfo(){
+  const el=document.getElementById('storageInfo');if(!el)return;
+  const meta=JSON.stringify(samples).length;
+  let photos=0;
+  samples.forEach(function(s){photos+=(s.photoKeys||[]).length;});
+  let txt=activeSamples().length+' active \u00b7 '+deletedSamples().length+' in trash \u00b7 '+photos+' photo'+(photos===1?'':'s');
+  if(navigator.storage&&navigator.storage.estimate){
+    try{const est=await navigator.storage.estimate();
+      if(est.usage)txt+=' \u00b7 using ~'+(est.usage/1048576).toFixed(1)+' MB';
+    }catch(e){}
+  }
+  el.textContent=txt;
 }
 
 /* ============ export / backup ============ */
 function dl(name,content,type){const b=new Blob([content],{type:type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
-function exportData(){if(!samples.length)return toast('Nothing to export',true);
-  const meta=samples.map(function(o){const c=Object.assign({},o);delete c.photoKeys;return c;});
+function exportData(){if(!activeSamples().length)return toast('Nothing to export',true);
+  const meta=activeSamples().map(function(o){const c=Object.assign({},o);delete c.photoKeys;return c;});
   dl('prospectfield_'+Date.now()+'.json',JSON.stringify(meta,null,2),'application/json');toast('Exported JSON');}
-function exportCSV(){if(!samples.length)return toast('Nothing to export',true);
+function exportCSV(){if(!activeSamples().length)return toast('Nothing to export',true);
   const head=['id','datetime','lat','lon','accuracy_m','material','depth','target','tags','notes','photos'];
-  const rows=samples.map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
+  const rows=activeSamples().map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
   dl('prospectfield_'+Date.now()+'.csv',head.join(',')+'\n'+rows.join('\n'),'text/csv');toast('Exported CSV');}
 async function backup(){
-  if(!samples.length)return toast('Nothing to back up',true);
+  if(!activeSamples().length)return toast('Nothing to back up',true);
   toast('Bundling photos…');
   const out=[];
+  // include trashed samples too — a backup should preserve anything still recoverable
   for(let i=0;i<samples.length;i++){
     const s=Object.assign({},samples[i]);const photos=[];
     for(let k=0;k<(s.photoKeys||[]).length;k++){const data=await idbGet(s.photoKeys[k]);if(data)photos.push(data);}
@@ -1105,6 +1230,31 @@ function initMap(){
 
 /* ============ SATELLITE PROSPECTING LAYERS (Sentinel-2 via Copernicus WMS) ============ */
 let satLayer=null,currentSatKind=null,satId=localStorage.getItem('pf_sat_id')||'';
+/* Cloud tolerance. Deposits don't move, so a clear older image beats a cloudy recent one.
+   'clear' = near cloud-free only; 'any' = accept cloudier scenes when coverage is thin. */
+let cloudMode=localStorage.getItem('pf_cloud_mode')||'clear';
+function maxCC(){return cloudMode==='clear'?10:80;}
+function toggleCloudMode(){
+  cloudMode=(cloudMode==='clear')?'any':'clear';
+  localStorage.setItem('pf_cloud_mode',cloudMode);
+  updateCloudUI();
+  if(satLayer&&currentSatKind){ // reload the active layer with the new filter
+    const active=document.querySelector('#satChips .tile.on, #satBasicChips .tile.on');
+    if(active)setSatLayer(currentSatKind,active);
+  }
+  toast(cloudMode==='clear'?'Clear scenes only':'Allowing cloudier scenes');
+}
+function updateCloudUI(){
+  const c=document.getElementById('cloudCurrent'),h=document.getElementById('cloudHint');
+  if(!c)return;
+  if(cloudMode==='clear'){
+    c.textContent='Clear scenes only';
+    h.textContent='Only accepting near cloud-free imagery (≤10% cloud). A deposit doesn\'t move, so an older clear image beats a recent cloudy one. Tap to allow cloudier scenes if nothing loads.';
+  }else{
+    c.textContent='Allow cloudy';
+    h.textContent='Accepting scenes up to 80% cloud — more coverage, but hazy images and false targets from cloud edges. Tap to go back to clear-only.';
+  }
+}
 /* Documented Sentinel-2 band-math. Each returns an RGB image the eye can read. */
 const EVALSCRIPTS={
   truecolor:'//VERSION=3\nfunction setup(){return{input:["B02","B03","B04"],output:{bands:3}};}function evaluatePixel(s){return[2.5*s.B04,2.5*s.B03,2.5*s.B02];}',
@@ -1137,7 +1287,7 @@ function scanTargets(){
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
     '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS='+(LAYERMAP[currentSatKind]||'IRON-RATIO')+
     '&SRS=EPSG:4326&BBOX='+b.getWest()+','+b.getSouth()+','+b.getEast()+','+b.getNorth()+
-    '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC=80&TIME=2023-01-01/'+today;
+    '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC='+maxCC()+'&TIME=2023-01-01/'+today;
   const bar=document.getElementById('scanBar'),fill=document.getElementById('scanFill');
   bar.classList.add('on');fill.style.width='25%';btn.style.opacity=.5;
   msg.textContent='Fetching imagery for this view…';
@@ -1153,7 +1303,7 @@ function scanTargets(){
     ctx.drawImage(bmp,0,0,W,H);
     const data=ctx.getImageData(0,0,W,H).data;
     fill.style.width='85%';
-    const targets=findClusters(data,W,H,b);
+    const targets=findClusters(data,W,H,b,currentSatKind);
     fill.style.width='100%';
     lastTargets=targets;
     drawTargets(targets);
@@ -1165,8 +1315,10 @@ function scanTargets(){
   });
 }
 
-/* Score each pixel for "mineral interest", then group hot pixels into clusters */
-function findClusters(data,W,H,bounds){
+/* Score each pixel for "mineral interest", then group hot pixels into clusters.
+   Scoring is layer-specific: a generic brightness score just finds towns and bare
+   ground in every layer, which makes every scan return the same places. */
+function findClusters(data,W,H,bounds,kind){
   const score=new Float32Array(W*H);
   for(let i=0,p=0;i<data.length;i+=4,p++){
     const r=data[i]/255,g=data[i+1]/255,bl=data[i+2]/255,a=data[i+3];
@@ -1175,9 +1327,30 @@ function findClusters(data,W,H,bounds){
     const dark=(r<0.22&&g<0.25&&bl<0.22);
     const water=(bl>r&&bl>g&&bl<0.30);
     if(dark||water){score[p]=0;continue;}
-    // interest = brightness of the mineral channels, favouring red/green agreement
-    const s=(r*0.55+g*0.35+bl*0.10)*(0.6+0.4*Math.min(r,g)/Math.max(0.001,Math.max(r,g)));
-    score[p]=s;
+    const mx=Math.max(r,g,bl),mn=Math.min(r,g,bl);
+    const sat=mx>0?(mx-mn)/mx:0;          // colour saturation
+    const grey=1-sat;                      // how washed-out / grey it is
+    let s=0;
+    if(kind==='ironratio'||kind==='iron'){
+      // want RED dominance, not general brightness. Penalise grey/white (roofs, concrete).
+      s=(r-Math.max(g,bl))*1.6*(0.35+0.65*sat);
+    }else if(kind==='ferrous'){
+      // ferrous script renders as orange-yellow: red AND green up, blue down
+      s=(Math.min(r,g)-bl)*1.7*(0.35+0.65*sat);
+    }else if(kind==='clay'){
+      // SWIR clay layer: favour warm mid-tones over bright white
+      s=(r*0.5+g*0.5-bl)*1.5*(0.35+0.65*sat);
+    }else if(kind==='alteration'){
+      // composite: red=iron, green=clay. Reward BOTH together (the real signature),
+      // and penalise when blue is equally high (that's just bright ground)
+      const both=Math.min(r,g);
+      s=(both-bl*0.8)*2.0*(0.3+0.7*sat);
+    }else{
+      s=(r*0.55+g*0.35+bl*0.10)*(0.6+0.4*sat);
+    }
+    // strong grey/white penalty — buildings, roads, cloud and bare rock are grey-bright
+    if(grey>0.75)s*=0.25;
+    score[p]=Math.max(0,s);
   }
   // threshold relative to the median of lit ground (not a tiny top percentile —
   // in jungle scenes only ~1% of pixels are lit, so a high percentile finds only one patch)
@@ -1259,7 +1432,7 @@ function renderTargetList(targets){
       '<div class="acts"><button onclick="targetToSample('+i+')">➕ Save as sample</button>'+
       '<button onclick="targetNavigate('+i+')">🧭 Navigate</button></div></div>';
   });
-  res.innerHTML=html+'<div class="callout" style="margin-top:10px"><b>⚠ These are colour patches, not deposits.</b> The scan finds where the layer is strongest — that could be mineralisation, or bare red soil, a quarry, a roof or a riverbank. Use them to plan which spots to walk to, then confirm on the ground and by assay.</div>';
+  res.innerHTML=html+'<div class="callout" style="margin-top:10px"><b>⚠ These are colour patches, not deposits.</b> The scan finds where the chosen layer is strongest. It filters out grey/white surfaces (roofs, roads, concrete) and jungle, but red-tile roofs, quarries, bare farmland and riverbanks can still slip through.<br><br><b>Scan over open country, not towns</b> — built-up areas produce a lot of false hits. Use these as a "walk here first" list, then confirm on the ground and by assay.</div>';
 }
 
 function targetToSample(i){
@@ -1374,7 +1547,7 @@ function setSatLayer(kind,chip){
     satLayer=L.tileLayer.wms(base,{
       layers:layerName,
       format:'image/png',transparent:true,version:'1.1.1',tileSize:512,
-      maxcc:isRadar?100:80,opacity:1.0,minZoom:11,
+      maxcc:isRadar?100:maxCC(),opacity:1.0,minZoom:11,
       time:'2023-01-01/'+today,
       attribution:''
     });
@@ -1382,7 +1555,7 @@ function setSatLayer(kind,chip){
     satLayer.on('tileerror',function(){
       if(errShown)return;errShown=true;
       if(isRadar)msg.innerHTML='⚠ Radar tiles didn\'t load. If you see a "meters per pixel exceeds limit" note on the map, zoom in more. Otherwise check signal.';
-      else msg.innerHTML='⚠ Optical tiles didn\'t load — likely cloud over this spot (common here). Try 📡 Radar, or pan to a clearer area.';
+      else msg.innerHTML='⚠ Optical tiles didn\'t load. In <b>Clear scenes only</b> mode there may be no cloud-free pass for this exact spot — tap <b>Image quality</b> to allow cloudier scenes, try 📡 Radar, or pan slightly.';
     });
     satLayer.addTo(map);
     const labels={truecolor:'True-colour Sentinel-2. Real ground imagery.',iron:'Geology layer (highlights mineral/rock differences incl. iron). Ground-check.',clay:'SWIR layer — sensitive to clays / alteration minerals. Ground-check.',ndvi:'Vegetation index: low/bare = orange-ish, where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.',ironratio:'Iron-oxide ratio (B04/B02): bright = rusty, iron-stained ground & gossans — a gold/base-metal pathfinder. Ground-check.',ferrous:'Ferrous-iron ratio (B11/B08): bright = a different iron mineralogy; use alongside the oxide ratio.',alteration:'Alteration composite: false-colour combo where hydrothermally altered ground stands out. Reddish/yellow patches worth investigating. Ground-check.'};
@@ -1408,7 +1581,7 @@ async function testSatId(){
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
     '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=NATURAL-COLOR'+
     '&SRS=EPSG:4326&BBOX='+(c.lng-d)+','+(c.lat-d)+','+(c.lng+d)+','+(c.lat+d)+
-    '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC=80&TIME=2023-01-01/'+today;
+    '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC='+maxCC()+'&TIME=2023-01-01/'+today;
   try{
     const res=await fetch(url);
     const ct=res.headers.get('content-type')||'';
@@ -1432,7 +1605,7 @@ function pinIcon(n,flag){return L.divIcon({html:'<div class="pin-num'+(flag?' fl
 function refreshMarkers(){
   if(!markerLayer)return;markerLayer.clearLayers();
   samples.forEach(function(s){
-    if(s.lat==null)return;
+    if(s.lat==null||s.deleted)return;
     const num=samples.length-samples.indexOf(s);
     const m=L.marker([s.lat,s.lon],{icon:pinIcon(num,s.flag)});
     m.bindPopup('<b>'+s.id+'</b><br>'+s.mat+' · '+s.depth+'<br>'+(s.tags.join(', ')||'—'));
@@ -1440,7 +1613,7 @@ function refreshMarkers(){
   });
 }
 function fitPins(){
-  const g=samples.filter(function(s){return s.lat!=null;});if(!map)return;
+  const g=samples.filter(function(s){return s.lat!=null&&!s.deleted;});if(!map)return;
   if(!g.length){toast('No geolocated samples yet');return;}
   if(g.length===1){map.setView([g[0].lat,g[0].lon],15);return;}
   map.fitBounds(L.latLngBounds(g.map(function(s){return[s.lat,s.lon];})).pad(0.2));
@@ -1492,12 +1665,12 @@ let navTargetSample=null,navWatchId=null,curHeading=0,curPos=null;
 function rebuildNavOptions(){
   const sel=document.getElementById('navTarget');const prev=sel.value;
   sel.innerHTML='<option value="">— choose a geolocated sample —</option>';
-  samples.forEach(function(s){if(s.lat==null)return;
+  samples.forEach(function(s){if(s.lat==null||s.deleted)return;
     const o=document.createElement('option');o.value=s.id+'|'+s.t;o.textContent=s.id+(s.flag?' ★':'')+' · '+s.mat;sel.appendChild(o);});
   sel.value=prev;
 }
 function navigateTo(id){
-  const s=samples.filter(function(x){return x.id===id&&x.lat!=null;})[0];
+  const s=samples.filter(function(x){return x.id===id&&x.lat!=null&&!x.deleted;})[0];
   if(!s)return toast('That sample has no GPS fix',true);
   nav('nav',document.querySelector('nav button[data-v=nav]'));
   document.getElementById('navTarget').value=s.id+'|'+s.t;setNavTarget();
@@ -1770,9 +1943,10 @@ function exportTrail(){
   dl('prospectfield_trail_'+Date.now()+'.gpx',gpx,'application/gpx+xml');
   toast('Trail exported as GPX');
 }
-function clearTrail(){
+async function clearTrail(){
   if(!trail.pts.length)return toast('No trail to clear',true);
-  if(!confirm('Clear the whole breadcrumb trail? This cannot be undone.'))return;
+  const ok=await askConfirm('Clear the trail?','This deletes your whole breadcrumb path. If you are still in the field you will lose your way back. Export a GPX first if you want to keep it.','Clear trail');
+  if(!ok)return;
   trail.active=false;stopTrackWatch();
   if(trailLayer&&map){map.removeLayer(trailLayer);trailLayer=null;}
   if(trailStartMarker&&map){map.removeLayer(trailStartMarker);trailStartMarker=null;}
@@ -1798,7 +1972,7 @@ let tTimer;function toast(msg,warn){const t=document.getElementById('toast');t.t
 
 /* ============ init ============ */
 idbOpen().then(function(){renderLog();}).catch(function(){toast('Photo database unavailable',true);});
-renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();rebuildNavOptions();initBattery();
+renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();rebuildNavOptions();initBattery();
 
 if('serviceWorker' in navigator){
   const sw="const TILES='pf-tiles';"+
