@@ -37,6 +37,7 @@ main{padding:16px}
 .card h2{font-size:15px;color:var(--ore);margin-bottom:4px;display:flex;align-items:center;gap:8px}
 .card .hint{font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.45}
 label{display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
+.fieldhead{display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
 input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ore2)}
 textarea{resize:vertical;min-height:70px}
@@ -154,6 +155,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
 .tile-head.closed .caret{transform:rotate(-90deg)}
 .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
 .tile-grid.hidden{display:none}
+.hidden{display:none}
 .tile{min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;gap:6px;padding:12px 10px;border-radius:14px;
   background:var(--bg2);border:2px solid var(--line);color:var(--ink2);
@@ -197,7 +199,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
   <div class="card">
     <h2>🎯 Site potential estimator</h2>
     <p class="hint">A field checklist, not an assay. Tick surface indicators you actually observe. Score suggests whether a spot is worth a proper sample + lab test — it never confirms a deposit.</p>
-    <label>What are you scouting for?</label>
+    <label for="target">What are you scouting for?</label>
     <select id="target" aria-label="What are you scouting for" onchange="renderIndicators()" style="display:none">
       <option value="gold">Gold (placer / lode)</option>
       <option value="ree">Rare earth elements (REE)</option>
@@ -233,7 +235,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <div class="meta" id="capMeta">no fix yet</div>
     </div>
     <button class="btn ghost sm" style="width:100%" onclick="captureGPS()">📍 Locate me (GPS)</button>
-    <label>Sample ID</label>
+    <label for="sId">Sample ID</label>
     <input id="sId" aria-label="Sample ID" placeholder="auto — e.g. SMP-001">
     <select id="sMat" aria-label="Sample material type" style="display:none"><option>Stream sediment</option><option>Soil</option><option>Rock / outcrop</option><option>Panned concentrate</option><option>Float / loose rock</option><option>Weathered laterite</option></select>
     <select id="sDepth" aria-label="Sample depth" style="display:none"><option>Surface</option><option>0–20 cm</option><option>20–50 cm</option><option>&gt;50 cm</option></select>
@@ -247,9 +249,9 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <span>Depth <b id="depCurrent">Surface</b></span><span class="caret">▾</span>
     </div>
     <div class="tile-grid" id="depWrap"></div>
-    <label>Field observations</label>
+    <label for="sNote">Field observations</label>
     <textarea id="sNote" aria-label="Field observations" placeholder="e.g. reddish iron staining on quartz vein, gossan-like; panned 3 fine gold colours"></textarea>
-    <label>Photos <span style="color:var(--ink3);font-weight:400">(stored in device database — no fixed limit)</span></label>
+    <label for="sPhoto">Photos <span style="color:var(--ink3);font-weight:400">(stored in device database — no fixed limit)</span></label>
     <input type="file" id="sPhoto" aria-label="Add photos of this sample" accept="image/*" capture="environment" multiple onchange="addPhotos(this)" style="padding:9px">
     <div class="thumbstrip" id="thumbs"></div>
     <div class="tile-head" id="tagHead" onclick="toggleSection('sTags','tagHead')">
@@ -271,11 +273,15 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     </div>
     <div id="map"></div>
     <div class="sat-box">
-      <label style="margin-top:0">🛰️ Satellite view — works right away <span style="color:var(--ink3);font-weight:400">(needs signal)</span></label>
-      <p class="hint" style="margin-bottom:8px">No setup needed. Shows real satellite imagery of the ground so you can spot bare/rocky areas, rivers, tracks, old workings and access routes before you walk in. The reddish-ground filter is a rough hint toward possible iron staining — not proof.</p>
-      <div class="tile-grid" id="satBasicChips"></div>
+      <div class="tile-head" id="satBasicHead" onclick="toggleSection('satBasicWrap','satBasicHead')">
+        <span>🛰️ Satellite view <b id="satBasicCurrent">Off</b></span><span class="caret">▾</span>
+      </div>
+      <div id="satBasicWrap">
+        <p class="hint" style="margin-bottom:8px">No setup needed. Shows real satellite imagery of the ground so you can spot bare/rocky areas, rivers, tracks, old workings and access routes before you walk in. The reddish-ground filter is a rough hint toward possible iron staining — not proof.</p>
+        <div class="tile-grid" id="satBasicChips"></div>
+      </div>
 
-      <details style="margin-top:14px;background:transparent;border:1px dashed var(--ore2);padding:12px 13px">
+      <details id="advDetails" style="margin-top:14px;background:transparent;border:1px dashed var(--ore2);padding:12px 13px">
         <summary style="color:var(--ore)">🔬 Advanced analysis layers (one-time setup)</summary>
         <p class="hint" style="margin:10px 0 8px">These do real satellite band-math — genuine iron, clay/alteration and cloud-proof radar analysis. They need a free Copernicus instance ID (see the Guide tab for step-by-step). Paste it once and it's saved on your phone.</p>
         <input id="satId" aria-label="Copernicus instance ID" placeholder="paste Copernicus instance ID" onchange="saveSatId()" style="margin-bottom:10px">
@@ -284,8 +290,17 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       </details>
       <div class="hint" id="satMsg" style="margin-top:10px"></div>
     </div>
+    <div class="sat-box" id="scanBox">
+      <div class="fieldhead" style="margin-top:0">🎯 Find targets in this view</div>
+      <p class="hint" style="margin-bottom:8px">Analyses the satellite layer you're viewing and marks the strongest patches with pins, boxes and GPS coordinates — so you know where to walk before you set off. Pick an analysis layer first (Iron ratio, Alteration, Clay), then scan.</p>
+      <button class="btn ghost sm" style="width:100%" onclick="scanTargets()" id="scanBtn">🔍 Scan this view for targets</button>
+      <div class="dlbar" id="scanBar"><i id="scanFill"></i></div>
+      <div class="hint" id="scanMsg" style="margin-top:8px"></div>
+      <div id="scanResults"></div>
+    </div>
+
     <div style="margin-top:14px">
-      <label style="margin-top:0">Pre-download this region for offline use</label>
+      <div class="fieldhead" style="margin-top:0">Pre-download this region for offline use</div>
       <p class="hint" style="margin-bottom:8px">On wifi before heading out: pan/zoom to your licence block, then download. Grabs tiles for the current view across working zoom levels.</p>
       <button class="btn ghost sm" style="width:100%" onclick="downloadRegion()" id="dlBtn">⬇ Download current view for offline</button>
       <div class="dlbar" id="dlBar"><i id="dlFill"></i></div>
@@ -298,7 +313,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
   <div class="card">
     <h2>🧭 Walk back to a pin</h2>
     <p class="hint">Pick a saved sample and follow the arrow. It points from where you're standing toward that pin, with live distance. Hold the phone flat.</p>
-    <label>Target sample</label>
+    <label for="navTarget">Target sample</label>
     <select id="navTarget" aria-label="Choose a sample to navigate to" onchange="setNavTarget()"><option value="">— choose a geolocated sample —</option></select>
     <div class="compass-wrap">
       <div class="compass" id="compass">
@@ -359,10 +374,10 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <h3 style="font-size:14px;color:var(--ore);margin-bottom:4px;display:flex;align-items:center;gap:7px">📲 Tell someone where you are</h3>
       <p class="hint" style="margin-bottom:10px">Set this before you head in. It sends your start point and return time to a trusted person, so someone knows where to send help if you're overdue. The most important safety step in this whole app.</p>
       <div class="row">
-        <div><label style="margin-top:0">Their WhatsApp number</label><input id="scNum" aria-label="Emergency contact WhatsApp number" placeholder="e.g. 60123456789" inputmode="tel" onchange="saveShareCfg()"></div>
-        <div><label style="margin-top:0">Their name</label><input id="scName" aria-label="Emergency contact name" placeholder="e.g. Ah Hock" onchange="saveShareCfg()"></div>
+        <div><label for="scNum" style="margin-top:0">Their WhatsApp number</label><input id="scNum" aria-label="Emergency contact WhatsApp number" placeholder="e.g. 60123456789" inputmode="tel" onchange="saveShareCfg()"></div>
+        <div><label for="scName" style="margin-top:0">Their name</label><input id="scName" aria-label="Emergency contact name" placeholder="e.g. Ah Hock" onchange="saveShareCfg()"></div>
       </div>
-      <label>Expected return time</label>
+      <label for="scReturn">Expected return time</label>
       <input id="scReturn" aria-label="Expected return time" type="time" onchange="saveShareCfg()">
       <button class="btn" style="margin-top:14px;background:linear-gradient(180deg,#25d366,#1da851);color:#04120a" onclick="shareHeadingIn()">🟢 Send “heading in” to WhatsApp</button>
       <div class="row" style="margin-top:10px">
@@ -449,43 +464,57 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <details><summary>②b The three custom scripts (copy these into Copernicus)</summary>
       <p>Paste each into its matching layer's Custom script box in the Configuration Utility.</p>
       <p style="margin-top:10px"><b>IRON-RATIO</b> — bright red = rusty, iron-stained ground &amp; gossans</p>
-      <textarea id="scriptIron" aria-label="IRON-RATIO custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:110px">//VERSION=3
+      <textarea id="scriptIron" aria-label="IRON-RATIO custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:170px">//VERSION=3
 function setup() {
-  return { input: ["B02","B04"], output: { bands: 3 } };
+  return { input: ["B02","B04","B08","B11"], output: { bands: 3 } };
 }
 function evaluatePixel(s) {
+  // mask vegetation - it drowns the geology signal in the tropics
+  let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 1e-6);
+  if (ndvi > 0.35) return [0.10, 0.13, 0.10];   // jungle = dark grey-green
+  if (s.B11 < 0.03) return [0.05, 0.08, 0.14];  // water = dark blue
+  // iron oxide ratio on exposed ground only, tight stretch
   let r = s.B04 / (s.B02 + 1e-6);
-  let v = (r - 0.9) / 1.6;
+  let v = (r - 1.05) / 0.85;
   v = Math.max(0, Math.min(1, v));
-  return [0.15 + 0.85*v, 0.15*(1-v), 0.1*(1-v)];
+  v = Math.pow(v, 0.7);
+  return [0.10 + 0.90*v, 0.35*(1-v), 0.30*(1-v)];
 }</textarea>
       <button class="btn ghost sm" style="width:100%;margin-top:6px" onclick="copyScript('scriptIron',this)">📋 Copy IRON-RATIO script</button>
       <p style="margin-top:10px"><b>FERROUS-IRON</b> — a second, different iron signature</p>
-      <textarea id="scriptFerrous" aria-label="FERROUS-IRON custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:110px">//VERSION=3
+      <textarea id="scriptFerrous" aria-label="FERROUS-IRON custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:170px">//VERSION=3
 function setup() {
-  return { input: ["B08","B11"], output: { bands: 3 } };
+  return { input: ["B04","B08","B11"], output: { bands: 3 } };
 }
 function evaluatePixel(s) {
+  let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 1e-6);
+  if (ndvi > 0.35) return [0.10, 0.13, 0.10];
+  if (s.B11 < 0.03) return [0.05, 0.08, 0.14];
   let r = s.B11 / (s.B08 + 1e-6);
-  let v = (r - 0.7) / 1.3;
+  let v = (r - 0.85) / 0.75;
   v = Math.max(0, Math.min(1, v));
-  return [0.1 + 0.6*v, 0.2 + 0.6*v, 0.15*(1-v)];
+  v = Math.pow(v, 0.7);
+  return [0.10 + 0.85*v, 0.25 + 0.65*v, 0.12*(1-v)];
 }</textarea>
       <button class="btn ghost sm" style="width:100%;margin-top:6px" onclick="copyScript('scriptFerrous',this)">📋 Copy FERROUS-IRON script</button>
       <p style="margin-top:10px"><b>ALTERATION</b> — red=iron, green=clay, blue=ferrous. Reddish-yellow = iron+clay together, the classic alteration signature</p>
-      <textarea id="scriptAlter" aria-label="ALTERATION custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:130px">//VERSION=3
+      <textarea id="scriptAlter" aria-label="ALTERATION custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:200px">//VERSION=3
 function setup() {
   return { input: ["B02","B04","B08","B11","B12"], output: { bands: 3 } };
 }
 function evaluatePixel(s) {
-  let clay = s.B11 / (s.B12 + 1e-6);
-  let iron = s.B04 / (s.B02 + 1e-6);
-  let ferro = s.B11 / (s.B08 + 1e-6);
-  let n = x => Math.max(0, Math.min(1, x));
-  return [ n((iron-0.9)/1.6), n((clay-1.0)/0.5), n((ferro-0.7)/1.3) ];
+  let ndvi = (s.B08 - s.B04) / (s.B08 + s.B04 + 1e-6);
+  if (ndvi > 0.35) return [0.10, 0.13, 0.10];
+  if (s.B11 < 0.03) return [0.05, 0.08, 0.14];
+  let n = function(x){ return Math.max(0, Math.min(1, Math.pow(Math.max(0,x), 0.7))); };
+  let iron  = n((s.B04/(s.B02+1e-6) - 1.05) / 0.85);
+  let clay  = n((s.B11/(s.B12+1e-6) - 1.02) / 0.35);
+  let ferro = n((s.B11/(s.B08+1e-6) - 0.85) / 0.75);
+  return [ 0.08 + 0.92*iron, 0.08 + 0.92*clay, 0.08 + 0.92*ferro ];
 }</textarea>
       <button class="btn ghost sm" style="width:100%;margin-top:6px" onclick="copyScript('scriptAlter',this)">📋 Copy ALTERATION script</button>
       <p style="margin-top:10px" class="hint">Tap a Copy button, then paste into the matching layer's Custom script box in Copernicus. (You can also tap a script box to select it manually.)</p>
+      <div class="callout" style="margin-top:10px"><b>Why these look clearer than plain band ratios.</b> In Malaysia jungle covers most ground, and vegetation reflects light in a way that makes a plain iron ratio glow reddish everywhere — the whole image turns to muddy mid-red haze and real targets disappear into it. These scripts <b>mask out vegetation and water first</b> (jungle renders flat dark grey-green, water dark blue) and colour only <b>exposed ground</b>, with a tighter contrast stretch. Targets stand out roughly a third more against the background.<br><br><b>Reading them:</b> dark grey-green = jungle, ignore it. Dark blue = water. Bright colour = exposed ground with a real signal. If almost the whole screen is dark, that area simply has no rock showing — try the Veg gaps layer to find where it does.</div>
     </details>
 
     <details><summary>③ At home on wifi: scout from space</summary><p>On the <b>Map</b> tab, pan to your partner's licence block. With the advanced layers on: <b>Iron</b> and <b>Clay</b> show possible targets, <b>Radar</b> shows faults through cloud, <b>Veg gaps</b> finds bare ground you can inspect. Note the promising spots. (No Copernicus ID yet? The plain satellite photo still helps you plan.)</p></details>
@@ -532,11 +561,16 @@ function evaluatePixel(s) {
     <b>Contact</b> — where two rock types meet; a favourable place for ore.<br>
     <b>Assay</b> — lab test measuring how much metal is in a sample.<br>
     <b>Placer</b> — metal concentrated in stream gravels by water.<br>
-    <b>Pathfinder</b> — an easy-to-spot clue that points to something harder to see.</p></details>
+    <b>Pathfinder</b> — an easy-to-spot clue that points to something harder to see.<br>
+    <b>Porphyry</b> — a large, lower-grade copper/gold system centred on an intrusion, with wide alteration around it.<br>
+    <b>Skarn</b> — ore formed where an intrusion reacts with limestone.<br>
+    <b>Stockwork</b> — a dense network of thin veinlets rather than one big vein.</p></details>
+
+    <details><summary>🌍 Using this app outside Malaysia</summary><p>Everything functional works <b>anywhere in the world</b>: GPS, sampling, photos, offline maps, breadcrumb trail, compass, safety check-in, and all satellite layers (Sentinel-1 and Sentinel-2 cover the whole planet).<br><br>The geology basics above are universal too — gossans, veins, contacts and alteration mean the same thing everywhere.<br><br>What is <b>Malaysia-specific</b> and would need adapting elsewhere: the regional examples (Central Gold Belt, Kinta Valley, Bau, Mamut), the emphasis on tin and tropical laterite, and above all the <b>licensing rules</b> — mining law differs completely between countries. Sections marked "region-specific" are the ones to treat with care abroad.</p></details>
   </div>
 
   <div class="card">
-    <h2>📖 Malaysian field indicators</h2>
+    <h2>📖 Malaysian field indicators <span style="font-size:11px;color:var(--ink3);font-weight:400">— region-specific</span></h2>
     <p class="hint">Surface clues and the minerals they point to in Malaysian geology.</p>
     <div class="kb"><h3>Gossan / iron capping</h3><div class="mineral">→ gold, base metals</div><p>Rusty red-brown weathered rock (oxidised sulphides). Classic pathfinder over buried mineralisation. Sample it and nearby quartz veins.<br><b>Tell it from ordinary rust:</b> a real gossan has a spongy <b>boxwork</b> texture — small cavities left where sulphide crystals dissolved — and usually sits with quartz veining. Uniform red-brown over a whole slope is normally just laterite soil.</p></div>
     <div class="kb"><h3>Quartz veins at granite/schist contact</h3><div class="mineral">→ lode gold, tungsten</div><p>The Central Gold Belt (Pahang–Kelantan–Terengganu) hosts gold in quartz veins near granite margins. Look for milky-grey vuggy quartz.</p></div>
@@ -544,6 +578,7 @@ function evaluatePixel(s) {
     <div class="kb"><h3>Weathered granite / laterite</h3><div class="mineral">→ ion-adsorption REE</div><p>Deeply weathered granite can concentrate rare earths in clay. No reliable visual signature — sample clay-rich saprolite and assay.</p></div>
     <div class="kb"><h3>Limestone / marble contacts (skarn)</h3><div class="mineral">→ iron, copper, gems</div><p>Intrusion–limestone contacts (Kinta Valley, Langkawi) can host skarn minerals and corundum.</p></div>
     <div class="kb"><h3>Galena & sulphide veins</h3><div class="mineral">→ silver (with lead & zinc)</div><p>Heavy silvery-grey galena that breaks into cubes is the main silver carrier — silver is rarely visible metal. Look for quartz veins speckled with metallic sulphides, banded/crustiform textures, and black manganese staining. In Malaysia silver is usually a byproduct of polymetallic systems, not a target on its own.</p></div>
+    <div class="kb"><h3>Green & blue staining</h3><div class="mineral">→ copper (porphyry or skarn)</div><p>Vivid green malachite and deep blue azurite are weathered copper — the most visible of all metal indicators, often spottable from metres away. Look also for brassy chalcopyrite, iridescent "peacock ore" bornite, and stockwork (dense networks of thin quartz veinlets).<br><b>Scale matters:</b> most copper is in large, low-grade porphyry systems, so a wide alteration zone with disseminated sulphides beats one rich-looking rock. Mamut in Sabah was this type.</p></div>
     <div class="callout" style="margin-top:6px"><b>⚠ Reality check.</b> None of these confirm an economic deposit. They tell you where to take a proper sample for lab geochemistry (ICP / fire assay). Field work narrows targets — assays and drilling prove them.</div>
   </div>
   <div class="card">
@@ -558,8 +593,31 @@ function evaluatePixel(s) {
     <div class="callout" style="margin-top:6px"><b>The strongest target</b> is where several layers agree: an iron + clay patch, on or near a radar fault line, on bare ground. That's the spot to sample first. At 20 m resolution these find districts, not single veins — and only a lab assay confirms anything.</div>
   </div>
   <div class="card">
+    <h2>🗺️ Malaysia's mineral regions <span style="font-size:11px;color:var(--ink3);font-weight:400">— region-specific</span></h2>
+    <p class="hint">Where things have been found before, and what kind of geology to expect. Peninsular and East Malaysia are genuinely different — what you look for depends on where you are.</p>
+
+    <details open><summary>Central Gold Belt — Kelantan, Terengganu, Pahang</summary><p>A north–south belt down the eastern side of the Peninsula, and Malaysia's main gold region. Gold sits in <b>quartz veins</b> formed where hot fluids travelled along faults near granite margins.<br><br>Known operations include <b>Penjom</b> (Pahang), <b>Selinsing</b>, and <b>Raub</b>, which has been mined since colonial times.<br><br><b>Look for:</b> milky-grey quartz veins (especially vuggy or rusty ones), gossans, sulphide minerals, and granite–schist contacts.</p></details>
+
+    <details><summary>Kinta Valley — Perak</summary><p>The historic tin heartland around Ipoh, once among the richest tin fields on Earth. Tin came from <b>cassiterite</b> in alluvial gravels and from granite–limestone contacts. The famous limestone hills around Ipoh are part of this same geology.<br><br><b>Still relevant:</b> old tin tailings can carry <b>monazite</b>, a rare-earth mineral that early miners discarded as waste.<br><br><b>Look for:</b> black heavy sand, cassiterite grains, alluvial gravels, old workings and tailings.</p></details>
+
+    <details><summary>Langkawi & limestone country — Kedah, Perlis</summary><p>Limestone and marble in contact with intrusive rock — the <b>skarn</b> setting. Contact zones here can host iron, copper and occasionally gem minerals such as corundum.<br><br><b>Look for:</b> the boundary where limestone meets igneous rock, unusual mineral growth along it, well-formed crystals.</p></details>
+
+    <details><summary>Sarawak — Bau gold district and beyond</summary><p>East Malaysia has quite different geology from the Peninsula, and a real gold history. <b>Bau</b>, near Kuching, has been mined since the 1800s. Mineralisation is associated with <b>intrusions into limestone and sedimentary rock</b> — skarn and Carlin-style systems, not the granite-hosted quartz veins of the Peninsula.<br><br>Sarawak sits on younger, more tectonically complex terrain from Borneo's formation, so the deposit types differ.<br><br><b>Look for:</b> intrusion–limestone contacts, altered and bleached rock, gossans, sulphides, quartz veining near intrusive bodies.</p></details>
+
+    <details><summary>Sabah — Mamut and porphyry country</summary><p><b>Mamut</b>, near Mount Kinabalu, was a large <b>copper–gold porphyry</b> deposit mined for decades until the 1990s. Porphyry systems are different again: large, lower-grade bodies centred on an intrusion, with broad zones of alteration around them.<br><br><b>Look for:</b> extensive alteration zones (often visible on the satellite clay/alteration layers), copper staining (green/blue), disseminated sulphides rather than narrow veins, and stockwork — dense networks of thin quartz veinlets.</p></details>
+
+    <details><summary>⚠ Why this matters for what you search</summary><p>An explorer in Pahang and one in Sarawak should be looking for different things.<br><br>• <b>Peninsula</b> — tin-granite province. Quartz veins near granite, alluvial tin, laterite. Narrow, higher-grade vein targets.<br>
+    • <b>East Malaysia</b> — porphyry and skarn country. Broad alteration zones, intrusion contacts, copper–gold associations. Larger, lower-grade targets.<br><br>
+    The satellite layers help in both, but you'd read them differently: narrow lineaments and small iron patches on the Peninsula, wide alteration halos in Sabah/Sarawak.</p></details>
+  </div>
+
+  <div class="card">
     <h2>⚖️ Before you dig — protocol</h2>
-    <details><summary>Licensing & land</summary><p>Confirm your partner's licence covers the exact block you're on. Mineral rights sit with state authorities (State Director of Lands & Mines / JMG). Sampling outside the licensed area can be an offence.</p></details>
+    <details><summary>Licensing & land</summary><p>Confirm your partner's licence covers the exact block you're on. Mineral rights sit with <b>state</b> authorities, and the body differs by state:<br><br>
+    • <b>Peninsular Malaysia</b> — State Director of Lands & Mines, with JMG (Jabatan Mineral dan Geosains) as the technical department.<br>
+    • <b>Sarawak</b> — has its own mineral legislation and land administration; permits go through Sarawak state authorities, not the federal route.<br>
+    • <b>Sabah</b> — likewise administers its own mineral rights through state bodies.<br><br>
+    Sampling outside the licensed area can be an offence. Because East Malaysia's rules genuinely differ from the Peninsula's, verify locally rather than assuming — and confirm the current requirements with the relevant state department before doing anything beyond looking.</p></details>
     <details><summary>Keeping it quiet, safely</summary><p>Solo recon is fine for finding targets, but tell one trusted person your daily route and expected return. Remote sites, rivers and old workings are genuinely dangerous — discretion should never mean nobody knows where you are.</p></details>
     <details><summary>When you find something</summary><p>Don't over-collect or start earthworks. Record location + photos, take a representative sample, send to an accredited lab (JMG or commercial). Positive results → bring in a licensed exploration geologist and follow official reporting with your partner.</p></details>
     <details><summary>Old mine hazards</summary><p>Abandoned tin/gold workings have collapse, deep water, and sometimes mercury/arsenic. Don't enter shafts or adits alone.</p></details>
@@ -616,7 +674,8 @@ const IND={
   tin:[['Black heavy sand',4],['Cassiterite grains',4],['Alluvial gravel in valley',3],['Granite source upstream',2],['Old tin workings',2]],
   ironmang:[['Heavy dark/rusty rock',3],['Laterite capping',3],['Black manganese coating',3],['Magnetic response',3],['Banded outcrop',2]],
   gem:[['Marble / limestone contact',3],['Corundum crystals',4],['Alluvial gem gravel',3],['Pegmatite',2],['Well-formed crystals',2]],
-  silver:[['Galena (lead sulphide)',4],['Sulphide-rich quartz vein',3],['Sphalerite (zinc sulphide)',3],['Banded / crustiform vein',3],['Gossan / iron staining',2],['Horn silver / sooty coating',3],['Manganese-rich coating',2],['Barite present',2]]
+  silver:[['Galena (lead sulphide)',4],['Sulphide-rich quartz vein',3],['Sphalerite (zinc sulphide)',3],['Banded / crustiform vein',3],['Gossan / iron staining',2],['Horn silver / sooty coating',3],['Manganese-rich coating',2],['Barite present',2]],
+  copper:[['Green malachite staining',4],['Blue azurite',3],['Chalcopyrite (brassy)',4],['Bornite (peacock ore)',3],['Stockwork veinlets',3],['Broad alteration zone',3],['Intrusion contact',2],['Gossan / iron staining',2],['Disseminated sulphides',3]]
 };
 const QUICKTAGS=['Gossan','Quartz vein','Black sand','Gold colour','Laterite','Sulphides','Magnetic','Old working','Contact zone'];
 let picked=new Set(),sampleTags=new Set(),pendingPhotos=[];
@@ -628,9 +687,10 @@ const TARGETS=[
   ['tin','Tin','cassiterite','⚫'],
   ['ironmang','Iron / Mn','oxides','🧱'],
   ['gem','Gemstones','corundum, quartz','💎'],
-  ['silver','Silver','in sulphides','🥈']
+  ['silver','Silver','in sulphides','🥈'],
+  ['copper','Copper','porphyry / skarn','🟢']
 ];
-const INDICON={'Quartz veins':'🤍','Gossan / iron staining':'🟥','Panned gold colours':'✨','Black heavy sand':'⚫','Granite–schist contact':'🧱','Old workings nearby':'🕳️','Sulphide minerals':'🟨','Weathered granite/laterite':'🟫','Monazite in black sand':'⚫','Clay-rich saprolite':'🟤','Elevated radiometrics*':'☢️','Carbonatite / alkaline rock':'🪨','Old tin tailings':'⛏️','Cassiterite grains':'🔘','Alluvial gravel in valley':'🌊','Granite source upstream':'⛰️','Old tin workings':'🕳️','Heavy dark/rusty rock':'🟥','Laterite capping':'🟫','Black manganese coating':'⬛','Magnetic response':'🧲','Banded outcrop':'📊','Marble / limestone contact':'⬜','Corundum crystals':'💎','Alluvial gem gravel':'🌊','Pegmatite':'🪨','Well-formed crystals':'🔷','Galena (lead sulphide)':'🔳','Sulphide-rich quartz vein':'🟨','Sphalerite (zinc sulphide)':'🟤','Banded / crustiform vein':'🎯','Horn silver / sooty coating':'⬛','Manganese-rich coating':'⚫','Barite present':'⬜'};
+const INDICON={'Quartz veins':'🤍','Gossan / iron staining':'🟥','Panned gold colours':'✨','Black heavy sand':'⚫','Granite–schist contact':'🧱','Old workings nearby':'🕳️','Sulphide minerals':'🟨','Weathered granite/laterite':'🟫','Monazite in black sand':'⚫','Clay-rich saprolite':'🟤','Elevated radiometrics*':'☢️','Carbonatite / alkaline rock':'🪨','Old tin tailings':'⛏️','Cassiterite grains':'🔘','Alluvial gravel in valley':'🌊','Granite source upstream':'⛰️','Old tin workings':'🕳️','Heavy dark/rusty rock':'🟥','Laterite capping':'🟫','Black manganese coating':'⬛','Magnetic response':'🧲','Banded outcrop':'📊','Marble / limestone contact':'⬜','Corundum crystals':'💎','Alluvial gem gravel':'🌊','Pegmatite':'🪨','Well-formed crystals':'🔷','Galena (lead sulphide)':'🔳','Sulphide-rich quartz vein':'🟨','Sphalerite (zinc sulphide)':'🟤','Banded / crustiform vein':'🎯','Horn silver / sooty coating':'⬛','Manganese-rich coating':'⚫','Barite present':'⬜','Green malachite staining':'🟩','Blue azurite':'🟦','Chalcopyrite (brassy)':'🟨','Bornite (peacock ore)':'🟣','Stockwork veinlets':'🕸️','Broad alteration zone':'🌫️','Intrusion contact':'🧱','Disseminated sulphides':'✴️'};
 const TAGICON={'Gossan':'🟥','Quartz vein':'🤍','Black sand':'⚫','Gold colour':'✨','Laterite':'🟫','Sulphides':'🟨','Magnetic':'🧲','Old working':'🕳️','Contact zone':'🧱'};
 
 /* Plain-language field definitions — what it is, how to spot it, why it matters */
@@ -697,7 +757,15 @@ const DEFS={
  'Banded / crustiform vein':'Quartz showing fine layers, bands or crusts built up in stages rather than one solid mass. This texture is the hallmark of epithermal veins — the low-temperature systems that host most of the world\'s silver.',
  'Horn silver / sooty coating':'Secondary silver minerals in the weathered zone: waxy grey-green "horn silver" (cerargyrite), or sooty black coatings (acanthite). Uncommon but a direct sign of silver where present.',
  'Manganese-rich coating':'Black sooty or dendritic manganese films on rock surfaces. In oxidised zones silver frequently associates with manganese oxides, so heavy black staining on a sulphide-bearing vein is worth sampling.',
- 'Barite present':'A pale white to cream mineral that feels unusually heavy for its light colour. A common gangue mineral in silver-bearing veins — not valuable itself, but a useful marker of the right vein system.'
+ 'Barite present':'A pale white to cream mineral that feels unusually heavy for its light colour. A common gangue mineral in silver-bearing veins — not valuable itself, but a useful marker of the right vein system.',
+ 'Green malachite staining':'Vivid green crusts, films or stains on rock. This is copper carbonate, formed where copper minerals weather at surface — the classic and most visible copper indicator. Often spottable from several metres away, which makes copper easier to find than gold.',
+ 'Blue azurite':'Deep blue mineral, usually found alongside malachite. Same origin — weathered copper — and just as reliable a pointer. Blue and green together on the same rock is a strong copper signal.',
+ 'Chalcopyrite (brassy)':'The main copper ore mineral: brassy golden metallic, similar to pyrite but slightly softer and more golden, sometimes with a faint iridescent tarnish. Scratch test: chalcopyrite is soft enough to mark with a knife, pyrite is not.',
+ 'Bornite (peacock ore)':'Copper-iron sulphide with an unmistakable iridescent purple-blue tarnish, like oil on water. Fresh surfaces are bronze. Distinctive enough that once you have seen it you will not mistake it.',
+ 'Stockwork veinlets':'A dense criss-crossing network of many thin quartz veinlets rather than one big vein. A hallmark of porphyry systems — the rock looks shattered and healed with quartz threads throughout.',
+ 'Broad alteration zone':'A wide area — often hundreds of metres — where the rock has been chemically changed by hot fluids: paler, clay-rich, bleached or crumbly compared with fresh rock nearby. Porphyry systems create large haloes like this, which is why the satellite alteration layers help for copper.',
+ 'Intrusion contact':'Where an igneous intrusion meets the surrounding rock, especially limestone. Copper skarn deposits form right at this junction, so trace the boundary and sample along it.',
+ 'Disseminated sulphides':'Fine metallic grains scattered evenly through the rock rather than concentrated in a vein. Typical of porphyry copper: lower grade but spread over a very large volume. Look closely at fresh broken surfaces for a fine sparkle.'
 };
 
 /* Copy an evalscript to the clipboard, with a fallback for browsers that block the API */
@@ -767,7 +835,8 @@ function renderTargets(){
 const TARGETNOTES={
   silver:'<b>⚠ Set expectations for silver.</b> Silver is almost never found as visible metal you can pan or spot by eye — it hides inside sulphide minerals, mainly galena. So you are really hunting lead–zinc sulphide systems, and only a lab assay will tell you how much silver is in them. In Malaysia especially, silver is typically a <b>byproduct</b> of polymetallic and tin-related systems rather than a standalone target, so don\'t expect dedicated silver ground. Treat a good score here as "worth assaying for silver alongside lead and zinc", not "found silver".',
   ree:'<b>⚠ Set expectations for rare earths.</b> REEs have <b>no visible signature</b> — you cannot see, pan or identify them by eye. The indicators here only tell you the ground is the right <i>type</i> to host them. Confirmation requires a lab assay, and economics depend on which specific rare earths are present, not just their total.',
-  gem:'<b>⚠ Set expectations for gemstones.</b> Most crystals you find will be common minerals, not gem-quality. Value depends heavily on clarity, colour and size, so a positive find still needs an experienced gemmologist to judge whether it is worth anything.'
+  gem:'<b>⚠ Set expectations for gemstones.</b> Most crystals you find will be common minerals, not gem-quality. Value depends heavily on clarity, colour and size, so a positive find still needs an experienced gemmologist to judge whether it is worth anything.',
+  copper:'<b>ℹ Good news and a caution for copper.</b> Copper is the friendliest target for a beginner because its weathering products are <b>brightly coloured</b> — green malachite and blue azurite are visible from metres away, unlike gold which hides. But note the scale: most copper comes from <b>porphyry</b> systems, which are large and <b>low grade</b>. That means a single rich-looking specimen matters far less than finding a <b>wide zone</b> of alteration and disseminated sulphides. You are hunting a big system, not a rich rock. Also, a bit of green staining is common and often trivial — it takes size and continuity to be worth anything.'
 };
 function renderTargetNote(t){
   const el=document.getElementById('targetNote');if(!el)return;
@@ -1035,7 +1104,7 @@ function initMap(){
 }
 
 /* ============ SATELLITE PROSPECTING LAYERS (Sentinel-2 via Copernicus WMS) ============ */
-let satLayer=null,satId=localStorage.getItem('pf_sat_id')||'';
+let satLayer=null,currentSatKind=null,satId=localStorage.getItem('pf_sat_id')||'';
 /* Documented Sentinel-2 band-math. Each returns an RGB image the eye can read. */
 const EVALSCRIPTS={
   truecolor:'//VERSION=3\nfunction setup(){return{input:["B02","B03","B04"],output:{bands:3}};}function evaluatePixel(s){return[2.5*s.B04,2.5*s.B03,2.5*s.B02];}',
@@ -1048,6 +1117,169 @@ const EVALSCRIPTS={
   // Sentinel-1 radar: VV/VH backscatter — texture & structural edges show through cloud. Bright lineaments often = faults/ridges controlling veins.
   radar:'//VERSION=3\nfunction setup(){return{input:["VV","VH"],output:{bands:3}};}function evaluatePixel(s){var vv=Math.max(0,Math.min(1,s.VV*2.2));var vh=Math.max(0,Math.min(1,s.VH*6.0));return[vv,0.5*vv+0.5*vh,vh];}'
 };
+/* ============ TARGET SCANNER ============
+   Fetches the active analysis layer as a single image over the current map bounds,
+   finds clusters of strong signal, and converts pixel positions back to GPS. */
+let scanLayerGroup=null,lastTargets=[];
+function scanTargets(){
+  const msg=document.getElementById('scanMsg'),btn=document.getElementById('scanBtn');
+  const res=document.getElementById('scanResults');res.innerHTML='';
+  if(!map){msg.textContent='Open the map first.';return;}
+  if(!satId){msg.innerHTML='⚠ Target scanning uses the analysis layers, which need your Copernicus instance ID (see above).';return;}
+  if(!currentSatKind||['off','esri','esrired','ndvi','truecolor'].indexOf(currentSatKind)>-1){
+    msg.innerHTML='⚠ Pick an analysis layer first — <b>Iron ratio</b>, <b>Alteration</b>, <b>Clay</b> or <b>Ferrous iron</b>. Those carry a mineral signal worth scanning.';return;
+  }
+  if(!navigator.onLine){msg.innerHTML='⚠ Scanning needs signal.';return;}
+  const b=map.getBounds();
+  const W=384,H=384;
+  const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
+  const today=new Date().toISOString().slice(0,10);
+  const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
+    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS='+(LAYERMAP[currentSatKind]||'IRON-RATIO')+
+    '&SRS=EPSG:4326&BBOX='+b.getWest()+','+b.getSouth()+','+b.getEast()+','+b.getNorth()+
+    '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC=80&TIME=2023-01-01/'+today;
+  const bar=document.getElementById('scanBar'),fill=document.getElementById('scanFill');
+  bar.classList.add('on');fill.style.width='25%';btn.style.opacity=.5;
+  msg.textContent='Fetching imagery for this view…';
+  fetch(url).then(function(r){
+    if(!r.ok)throw new Error('server returned '+r.status);
+    return r.blob();
+  }).then(function(blob){
+    fill.style.width='60%';msg.textContent='Analysing pixels…';
+    return createImageBitmap(blob);
+  }).then(function(bmp){
+    const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    const ctx=cv.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(bmp,0,0,W,H);
+    const data=ctx.getImageData(0,0,W,H).data;
+    fill.style.width='85%';
+    const targets=findClusters(data,W,H,b);
+    fill.style.width='100%';
+    lastTargets=targets;
+    drawTargets(targets);
+    renderTargetList(targets);
+    btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1200);
+  }).catch(function(e){
+    btn.style.opacity=1;bar.classList.remove('on');
+    msg.innerHTML='⚠ Couldn\'t scan: '+(e&&e.message?e.message:e)+'. If this says CORS or tainted, the imagery can\'t be read by the browser — pan/zoom and try again, or mark targets by eye.';
+  });
+}
+
+/* Score each pixel for "mineral interest", then group hot pixels into clusters */
+function findClusters(data,W,H,bounds){
+  const score=new Float32Array(W*H);
+  for(let i=0,p=0;i<data.length;i+=4,p++){
+    const r=data[i]/255,g=data[i+1]/255,bl=data[i+2]/255,a=data[i+3];
+    if(a<10){score[p]=0;continue;}
+    // our scripts render jungle dark grey-green and water dark blue — skip those
+    const dark=(r<0.22&&g<0.25&&bl<0.22);
+    const water=(bl>r&&bl>g&&bl<0.30);
+    if(dark||water){score[p]=0;continue;}
+    // interest = brightness of the mineral channels, favouring red/green agreement
+    const s=(r*0.55+g*0.35+bl*0.10)*(0.6+0.4*Math.min(r,g)/Math.max(0.001,Math.max(r,g)));
+    score[p]=s;
+  }
+  // threshold relative to the median of lit ground (not a tiny top percentile —
+  // in jungle scenes only ~1% of pixels are lit, so a high percentile finds only one patch)
+  const sorted=Array.from(score).filter(function(v){return v>0;}).sort(function(a,b){return b-a;});
+  if(sorted.length<120)return [];
+  const median=sorted[Math.floor(sorted.length*0.5)];
+  const thr=Math.max(0.28,median*0.72);
+  const hot=new Uint8Array(W*H);
+  for(let p=0;p<score.length;p++)hot[p]=score[p]>=thr?1:0;
+  // flood-fill into clusters
+  const seen=new Uint8Array(W*H),clusters=[];
+  const stack=[];
+  for(let p=0;p<hot.length;p++){
+    if(!hot[p]||seen[p])continue;
+    stack.length=0;stack.push(p);seen[p]=1;
+    let minx=W,maxx=0,miny=H,maxy=0,n=0,sum=0;
+    while(stack.length){
+      const q=stack.pop();const x=q%W,y=(q/W)|0;
+      n++;sum+=score[q];
+      if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
+      const nb=[q-1,q+1,q-W,q+W];
+      for(let k=0;k<4;k++){
+        const m=nb[k];if(m<0||m>=hot.length||seen[m]||!hot[m])continue;
+        if(k<2&&Math.abs((m%W)-x)>1)continue; // don't wrap rows
+        seen[m]=1;stack.push(m);
+      }
+    }
+    if(n<25)continue; // ignore specks — too small to be a real target
+    clusters.push({n:n,mean:sum/n,minx:minx,maxx:maxx,miny:miny,maxy:maxy});
+  }
+  // convert pixel boxes to lat/lon and rank
+  const W_lon=bounds.getEast()-bounds.getWest(), H_lat=bounds.getNorth()-bounds.getSouth();
+  const px2lon=function(x){return bounds.getWest()+(x/W)*W_lon;};
+  const py2lat=function(y){return bounds.getNorth()-(y/H)*H_lat;};
+  clusters.forEach(function(c){
+    c.west=px2lon(c.minx);c.east=px2lon(c.maxx+1);
+    c.north=py2lat(c.miny);c.south=py2lat(c.maxy+1);
+    c.lat=(c.north+c.south)/2;c.lon=(c.west+c.east)/2;
+    // approximate ground size in metres
+    c.wM=Math.round(haversine(c.lat,c.west,c.lat,c.east));
+    c.hM=Math.round(haversine(c.north,c.lon,c.south,c.lon));
+    c.strength=c.mean*Math.log(1+c.n); // size-weighted strength
+  });
+  clusters.sort(function(a,b){return b.strength-a.strength;});
+  return clusters.slice(0,8);
+}
+
+function drawTargets(targets){
+  if(scanLayerGroup){map.removeLayer(scanLayerGroup);scanLayerGroup=null;}
+  if(!targets.length)return;
+  scanLayerGroup=L.layerGroup().addTo(map);
+  targets.forEach(function(t,i){
+    const rect=L.rectangle([[t.south,t.west],[t.north,t.east]],
+      {color:'#d9a441',weight:2,fillColor:'#d9a441',fillOpacity:0.12});
+    rect.bindPopup('<b>Target '+(i+1)+'</b><br>'+t.lat.toFixed(5)+', '+t.lon.toFixed(5)+
+      '<br>approx '+t.wM+' × '+t.hM+' m<br>signal '+(t.mean*100).toFixed(0)+'%');
+    scanLayerGroup.addLayer(rect);
+    const mk=L.marker([t.lat,t.lon],{icon:L.divIcon({
+      html:'<div style="background:#d9a441;color:#1a1207;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #1a1207">T'+(i+1)+'</div>',
+      className:'',iconSize:[24,24],iconAnchor:[12,12]})});
+    scanLayerGroup.addLayer(mk);
+  });
+}
+
+function renderTargetList(targets){
+  const msg=document.getElementById('scanMsg'),res=document.getElementById('scanResults');
+  if(!targets.length){
+    msg.innerHTML='No strong patches found in this view. That usually means cloud, dense jungle, or genuinely nothing standing out — try panning, zooming out a little, or a different layer.';
+    return;
+  }
+  msg.innerHTML='Found <b>'+targets.length+'</b> patch'+(targets.length===1?'':'es')+' worth a look, strongest first. Boxes are drawn on the map.';
+  let html='';
+  targets.forEach(function(t,i){
+    html+='<div class="samp" style="margin-top:8px"><div class="top"><div>'+
+      '<span class="id">Target '+(i+1)+'</span>'+
+      '<div class="co mono">📍 '+t.lat.toFixed(5)+', '+t.lon.toFixed(5)+'</div>'+
+      '<div class="co">approx '+t.wM+' × '+t.hM+' m · signal '+(t.mean*100).toFixed(0)+'%</div>'+
+      '</div></div>'+
+      '<div class="acts"><button onclick="targetToSample('+i+')">➕ Save as sample</button>'+
+      '<button onclick="targetNavigate('+i+')">🧭 Navigate</button></div></div>';
+  });
+  res.innerHTML=html+'<div class="callout" style="margin-top:10px"><b>⚠ These are colour patches, not deposits.</b> The scan finds where the layer is strongest — that could be mineralisation, or bare red soil, a quarry, a roof or a riverbank. Use them to plan which spots to walk to, then confirm on the ground and by assay.</div>';
+}
+
+function targetToSample(i){
+  const t=lastTargets[i];if(!t)return;
+  const s={id:'TGT-'+String(samples.length+1).padStart(3,'0'),t:Date.now(),
+    lat:t.lat,lon:t.lon,acc:Math.max(t.wM,t.hM)/2,
+    mat:'Rock / outcrop',depth:'Surface',
+    note:'Satellite target from '+(currentSatKind||'analysis')+' layer. Approx '+t.wM+'×'+t.hM+' m, signal '+(t.mean*100).toFixed(0)+'%. Not yet ground-checked.',
+    tags:[],photoKeys:[],target:document.getElementById('target').value,flag:false};
+  samples.unshift(s);save();renderLog();refreshMarkers();rebuildNavOptions();
+  toast('Saved as '+s.id+' — visit and sample it');
+}
+function targetNavigate(i){
+  const t=lastTargets[i];if(!t)return;
+  navTargetSample={id:'Target '+(i+1),lat:t.lat,lon:t.lon,mat:'satellite target',flag:false,t:0};
+  nav('nav',document.querySelector('nav button[data-v=nav]'));
+  startNavWatch();updateNavReadout();
+  toast('Navigating to Target '+(i+1));
+}
+
 function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 function saveSatId(){satId=(document.getElementById('satId').value||'').trim();localStorage.setItem('pf_sat_id',satId);if(satId){document.getElementById('satMsg').textContent='✓ Instance ID saved. The advanced layers below will work now.';}}
 function restoreSatUI(){const el=document.getElementById('satId');if(el)el.value=satId;}
@@ -1075,6 +1307,12 @@ let satTilesBuilt=false;
 function renderSatTiles(){
   if(satTilesBuilt)return; // build once so the active selection isn't wiped on tab switch
   satTilesBuilt=true;
+  // returning user who already has an instance ID: open Advanced, collapse the instant view
+  if(satId){
+    const adv=document.getElementById('advDetails');if(adv)adv.setAttribute('open','');
+    const wrap=document.getElementById('satBasicWrap'),head=document.getElementById('satBasicHead');
+    if(wrap){wrap.classList.add('hidden');head.classList.add('closed');}
+  }
   [['satBasicChips',SATBASIC],['satChips',SATADV]].forEach(function(pair){
     const wrap=document.getElementById(pair[0]);if(!wrap)return;
     wrap.innerHTML='';
@@ -1088,8 +1326,19 @@ function renderSatTiles(){
 
 function setSatLayer(kind,chip){
   clearAllSatChips();chip.classList.add('on');
+  currentSatKind=kind;
   if(satLayer){map.removeLayer(satLayer);satLayer=null;}
   const msg=document.getElementById('satMsg');
+  // keep the collapsed header label in sync, and tidy the screen automatically
+  const basicNames={off:'Off',esri:'Satellite photo',esrired:'Reddish ground'};
+  const head=document.getElementById('satBasicHead'),wrap=document.getElementById('satBasicWrap'),cur=document.getElementById('satBasicCurrent');
+  if(basicNames[kind]){
+    if(cur)cur.textContent=basicNames[kind];
+  }else{
+    // an advanced layer is now active — collapse the instant section to free up the map
+    if(cur)cur.textContent='Off (advanced active)';
+    if(wrap&&!wrap.classList.contains('hidden')){wrap.classList.add('hidden');head.classList.add('closed');}
+  }
   if(kind==='off'){msg.textContent='';return;}
   if(!navigator.onLine){msg.textContent='⚠ You are offline — satellite view needs signal. Use it before heading in, then download the area for offline.';}
 
@@ -1125,7 +1374,7 @@ function setSatLayer(kind,chip){
     satLayer=L.tileLayer.wms(base,{
       layers:layerName,
       format:'image/png',transparent:true,version:'1.1.1',tileSize:512,
-      maxcc:isRadar?100:80,opacity:isRadar?0.85:0.9,minZoom:11,
+      maxcc:isRadar?100:80,opacity:1.0,minZoom:11,
       time:'2023-01-01/'+today,
       attribution:''
     });
