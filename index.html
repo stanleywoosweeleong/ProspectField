@@ -99,6 +99,8 @@ input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--li
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ore2)}
 textarea{resize:vertical;min-height:70px}
 .row{display:flex;gap:10px}
+/* On narrow phones a two-up row squeezes long labels into 3 lines; stack instead. */
+@media (max-width:430px){ .row.stack-sm{flex-direction:column;gap:0} }
 .row>*{flex:1}
 button{cursor:pointer;font-family:inherit;border:none}
 .btn{width:100%;background:linear-gradient(180deg,var(--ore),var(--ore2));color:#1a1207;font-weight:700;font-size:16px;padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(217,164,65,.28);letter-spacing:.3px}
@@ -154,7 +156,34 @@ nav button.on .ic{transform:translateY(-1px)}
 details{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:10px}
 summary{font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
 details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
+.map-wrap{position:relative}
 #map{height:60vh;min-height:340px;border-radius:14px;border:1px solid var(--line);background:#0d0a07;z-index:1}
+/* Scroll rails. On a phone the map fills the width, so a vertical swipe anywhere over
+   it pans the map and the page cannot be scrolled past. These narrow strips down each
+   edge let the page scroll normally.
+   Fully transparent: they exist only to catch touch. The target scanner analyses a
+   freshly fetched Copernicus image, never the rendered map, so they cannot affect it. */
+.map-wrap{position:relative}
+.map-rail{position:absolute;top:0;bottom:0;width:30px;z-index:5;
+  background:transparent;touch-action:pan-y;
+  -webkit-tap-highlight-color:transparent}
+.map-rail-r{right:0}
+/* Left rail starts below Leaflet's +/- zoom buttons so they stay tappable. */
+.map-rail-l{left:0;top:96px}
+/* On a wide screen the map is easy to scroll past, so the rails are unnecessary. */
+@media (min-width:900px){ .map-rail{display:none} }
+/* Scroll rails. On a phone the map fills the width, so a vertical swipe pans the map
+   instead of scrolling the page and the user gets stuck. These transparent strips down
+   each edge pass touches through to the page. Hidden on wide screens where the map
+   does not span the full width. */
+.map-rail{position:absolute;top:0;bottom:0;width:34px;z-index:500;
+  touch-action:pan-y;background:transparent;pointer-events:auto}
+.map-rail-l{left:0;border-radius:14px 0 0 14px}
+.map-rail-r{right:0;border-radius:0 14px 14px 0}
+/* faint edge hint so the rails are discoverable without being ugly */
+.map-rail-l{background:linear-gradient(90deg,rgba(23,17,12,.45),rgba(23,17,12,0))}
+.map-rail-r{background:linear-gradient(270deg,rgba(23,17,12,.45),rgba(23,17,12,0))}
+@media (min-width:700px){ .map-rail{display:none} }
 .leaflet-container{background:#0d0a07;font-family:inherit}
 .map-tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .netpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);color:var(--ink2)}
@@ -355,7 +384,11 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <button class="btn ghost sm" onclick="fitPins()"><span data-zh="⊹ 适配标记" data-en="⊹ Fit pins">⊹ 适配标记</span></button>
       <button class="btn ghost sm" onclick="locateOnMap()"><span data-zh="📍 我的位置" data-en="📍 My position">📍 我的位置</span></button>
     </div>
-    <div id="map"></div>
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="map-rail map-rail-l" aria-hidden="true"></div>
+      <div class="map-rail map-rail-r" aria-hidden="true"></div>
+    </div>
     <div class="sat-box">
       <div class="tile-head" id="satBasicHead" onclick="toggleSection('satBasicWrap','satBasicHead')">
         <span><span data-zh="🛰️ 卫星视图 " data-en="🛰️ Satellite view ">🛰️ 卫星视图 </span><b id="satBasicCurrent" data-zh="关闭" data-en="Off">关闭</b></span><span class="caret">▾</span>
@@ -421,7 +454,8 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
         <div class="mag-big" id="magBearing">—</div>
         <div class="mag-sub" id="magSub"></div>
         <div class="mag-decl" id="magDecl"></div>
-        <button class="btn ghost sm" style="width:100%;margin-top:10px;font-size:12.5px" onclick="setDeclination()"><span data-zh="设定磁偏角（出国时）" data-en="Set declination (when abroad)">设定磁偏角（出国时）</span></button>
+        <button class="btn ghost sm" style="width:100%;margin-top:10px;font-size:12.5px" onclick="showBearingHome()"><span data-zh="📝 显示回起点的方位（抄下来）" data-en="📝 Show bearing home (write it down)">📝 显示回起点的方位（抄下来）</span></button>
+        <button class="btn ghost sm" style="width:100%;margin-top:8px;font-size:12.5px" onclick="setDeclination()"><span data-zh="设定磁偏角（出国时）" data-en="Set declination (when abroad)">设定磁偏角（出国时）</span></button>
       </div>
       <div class="arrived" id="arrived"><span data-zh="✓ 你已在 15 米范围内 — 基本就在点上" data-en="✓ You're within 15 m — you're basically on it">✓ 你已在 15 米范围内 — 基本就在点上</span></div>
       <div class="hint" id="navMsg" style="margin-top:12px" data-html data-zh="选择一个目标以开始。需开启 GPS；指南针旋转需要设备方向权限（如有提示请点击启用）。" data-en="Choose a target to begin. Needs GPS on; compass rotation needs device orientation permission (tap Enable if prompted).">选择一个目标以开始。需开启 GPS；指南针旋转需要设备方向权限（如有提示请点击启用）。</div>
@@ -455,7 +489,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <span><span data-zh="GPS 采样模式 " data-en="GPS sampling mode ">GPS 采样模式 </span><b id="modeCurrent" data-zh="均衡" data-en="Balanced">均衡</b></span><span class="caret">▾</span>
     </div>
     <div class="tile-grid hidden" id="modeWrap"></div>
-    <div class="batt-row" id="battRow"><span class="batt-ic" id="battIc">🔋</span><span id="battTxt"><span data-zh="此设备无法获取电池状态" data-en="battery status unavailable on this device">此设备无法获取电池状态</span></span></div>
+    <div class="batt-row" id="battRow"><span class="batt-ic" id="battIc">🔋</span><span id="battTxt"><span data-zh="iPhone 不向网页应用提供电池状态 — 请自行留意电量" data-en="iPhone does not report battery to web apps — watch your own charge">iPhone 不向网页应用提供电池状态 — 请自行留意电量</span></span></div>
 
     <div class="stat-grid" style="margin-top:12px">
       <div class="stat"><div class="n" id="trPts">0</div><div class="l"><span data-zh="轨迹点" data-en="breadcrumbs">轨迹点</span></div></div>
@@ -471,7 +505,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
     <div class="share-panel" id="sharePanel">
       <h3 style="font-size:14px;color:var(--ore);margin-bottom:4px;display:flex;align-items:center;gap:7px"><span data-zh="📲 告诉别人你在哪里" data-en="📲 Tell someone where you are">📲 告诉别人你在哪里</span></h3>
       <p class="hint" style="margin-bottom:10px" data-html data-zh="出发前先设定好。它把你的起点和返回时间发给一位信任的人，这样万一你逾时未归，就有人知道该往哪里求援。这是整个应用中最重要的安全步骤。" data-en="Set this before you head in. It sends your start point and return time to a trusted person, so someone knows where to send help if you're overdue. The most important safety step in this whole app.">出发前先设定好。它把你的起点和返回时间发给一位信任的人，这样万一你逾时未归，就有人知道该往哪里求援。这是整个应用中最重要的安全步骤。</p>
-      <div class="row">
+      <div class="row stack-sm">
         <div><label for="scNum" style="margin-top:0"><span data-zh="对方 WhatsApp 号码" data-en="Their WhatsApp number">对方 WhatsApp 号码</span></label><input id="scNum" aria-label="紧急联系人 WhatsApp 号码" data-zh-al="紧急联系人 WhatsApp 号码" data-en-al="Emergency contact WhatsApp number" placeholder="例如 60123456789" data-zh-ph="例如 60123456789" data-en-ph="e.g. 60123456789" inputmode="tel" onchange="saveShareCfg()"></div>
         <div><label for="scName" style="margin-top:0"><span data-zh="对方姓名" data-en="Their name">对方姓名</span></label><input id="scName" aria-label="紧急联系人姓名" data-zh-al="紧急联系人姓名" data-en-al="Emergency contact name" placeholder="例如：黄金宝" data-zh-ph="例如：黄金宝" data-en-ph="e.g. Golden Wong" onchange="saveShareCfg()"></div>
       </div>
@@ -2344,6 +2378,21 @@ function setDeclination(){
   toast(T('磁偏角已更新','Declination updated'));
 }
 
+/* iOS gives web apps no battery level, so the automatic 20% bearing prompt never
+   fires there. This lets anyone pull up the same information on demand. */
+function showBearingHome(){
+  if(!trail.start){toast(T('尚未记录起点 — 请先开始记录轨迹','No start point yet — start tracking first'),true);return;}
+  if(!curPos){toast(T('正在获取位置…','Getting your location…'));return;}
+  const b=bearing(curPos.lat,curPos.lon,trail.start.lat,trail.start.lon);
+  const m=Math.round(magneticBearing(b));
+  const d=haversine(curPos.lat,curPos.lon,trail.start.lat,trail.start.lon);
+  const dtxt=d<1000?Math.round(d)+' m':(d/1000).toFixed(2)+' km';
+  askConfirm(T('回起点的方位','Bearing back to start'),
+    T('用实体指南针走 '+m+'°，约 '+dtxt+' 回到起点。\n\n把这个数字写在纸上或手上 — 手机没电后它仍然有效。',
+      'Steer '+m+'° on your physical compass for about '+dtxt+' to reach your start point.\n\nWrite this number down on paper or your hand — it still works after the phone dies.'),
+    T('已记下','Written down'),false);
+}
+
 /* Show the number to steer on a handheld compass, plus the declination behind it. */
 function updateCompassPanel(dist){
   const p=document.getElementById('magPanel');if(!p)return;
@@ -2779,6 +2828,31 @@ if(trail.active){startTrackWatch();}
 /* Guide sits in the header, so it toggles: tap 📖 to open, tap again (or Close) to
    return to whichever tab you were on before. */
 let lastTabBeforeGuide='survey';
+/* The scroll rails sit over the map edges, so a tap there would be swallowed.
+   Forward a genuine tap (no drag) to whatever is underneath, while vertical drags
+   still scroll the page via touch-action:pan-y. */
+(function(){
+  window.addEventListener('load',function(){
+    document.querySelectorAll('.map-rail').forEach(function(rail){
+      let sx=0,sy=0,moved=false;
+      rail.addEventListener('touchstart',function(e){
+        const t=e.touches[0];sx=t.clientX;sy=t.clientY;moved=false;
+      },{passive:true});
+      rail.addEventListener('touchmove',function(e){
+        const t=e.touches[0];
+        if(Math.abs(t.clientX-sx)>8||Math.abs(t.clientY-sy)>8)moved=true;
+      },{passive:true});
+      rail.addEventListener('touchend',function(){
+        if(moved)return;                       // it was a scroll, not a tap
+        rail.style.pointerEvents='none';
+        const el=document.elementFromPoint(sx,sy);
+        rail.style.pointerEvents='';
+        if(el&&el!==rail&&typeof el.click==='function')el.click();
+      },{passive:true});
+    });
+  });
+})();
+
 function openGuide(){
   const gb=document.getElementById('guideBtn');
   // already open -> close and go back
