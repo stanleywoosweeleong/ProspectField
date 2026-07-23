@@ -187,9 +187,12 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
   touch-action:pan-y;background:transparent;pointer-events:auto}
 .map-rail-l{left:0;border-radius:14px 0 0 14px}
 .map-rail-r{right:0;border-radius:0 14px 14px 0}
-/* faint edge hint so the rails are discoverable without being ugly */
-.map-rail-l{background:linear-gradient(90deg,rgba(23,17,12,.45),rgba(23,17,12,0))}
-.map-rail-r{background:linear-gradient(270deg,rgba(23,17,12,.45),rgba(23,17,12,0))}
+/* Rails are invisible touch-catch strips only. The old "edge hint" gradient painted
+   the dark background at 45% down each side, which read as two vertical shadow bars
+   over the map (in every layer mode). Keep the rails transparent — the map itself is
+   discoverable enough, and the shadow is worse than any missing hint. */
+.map-rail-l{background:transparent}
+.map-rail-r{background:transparent}
 @media (min-width:700px){ .map-rail{display:none} }
 .leaflet-container{background:#0d0a07;font-family:inherit}
 /* Sub-pixel tile-seam fix. On phones with a fractional devicePixelRatio, adjacent
@@ -279,6 +282,11 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .tile-head .caret{color:var(--ore);font-size:13px;transition:transform .2s}
 .tile-head.closed .caret{transform:rotate(-90deg)}
 .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+/* Satellite view + Analysis-layer grids: pin to a fixed 2 columns. The advanced
+   layers sit in a padded, dashed box whose inner width dips below the 248px that
+   auto-fill/minmax(120px) needs, so on narrower phones the 8 layers collapsed into
+   one very tall column. Forcing 2 columns keeps them compact at any width. */
+#satBasicChips,#satChips{grid-template-columns:1fr 1fr}
 .tile-grid.hidden{display:none}
 .hidden{display:none}
 .tile{min-height:94px;display:flex;flex-direction:column;align-items:center;justify-content:center;
