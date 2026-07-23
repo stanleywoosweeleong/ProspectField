@@ -49,7 +49,7 @@ header{position:relative;position:sticky;top:0;z-index:50;background:linear-grad
 #guideClose.on{display:flex;align-items:center;justify-content:center}
 #guideClose:hover{color:var(--ink);border-color:rgba(184,132,44,.5)}
 #guideClose:active{background:rgba(192,123,74,.85);color:#fff;transform:scale(.94)}
-.gpsbar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px}
+.gpsbar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13.5px}
 .gpsdot{width:8px;height:8px;border-radius:50%;background:var(--ink3);transition:.3s}
 .gpsdot.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .gpsdot.hunting{background:var(--ore);animation:pulse 1s infinite}
@@ -60,9 +60,9 @@ main{padding:16px}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .card h2{font-size:15px;color:var(--ore);margin-bottom:4px;display:flex;align-items:center;gap:8px}
-.card .hint{font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.45}
-label{display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
-.fieldhead{display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
+.card .hint{font-size:13.5px;color:var(--ink2);margin-bottom:12px;line-height:1.5}
+label{display:block;font-size:13.5px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
+.fieldhead{display:block;font-size:13.5px;color:var(--ink2);margin:12px 0 5px;font-weight:600}
 /* photo scale reminder — deliberately prominent: a photo with no scale reference is
    nearly useless to a geologist later, and it is an easy mistake to make in the field */
 .scale-tip{display:flex;gap:10px;align-items:flex-start;
@@ -107,7 +107,7 @@ button{cursor:pointer;font-family:inherit;border:none}
 .btn.sm{width:auto;padding:9px 14px;font-size:13px;border-radius:9px}
 .coordbox{background:var(--bg2);border:1px dashed var(--ore2);border-radius:12px;padding:14px;text-align:center;margin-bottom:6px}
 .coordbox .big{font-size:22px;font-weight:700;color:var(--ore)}
-.coordbox .meta{font-size:12px;color:var(--ink3);margin-top:4px}
+.coordbox .meta{font-size:14px;color:var(--ink2);margin-top:5px;font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .chip{padding:8px 13px;border-radius:20px;background:var(--bg2);border:1px solid var(--line);font-size:13px;color:var(--ink2);transition:.15s}
 .chip.on{background:var(--copper);border-color:var(--copper);color:#fff;font-weight:600}
@@ -115,27 +115,27 @@ button{cursor:pointer;font-family:inherit;border:none}
 .score-ring{width:130px;height:130px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:conic-gradient(var(--ore) var(--pct,0%),var(--bg2) 0);transition:1s}
 .score-inner{width:104px;height:104px;border-radius:50%;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .score-inner .n{font-size:34px;font-weight:800;color:var(--ore)}
-.score-inner .l{font-size:11px;color:var(--ink3);letter-spacing:1px}
+.score-inner .l{font-size:12.5px;color:var(--ink2);letter-spacing:1px;font-weight:600}
 .verdict{margin-top:12px;font-size:14px;font-weight:600}
 .samp{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:10px}
 .samp .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .samp .id{font-weight:700;color:var(--ore);font-size:14px}
-.samp .co{font-size:12px;color:var(--ink3);margin-top:2px}
+.samp .co{font-size:13px;color:var(--ink2);margin-top:3px}
 .samp .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.samp .tg{font-size:11px;padding:3px 8px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
-.samp .note{font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.45}
+.samp .tg{font-size:12.5px;padding:4px 9px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
+.samp .note{font-size:14px;color:var(--ink2);margin-top:8px;line-height:1.5}
 .samp .del{background:none;color:var(--ink3);font-size:12px;padding:4px}
 .samp .acts{display:flex;gap:8px;margin-top:10px}
-.samp .acts button{font-size:12px;padding:6px 11px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
+.samp .acts button{font-size:13px;padding:8px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
 .samp .photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .samp .photos img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .empty{text-align:center;padding:40px 20px;color:var(--ink3)}
 .empty .ic{font-size:40px;opacity:.5}
 .kb{border-left:3px solid var(--copper);padding:10px 0 10px 14px;margin-bottom:16px}
 .kb h3{font-size:14px;color:var(--ink);margin-bottom:4px}
-.kb p{font-size:13px;color:var(--ink2);margin:0}
-.kb .mineral{font-size:12px;color:var(--malachite);font-weight:600}
-.callout{background:rgba(209,107,74,.12);border:1px solid var(--warn);border-radius:10px;padding:12px;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.kb p{font-size:14px;color:var(--ink2);margin:0;line-height:1.5}
+.kb .mineral{font-size:13px;color:var(--malachite);font-weight:600}
+.callout{background:rgba(209,107,74,.12);border:1px solid var(--warn);border-radius:10px;padding:13px;font-size:14px;color:var(--ink2);line-height:1.55}
 .callout b{color:var(--warn)}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:linear-gradient(180deg,#1f1811,#140f0a);border-top:1px solid var(--line);display:flex;padding:8px 2px 10px}
 nav button{flex:1;background:none;color:var(--ink3);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px}
@@ -144,16 +144,16 @@ nav button .ic svg{width:24px;height:24px;display:block;color:currentColor;trans
 nav button.on .ic svg{filter:drop-shadow(0 2px 5px rgba(217,164,65,.45))}
 nav button.on{color:var(--ore)}
 nav button.on .ic{transform:translateY(-1px)}
-.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel2);color:var(--ore);border:1px solid var(--ore2);padding:11px 20px;border-radius:24px;font-weight:700;font-size:13px;opacity:0;transition:.3s;z-index:100;pointer-events:none;box-shadow:var(--shadow);max-width:88%;text-align:center}
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel2);color:var(--ore);border:1px solid var(--ore2);padding:12px 20px;border-radius:24px;font-weight:700;font-size:14.5px;opacity:0;transition:.3s;z-index:100;pointer-events:none;box-shadow:var(--shadow);max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.warn{background:var(--warn);color:#fff;border-color:var(--warn)}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
 .stat .n{font-size:24px;font-weight:800;color:var(--ore)}
-.stat .l{font-size:11px;color:var(--ink3);margin-top:2px}
+.stat .l{font-size:13px;color:var(--ink2);margin-top:3px;font-weight:600}
 details{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:10px}
 summary{font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
-details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
+details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 #map{height:60vh;min-height:340px;border-radius:14px;border:1px solid var(--line);background:#0d0a07;z-index:1}
 .leaflet-container{background:#0d0a07;font-family:inherit}
 .map-tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
@@ -174,7 +174,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
 /* compass */
 .compass-wrap{text-align:center;padding:6px 0}
 .compass{position:relative;width:230px;height:230px;margin:6px auto;border-radius:50%;background:radial-gradient(circle at 50% 45%,#221a12,#140f0a);border:2px solid var(--line);box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
-.compass .ring-lbl{position:absolute;font-size:12px;color:var(--ink3);font-weight:700}
+.compass .ring-lbl{position:absolute;font-size:15px;color:var(--ink2);font-weight:800}
 .compass .n{top:8px;left:50%;transform:translateX(-50%);color:var(--warn)}
 .compass .s{bottom:8px;left:50%;transform:translateX(-50%)}
 .compass .e{right:10px;top:50%;transform:translateY(-50%)}
@@ -186,16 +186,27 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
 .compass .hub{position:absolute;top:50%;left:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;background:var(--ore);border:3px solid #140f0a;z-index:2}
 .nav-readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .nav-readout .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
-.nav-readout .box .n{font-size:26px;font-weight:800;color:var(--ore)}
-.nav-readout .box .l{font-size:11px;color:var(--ink3);margin-top:2px}
+.nav-readout .box .n{font-size:30px;font-weight:800;color:var(--ore)}
+.nav-readout .box .l{font-size:13px;color:var(--ink2);margin-top:3px;font-weight:600;letter-spacing:.5px}
 .arrived{background:rgba(74,157,127,.15);border:1px solid var(--ok);color:var(--ok);border-radius:10px;padding:10px;text-align:center;font-weight:700;margin-top:12px;display:none}
 .arrived.on{display:block}
+/* Physical-compass panel: the bridge between GPS (true north) and a handheld
+   compass (magnetic north). Deliberately high-contrast — this is what he copies
+   onto paper before the battery dies. */
+.mag-panel{margin-top:14px;padding:14px;border-radius:12px;
+  background:rgba(217,164,65,.10);border:1px solid var(--ore2)}
+.mag-head{font-size:13.5px;font-weight:700;color:var(--ore);margin-bottom:6px}
+.mag-big{font-size:40px;font-weight:800;color:var(--ink);line-height:1.05;letter-spacing:1px}
+.mag-sub{font-size:14px;color:var(--ink2);margin-top:4px;font-weight:600}
+.mag-decl{font-size:12.5px;color:var(--ink3);margin-top:8px;line-height:1.45}
+.mag-decl b{color:var(--ink2)}
+.mag-warn{color:var(--warn)}
 /* trail */
 .trail-status{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px}
 .ts-dot{width:14px;height:14px;border-radius:50%;background:var(--ink3);flex:0 0 auto}
 .ts-dot.rec{background:var(--warn);box-shadow:0 0 10px var(--warn);animation:pulse 1.1s infinite}
-.ts-main{font-weight:700;font-size:15px}
-.ts-sub{font-size:12px;color:var(--ink3);margin-top:1px}
+.ts-
+.ts-sub{font-size:13px;color:var(--ink2);margin-top:2px}
 .trail-line{stroke:#4a9d7f;stroke-width:4;fill:none;opacity:.9}
 .batt-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--ink2);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
 .batt-ic{font-size:16px}
@@ -212,14 +223,18 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
 .tile-head b{color:var(--ore);margin-left:4px}
 .tile-head .caret{color:var(--ore);font-size:13px;transition:transform .2s}
 .tile-head.closed .caret{transform:rotate(-90deg)}
-.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .tile-grid.hidden{display:none}
 .hidden{display:none}
-.tile{min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;gap:6px;padding:12px 10px;border-radius:14px;
+.tile{min-height:94px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:6px;padding:12px 8px;border-radius:14px;
   background:var(--bg2);border:2px solid var(--line);color:var(--ink2);
-  font-size:13.5px;line-height:1.3;font-weight:600;transition:.12s;cursor:pointer;
-  -webkit-user-select:none;user-select:none}
+  font-size:13px;line-height:1.28;font-weight:600;transition:.12s;cursor:pointer;
+  -webkit-user-select:none;user-select:none;
+  /* long geology terms must wrap inside a ~120px tile on small phones */
+  overflow-wrap:anywhere;word-break:break-word;hyphens:auto}
+/* a touch more room on wider screens */
+@media (min-width:400px){ .tile{font-size:13.5px;padding:12px 10px} }
 .tile .ic{font-size:24px;line-height:1}
 .tile:active{transform:scale(.97)}
 .tile.on{background:var(--copper);border-color:var(--ore);color:#fff;box-shadow:0 3px 12px rgba(192,123,74,.35)}
@@ -236,7 +251,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
 .def-box{background:var(--panel);border:1px solid var(--ore2);border-radius:16px;
   padding:20px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow)}
 .def-box h3{color:var(--ore);font-size:17px;margin-bottom:10px}
-.def-box p{font-size:14.5px;line-height:1.55;color:var(--ink2);margin:0}
+.def-box p{font-size:15.5px;line-height:1.6;color:var(--ink);margin:0}
 </style>
 </head>
 <body>
@@ -269,10 +284,10 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <option value="ironmang">Iron / Manganese</option>
       <option value="gem">Gemstones (corundum, quartz)</option>
     </select>
-    <div class="tile-head" id="targetHead" onclick="toggleSection('targetWrap','targetHead')">
-      <span id="targetCurrent">Gold (placer / lode)</span><span class="caret">▾</span>
+    <div class="tile-head closed" id="targetHead" onclick="toggleSection('targetWrap','targetHead')">
+      <span id="targetCurrent" data-zh="黄金 (砂金 / 金脉)" data-en="Gold (placer / lode)">黄金 (砂金 / 金脉)</span><span class="caret">▾</span>
     </div>
-    <div class="tile-grid" id="targetWrap"></div>
+    <div class="tile-grid hidden" id="targetWrap"></div>
 
     <div class="tile-head" id="indHead" onclick="toggleSection('indChips','indHead')">
       <span><span data-zh="观察到的地表指标 " data-en="Surface indicators observed ">观察到的地表指标 </span><b id="indCount">0</b></span><span class="caret">▾</span>
@@ -281,7 +296,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <div id="targetNote"></div>
     <div class="score-wrap" style="margin-top:18px">
       <div class="score-ring" id="ring"><div class="score-inner"><div class="n" id="scoreN">0</div><div class="l"><span data-zh="潜力" data-en="POTENTIAL">潜力</span></div></div></div>
-      <div class="verdict" id="verdict" style="color:var(--ink3)">Select indicators above</div>
+      <div class="verdict" id="verdict" data-zh="请在上方勾选指标" data-en="Select indicators above" style="color:var(--ink3)">请在上方勾选指标</div>
     </div>
   </div>
   <div class="card"><h2><span data-zh="📋 下一步建议" data-en="📋 Next step guidance">📋 下一步建议</span></h2><div id="guidance" class="hint" style="margin-bottom:0"><span data-zh="完成评估后将显示建议的野外行动。" data-en="Complete the estimator to see recommended field actions.">完成评估后将显示建议的野外行动。</span></div></div>
@@ -302,15 +317,15 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <select id="sMat" aria-label="样品类型" data-zh-al="样品类型" data-en-al="Sample material type" style="display:none"><option>Stream sediment</option><option>Soil</option><option>Rock / outcrop</option><option>Panned concentrate</option><option>Float / loose rock</option><option>Weathered laterite</option></select>
     <select id="sDepth" aria-label="样品深度" data-zh-al="样品深度" data-en-al="Sample depth" style="display:none"><option>Surface</option><option>0–20 cm</option><option>20–50 cm</option><option>&gt;50 cm</option></select>
 
-    <div class="tile-head" id="matHead" onclick="toggleSection('matWrap','matHead')">
-      <span><span data-zh="样品类型 " data-en="Material ">样品类型 </span><b id="matCurrent">Stream sediment</b></span><span class="caret">▾</span>
+    <div class="tile-head closed" id="matHead" onclick="toggleSection('matWrap','matHead')">
+      <span><span data-zh="样品类型 " data-en="Material ">样品类型 </span><b id="matCurrent" data-zh="河流沉积物" data-en="Stream sediment">河流沉积物</b></span><span class="caret">▾</span>
     </div>
-    <div class="tile-grid" id="matWrap"></div>
+    <div class="tile-grid hidden" id="matWrap"></div>
 
-    <div class="tile-head" id="depHead" onclick="toggleSection('depWrap','depHead')">
-      <span><span data-zh="深度 " data-en="Depth ">深度 </span><b id="depCurrent">Surface</b></span><span class="caret">▾</span>
+    <div class="tile-head closed" id="depHead" onclick="toggleSection('depWrap','depHead')">
+      <span><span data-zh="深度 " data-en="Depth ">深度 </span><b id="depCurrent" data-zh="地表" data-en="Surface">地表</b></span><span class="caret">▾</span>
     </div>
-    <div class="tile-grid" id="depWrap"></div>
+    <div class="tile-grid hidden" id="depWrap"></div>
     <label for="sNote"><span data-zh="野外观察" data-en="Field observations">野外观察</span></label>
     <textarea id="sNote" aria-label="野外观察" data-zh-al="野外观察" data-en-al="Field observations" placeholder="例如：石英脉上有红褐色铁染，似铁帽；淘出 3 个细金点" data-zh-ph="例如：石英脉上有红褐色铁染，似铁帽；淘出 3 个细金点" data-en-ph="e.g. reddish iron staining on quartz vein, gossan-like; panned 3 fine gold colours"></textarea>
     <div class="fieldhead"><span data-zh="照片 " data-en="Photos ">照片 </span><span style="color:var(--ink3);font-weight:400"><span data-zh="（存于设备数据库 — 无固定上限）" data-en="(stored in device database — no fixed limit)">（存于设备数据库 — 无固定上限）</span></span></div>
@@ -326,6 +341,8 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     </div>
     <div class="tile-grid" id="sTags"></div>
     <button class="btn" style="margin-top:16px" onclick="saveSample()"><span data-zh="保存样品" data-en="Save sample">保存样品</span></button>
+    <button class="btn ghost sm" id="saveAnotherBtn" style="width:100%;margin-top:8px;display:none" onclick="saveSample(true)"><span data-zh="➕ 保存并在同一地点继续取样" data-en="➕ Save &amp; log another at this spot">➕ 保存并在同一地点继续取样</span></button>
+    <p class="hint" id="sameSpotHint" style="display:none;margin:6px 0 0"><span data-zh="同一露头常需取多种样品（岩石、沉积物、淘洗精矿）。此按钮保留位置，便于连续记录。" data-en="One outcrop often needs several samples (rock, sediment, panned concentrate). This keeps the location so you can log them in a row.">同一露头常需取多种样品（岩石、沉积物、淘洗精矿）。此按钮保留位置，便于连续记录。</span></p>
   </div>
 </section>
 
@@ -341,7 +358,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <div id="map"></div>
     <div class="sat-box">
       <div class="tile-head" id="satBasicHead" onclick="toggleSection('satBasicWrap','satBasicHead')">
-        <span><span data-zh="🛰️ 卫星视图 " data-en="🛰️ Satellite view ">🛰️ 卫星视图 </span><b id="satBasicCurrent">Off</b></span><span class="caret">▾</span>
+        <span><span data-zh="🛰️ 卫星视图 " data-en="🛰️ Satellite view ">🛰️ 卫星视图 </span><b id="satBasicCurrent" data-zh="关闭" data-en="Off">关闭</b></span><span class="caret">▾</span>
       </div>
       <div id="satBasicWrap">
         <p class="hint" style="margin-bottom:8px" data-html data-zh="无需设置。显示地面的真实卫星影像，让你在出发前就能看到裸露／多岩区域、河流、道路、旧矿坑和进入路线。偏红地面滤镜只是对可能铁染的粗略提示——不是证据。" data-en="No setup needed. Shows real satellite imagery of the ground so you can spot bare/rocky areas, rivers, tracks, old workings and access routes before you walk in. The reddish-ground filter is a rough hint toward possible iron staining — not proof.">无需设置。显示地面的真实卫星影像，让你在出发前就能看到裸露／多岩区域、河流、道路、旧矿坑和进入路线。偏红地面滤镜只是对可能铁染的粗略提示——不是证据。</p>
@@ -353,9 +370,12 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
         <p class="hint" style="margin:10px 0 8px" data-html data-zh="这些进行真正的卫星波段运算——真实的铁、黏土／蚀变和穿云雷达分析。需要一个免费的 Copernicus 实例 ID（详见"指南"页的分步说明）。粘贴一次即保存在你的手机上。" data-en="These do real satellite band-math — genuine iron, clay/alteration and cloud-proof radar analysis. They need a free Copernicus instance ID (see the Guide tab for step-by-step). Paste it once and it's saved on your phone.">这些进行真正的卫星波段运算——真实的铁、黏土／蚀变和穿云雷达分析。需要一个免费的 Copernicus 实例 ID（详见"指南"页的分步说明）。粘贴一次即保存在你的手机上。</p>
         <input id="satId" aria-label="Copernicus 实例 ID" data-zh-al="Copernicus 实例 ID" data-en-al="Copernicus instance ID" placeholder="粘贴 Copernicus 实例 ID" data-zh-ph="粘贴 Copernicus 实例 ID" data-en-ph="paste Copernicus instance ID" onchange="saveSatId()" style="margin-bottom:10px">
         <button class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="testSatId()"><span data-zh="🔎 测试我的 ID（检查连接）" data-en="🔎 Test my ID (check connection)">🔎 测试我的 ID（检查连接）</span></button>
-        <div class="tile-grid" id="satChips"></div>
+        <div class="tile-head closed" id="satAdvHead" onclick="toggleSection('satChips','satAdvHead')" style="margin-top:4px">
+          <span><span data-zh="分析图层" data-en="Analysis layers">分析图层</span> <b id="satAdvCurrent" data-zh="关闭" data-en="Off">关闭</b></span><span class="caret">▾</span>
+        </div>
+        <div class="tile-grid hidden" id="satChips"></div>
         <div class="tile-head" id="cloudHead" onclick="toggleCloudMode()" style="margin-top:12px">
-          <span><span data-zh="☁️ 影像质量 " data-en="☁️ Image quality ">☁️ 影像质量 </span><b id="cloudCurrent">Clear scenes only</b></span><span class="caret" style="transform:none">⇄</span>
+          <span><span data-zh="☁️ 影像质量 " data-en="☁️ Image quality ">☁️ 影像质量 </span><b id="cloudCurrent" data-zh="仅晴空影像" data-en="Clear scenes only">仅晴空影像</b></span><span class="caret" style="transform:none">⇄</span>
         </div>
         <p class="hint" id="cloudHint" style="margin-top:6px" data-html data-zh="仅接受接近无云的影像（≤10% 云量）。矿床不会移动，因此一张较旧的晴空影像胜过一张较新的多云影像。若始终加载不出，可点击改为允许多云影像。" data-en="Only accepting near cloud-free imagery. A deposit doesn't move, so an older clear image beats a recent cloudy one. Tap to allow cloudier scenes if nothing loads.">仅接受接近无云的影像（≤10% 云量）。矿床不会移动，因此一张较旧的晴空影像胜过一张较新的多云影像。若始终加载不出，可点击改为允许多云影像。</p>
       </details>
@@ -385,7 +405,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <h2><span data-zh="🧭 返回标记点" data-en="🧭 Walk back to a pin">🧭 返回标记点</span></h2>
     <p class="hint" data-html data-zh="选择一个已保存的样品并跟随箭头。它从你所站位置指向该标记点，并显示实时距离。手机请保持水平。" data-en="Pick a saved sample and follow the arrow. It points from where you're standing toward that pin, with live distance. Hold the phone flat.">选择一个已保存的样品并跟随箭头。它从你所站位置指向该标记点，并显示实时距离。手机请保持水平。</p>
     <label for="navTarget"><span data-zh="目标样品" data-en="Target sample">目标样品</span></label>
-    <select id="navTarget" aria-label="选择要导航前往的样品" data-zh-al="选择要导航前往的样品" data-en-al="Choose a sample to navigate to" onchange="setNavTarget()"><option value="">— 选择一个已定位的样品 —</option></select>
+    <select id="navTarget" aria-label="选择要导航前往的样品" data-zh-al="选择要导航前往的样品" data-en-al="Choose a sample to navigate to" onchange="setNavTarget()"><option value="">—</option></select>
     <div class="compass-wrap">
       <div class="compass" id="compass">
         <span class="ring-lbl n">N</span><span class="ring-lbl e">E</span><span class="ring-lbl s">S</span><span class="ring-lbl w">W</span>
@@ -395,6 +415,13 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <div class="nav-readout">
         <div class="box"><div class="n" id="navDist">—</div><div class="l"><span data-zh="距离" data-en="DISTANCE">距离</span></div></div>
         <div class="box"><div class="n" id="navBear">—</div><div class="l"><span data-zh="方位角" data-en="BEARING TO PIN">方位角</span></div></div>
+      </div>
+      <div class="mag-panel" id="magPanel">
+        <div class="mag-head"><span data-zh="🧭 用实体指南针走" data-en="🧭 Steer on your physical compass">🧭 用实体指南针走</span></div>
+        <div class="mag-big" id="magBearing">—</div>
+        <div class="mag-sub" id="magSub"></div>
+        <div class="mag-decl" id="magDecl"></div>
+        <button class="btn ghost sm" style="width:100%;margin-top:10px;font-size:12.5px" onclick="setDeclination()"><span data-zh="设定磁偏角（出国时）" data-en="Set declination (when abroad)">设定磁偏角（出国时）</span></button>
       </div>
       <div class="arrived" id="arrived"><span data-zh="✓ 你已在 15 米范围内 — 基本就在点上" data-en="✓ You're within 15 m — you're basically on it">✓ 你已在 15 米范围内 — 基本就在点上</span></div>
       <div class="hint" id="navMsg" style="margin-top:12px" data-html data-zh="选择一个目标以开始。需开启 GPS；指南针旋转需要设备方向权限（如有提示请点击启用）。" data-en="Choose a target to begin. Needs GPS on; compass rotation needs device orientation permission (tap Enable if prompted).">选择一个目标以开始。需开启 GPS；指南针旋转需要设备方向权限（如有提示请点击启用）。</div>
@@ -424,10 +451,10 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <option value="30">Saver — sample every 30 s (light drain)</option>
       <option value="60">Max saver — sample every 60 s (sparser path)</option>
     </select>
-    <div class="tile-head" id="modeHead" onclick="toggleSection('modeWrap','modeHead')">
-      <span><span data-zh="GPS 采样模式 " data-en="GPS sampling mode ">GPS 采样模式 </span><b id="modeCurrent">Balanced</b></span><span class="caret">▾</span>
+    <div class="tile-head closed" id="modeHead" onclick="toggleSection('modeWrap','modeHead')">
+      <span><span data-zh="GPS 采样模式 " data-en="GPS sampling mode ">GPS 采样模式 </span><b id="modeCurrent" data-zh="均衡" data-en="Balanced">均衡</b></span><span class="caret">▾</span>
     </div>
-    <div class="tile-grid" id="modeWrap"></div>
+    <div class="tile-grid hidden" id="modeWrap"></div>
     <div class="batt-row" id="battRow"><span class="batt-ic" id="battIc">🔋</span><span id="battTxt"><span data-zh="此设备无法获取电池状态" data-en="battery status unavailable on this device">此设备无法获取电池状态</span></span></div>
 
     <div class="stat-grid" style="margin-top:12px">
@@ -451,7 +478,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
       <div class="fieldhead"><span data-zh="预计返回日期与时间" data-en="Expected return date &amp; time">预计返回日期与时间</span></div>
       <input id="scReturn" type="hidden" aria-label="预计返回日期与时间" data-zh-al="预计返回日期与时间" data-en-al="Expected return date and time">
       <button class="btn ghost" style="width:100%;text-align:left;padding:16px" onclick="openPicker()">
-        <span style="font-size:20px">📅</span> <span id="returnDisplay" style="font-weight:700;font-size:16px">未设定</span>
+        <span style="font-size:20px">📅</span> <span id="returnDisplay" data-zh="未设定" data-en="Not set" style="font-weight:700;font-size:16px">未设定</span>
       </button>
       <div class="row" style="margin-top:8px">
         <button class="btn ghost sm preset-btn" id="preset0" style="width:100%;font-size:12px" onclick="setReturnPreset(0)"><span data-zh="今天傍晚" data-en="Today 6pm">今天傍晚</span></button>
@@ -499,7 +526,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     </details>
     <div class="callout" id="fieldLock" style="display:none;margin-bottom:12px" data-html data-zh="<b>🥾 你仍在野外。</b>轨迹记录运行期间禁止删除，以免丢失你可能需要返回的位置。安全返回后，请先在「轨迹」页停止记录。" data-en="<b>🥾 You&#39;re still in the field.</b> Deleting is disabled while trail tracking is running, so you can&#39;t lose a location you may need to walk back to. Stop tracking from the Trail tab once you&#39;re safely back."><b>🥾 你仍在野外。</b>轨迹记录运行期间禁止删除，以免丢失你可能需要返回的位置。安全返回后，请先在「轨迹」页停止记录。</div>
     <div class="tile-head" id="logViewHead" onclick="toggleTrashView()" style="margin-top:12px">
-      <span id="logViewLabel">显示有效样品</span><span class="caret" style="transform:none"><span data-zh="⇄ 点击切换" data-en="⇄ tap to switch">⇄ 点击切换</span></span>
+      <span id="logViewLabel" data-zh="显示有效样品" data-en="Showing active samples">显示有效样品</span><span class="caret" style="transform:none"><span data-zh="⇄ 点击切换" data-en="⇄ tap to switch">⇄ 点击切换</span></span>
     </div>
     <div id="trashActions" style="display:none">
       <div class="row" style="margin-bottom:10px">
@@ -515,9 +542,15 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
 
 <section class="view" id="v-guide">
   <div class="callout" id="iosInstall" style="display:none;margin-bottom:12px" data-html data-zh="<b>📲 安装到 iPhone 主屏幕</b><br>点击 Safari 底部的<b>分享</b>按钮 <span style=&quot;font-size:15px&quot;>&#x2191;</span>，向下滑动选择<b>「加入主画面」</b>。之后即可离线使用。" data-en="<b>📲 Install on your iPhone</b><br>Tap the <b>Share</b> button at the bottom of Safari, scroll down and choose <b>Add to Home Screen</b>. It then works offline."><b>📲 安装到 iPhone 主屏幕</b><br>点击 Safari 底部的<b>分享</b>按钮，向下滑动选择<b>「加入主画面」</b>。之后即可离线使用。</div>
+  <div class="callout" id="androidInstall" style="display:none;margin-bottom:12px" data-html data-zh="<b>📲 安装到 Android 主屏幕</b><br>点击 Chrome 右上角的<b>⋮</b>菜单，选择<b>「安装应用」</b>或<b>「添加到主屏幕」</b>。之后即可离线使用。" data-en="<b>📲 Install on Android</b><br>Tap the <b>⋮</b> menu at the top right of Chrome and choose <b>Install app</b> or <b>Add to Home screen</b>. It then works offline."><b>📲 安装到 Android 主屏幕</b><br>点击 Chrome 右上角的<b>⋮</b>菜单，选择<b>「安装应用」</b>或<b>「添加到主屏幕」</b>。之后即可离线使用。</div>
   <button class="btn" id="installBtn" style="display:none;width:100%;margin-bottom:12px" onclick="installApp()">
     <span data-zh="📲 安装到主屏幕（可离线使用）" data-en="📲 Install to home screen (works offline)">📲 安装到主屏幕（可离线使用）</span>
   </button>
+  <details style="margin-bottom:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px">
+    <summary style="color:var(--ore);font-weight:700"><span data-zh="📲 如何安装到手机（iPhone 与 Android）" data-en="📲 How to install on a phone (iPhone &amp; Android)">📲 如何安装到手机（iPhone 与 Android）</span></summary>
+    <p data-html data-zh="安装后可离线使用，并像普通应用一样从主屏幕打开。<b>帮别人安装时，这里两种系统的步骤都能看到。</b><br><br><b>iPhone / iPad（Safari）</b><br>1. 用 <b>Safari</b> 打开本页（Chrome 在 iOS 上无法安装）<br>2. 点击底部中间的<b>分享</b>按钮（方框加向上箭头）<br>3. 向下滑动，选择<b>「加入主画面」</b><br>4. 点击<b>「新增」</b>确认<br><br><b>Android（Chrome）</b><br>1. 用 <b>Chrome</b> 打开本页<br>2. 点击右上角的 <b>⋮</b> 菜单<br>3. 选择<b>「安装应用」</b>或<b>「添加到主屏幕」</b><br>4. 点击<b>「安装」</b>确认<br><br><b>其他 Android 浏览器</b>（Firefox、Samsung Internet）步骤类似，都在菜单里找「添加到主屏幕」。<br><br><b>安装之后：</b>先联网打开一次，让应用缓存地图库；再到<b>地图</b>页下载你要去的区域，之后在野外没有信号也能用。" data-en="Installing lets the app work offline and open from your home screen like a normal app. <b>Both platforms are shown here so you can help someone else set it up.</b><br><br><b>iPhone / iPad (Safari)</b><br>1. Open this page in <b>Safari</b> (Chrome on iOS cannot install it)<br>2. Tap the <b>Share</b> button at the bottom centre (square with an up arrow)<br>3. Scroll down and choose <b>Add to Home Screen</b><br>4. Tap <b>Add</b> to confirm<br><br><b>Android (Chrome)</b><br>1. Open this page in <b>Chrome</b><br>2. Tap the <b>⋮</b> menu at the top right<br>3. Choose <b>Install app</b> or <b>Add to Home screen</b><br>4. Tap <b>Install</b> to confirm<br><br><b>Other Android browsers</b> (Firefox, Samsung Internet) work the same way — look for Add to Home screen in the menu.<br><br><b>After installing:</b> open it once with internet so it caches the map library, then use the <b>Map</b> tab to download the region you are heading to. After that it works with no signal.">安装后可离线使用，并像普通应用一样从主屏幕打开。<b>帮别人安装时，这里两种系统的步骤都能看到。</b><br><br><b>iPhone / iPad（Safari）</b><br>1. 用 <b>Safari</b> 打开本页（Chrome 在 iOS 上无法安装）<br>2. 点击底部中间的<b>分享</b>按钮（方框加向上箭头）<br>3. 向下滑动，选择<b>「加入主画面」</b><br>4. 点击<b>「新增」</b>确认<br><br><b>Android（Chrome）</b><br>1. 用 <b>Chrome</b> 打开本页<br>2. 点击右上角的 <b>⋮</b> 菜单<br>3. 选择<b>「安装应用」</b>或<b>「添加到主屏幕」</b><br>4. 点击<b>「安装」</b>确认<br><br><b>其他 Android 浏览器</b>（Firefox、Samsung Internet）步骤类似，都在菜单里找「添加到主屏幕」。<br><br><b>安装之后：</b>先联网打开一次，让应用缓存地图库；再到<b>地图</b>页下载你要去的区域，之后在野外没有信号也能用。</p>
+  </details>
+
   <div class="card">
     <h2><span data-zh="🚀 快速上手" data-en="🚀 Quick start">🚀 快速上手</span></h2>
     <p class="hint" data-html data-zh="完整流程，按顺序排列。一次性设置请在家用 WiFi 完成。" data-en="The whole workflow, in order. Do the one-time setup at home on wifi.">完整流程，按顺序排列。一次性设置请在家用 WiFi 完成。</p>
@@ -638,7 +671,7 @@ function evaluatePixel(s) {
     <h2><span data-zh="🎒 基本装备清单" data-en="🎒 Basic kit list">🎒 基本装备清单</span></h2>
     <p class="hint" data-html data-zh="想跟着做的人需要什么。这份清单按<b>优先级</b>排列——先买上面的。多数东西在五金店或网上就能买到，不必买昂贵的专业货。" data-en="What anyone following along actually needs. Ordered by <b>priority</b> — buy from the top down. Most of it comes from a hardware shop or online; you do not need expensive specialist gear.">想跟着做的人需要什么。这份清单按<b>优先级</b>排列——先买上面的。多数东西在五金店或网上就能买到，不必买昂贵的专业货。</p>
 
-    <details open><summary><span data-zh="① 必备 — 没有这些别出门" data-en="① Essential — do not go without these">① 必备 — 没有这些别出门</span></summary><p data-html data-zh="<b>地质锤</b>（约 RM80–200）——尖头或凿头款。这是唯一真正专业的工具，值得买好的；普通羊角锤会碎裂伤人。<br><br><b>手持放大镜 10 倍</b>（约 RM20–60）——辨认矿物的关键。10 倍是标准；不要买倍率更高的，视野太窄不好用。<br><br><b>护目镜</b>（约 RM15）——敲石头会崩碎片。眼睛只有一双。<br><br><b>结实手套</b>（约 RM15）——防割伤，也防某些矿物。<br><br><b>样品袋</b>——厚塑料袋或布袋，一样一袋，绝不重复使用。<br><br><b>永久记号笔</b>——在袋上写编号。<br><br><b>充电宝 10000mAh</b>（约 RM40–80）——手机是你的 GPS、地图和求救工具。<br><br><b>实体指南针</b>（约 RM30–60）——手机会没电。这是保命的备份。" data-en="<b>Geological hammer</b> (~RM80–200) — pointed or chisel tip. This is the one genuinely specialist tool worth buying properly; an ordinary claw hammer can shatter and injure you.<br><br><b>Hand lens, 10x</b> (~RM20–60) — essential for identifying minerals. 10x is the standard; do not buy higher magnification, the field of view becomes unusable.<br><br><b>Safety glasses</b> (~RM15) — hammering rock throws chips. You only get one pair of eyes.<br><br><b>Sturdy gloves</b> (~RM15) — against cuts, and against some minerals.<br><br><b>Sample bags</b> — thick plastic or cloth, one per sample, never reused.<br><br><b>Permanent marker</b> — to write the ID on the bag.<br><br><b>Power bank 10000mAh</b> (~RM40–80) — your phone is your GPS, map and emergency call.<br><br><b>Physical compass</b> (~RM30–60) — phones die. This is the backup that keeps you alive."><b>地质锤</b>（约 RM80–200）——尖头或凿头款。这是唯一真正专业的工具，值得买好的；普通羊角锤会碎裂伤人。<br><br><b>手持放大镜 10 倍</b>（约 RM20–60）——辨认矿物的关键。10 倍是标准；不要买倍率更高的，视野太窄不好用。<br><br><b>护目镜</b>（约 RM15）——敲石头会崩碎片。眼睛只有一双。<br><br><b>结实手套</b>（约 RM15）——防割伤，也防某些矿物。<br><br><b>样品袋</b>——厚塑料袋或布袋，一样一袋，绝不重复使用。<br><br><b>永久记号笔</b>——在袋上写编号。<br><br><b>充电宝 10000mAh</b>（约 RM40–80）——手机是你的 GPS、地图和求救工具。<br><br><b>实体指南针</b>（约 RM30–60）——手机会没电。这是保命的备份。</p></details>
+    <details open><summary><span data-zh="① 必备 — 没有这些别出门" data-en="① Essential — do not go without these">① 必备 — 没有这些别出门</span></summary><p data-html data-zh="<b>地质锤</b>（约 RM80–200）——尖头或凿头款。这是唯一真正专业的工具，值得买好的；普通羊角锤会碎裂伤人。<br><br><b>手持放大镜 10 倍</b>（约 RM20–60）——辨认矿物的关键。10 倍是标准；不要买倍率更高的，视野太窄不好用。<br><br><b>护目镜</b>（约 RM15）——敲石头会崩碎片。眼睛只有一双。<br><br><b>结实手套</b>（约 RM15）——防割伤，也防某些矿物。<br><br><b>样品袋</b>——厚塑料袋或布袋，一样一袋，绝不重复使用。<br><br><b>永久记号笔</b>——在袋上写编号。<br><br><b>充电宝 10000mAh</b>（约 RM40–80）——手机是你的 GPS、地图和求救工具。<br><br><b>实体指南针</b>（约 RM30–60）——手机会没电，这是保命的备份。请买<b>带度数刻度、可旋转表圈的底板式指南针</b>（Silva 或 Suunto 那类），不要钥匙扣式小指南针——你需要能设定一个方位并沿着它走。导航页会直接给出要设定的度数。" data-en="<b>Geological hammer</b> (~RM80–200) — pointed or chisel tip. This is the one genuinely specialist tool worth buying properly; an ordinary claw hammer can shatter and injure you.<br><br><b>Hand lens, 10x</b> (~RM20–60) — essential for identifying minerals. 10x is the standard; do not buy higher magnification, the field of view becomes unusable.<br><br><b>Safety glasses</b> (~RM15) — hammering rock throws chips. You only get one pair of eyes.<br><br><b>Sturdy gloves</b> (~RM15) — against cuts, and against some minerals.<br><br><b>Sample bags</b> — thick plastic or cloth, one per sample, never reused.<br><br><b>Permanent marker</b> — to write the ID on the bag.<br><br><b>Power bank 10000mAh</b> (~RM40–80) — your phone is your GPS, map and emergency call.<br><br><b>Physical compass</b> (~RM30–60) — phones die. This is the backup that keeps you alive. Get a <b>baseplate compass with a rotating bezel marked in degrees</b> (Silva or Suunto style), not a keyring button compass — you need to be able to set a bearing and walk it. The Navigate tab gives you the exact number to set."><b>地质锤</b>（约 RM80–200）——尖头或凿头款。这是唯一真正专业的工具，值得买好的；普通羊角锤会碎裂伤人。<br><br><b>手持放大镜 10 倍</b>（约 RM20–60）——辨认矿物的关键。10 倍是标准；不要买倍率更高的，视野太窄不好用。<br><br><b>护目镜</b>（约 RM15）——敲石头会崩碎片。眼睛只有一双。<br><br><b>结实手套</b>（约 RM15）——防割伤，也防某些矿物。<br><br><b>样品袋</b>——厚塑料袋或布袋，一样一袋，绝不重复使用。<br><br><b>永久记号笔</b>——在袋上写编号。<br><br><b>充电宝 10000mAh</b>（约 RM40–80）——手机是你的 GPS、地图和求救工具。<br><br><b>实体指南针</b>（约 RM30–60）——手机会没电，这是保命的备份。请买<b>带度数刻度、可旋转表圈的底板式指南针</b>（Silva 或 Suunto 那类），不要钥匙扣式小指南针——你需要能设定一个方位并沿着它走。导航页会直接给出要设定的度数。</p></details>
 
     <details><summary><span data-zh="② 很有用 — 尽快添置" data-en="② Very useful — add soon">② 很有用 — 尽快添置</span></summary><p data-html data-zh="<b>淘金盘</b>（约 RM30–60）——塑料的比金属好用（较轻、有沟槽）。检验河床沉积物的基本工具。<br><br><b>小铲或手镐</b>——采集土壤和沉积物样品。<br><br><b>筛子</b>（约 5mm 和 2mm）——淘洗前筛除粗砾。<br><br><b>强力磁铁</b>（约 RM10）——检验磁铁矿；黑砂中吸出磁性组分。<br><br><b>稀盐酸</b>（10%，小滴瓶）——滴在石灰岩上会起泡，用于识别碳酸盐岩。请小心携带并标明。<br><br><b>硬度测试组</b>——一枚铜币（硬度约 3.5）、一把小刀（约 5.5）、一小块石英（7）。用来快速判断矿物硬度。<br><br><b>卷尺或折叠尺</b>——量脉宽，也可作照片比例参照。<br><br><b>野外记录本</b>（防水纸更好）——手机会没电，纸不会。" data-en="<b>Gold pan</b> (~RM30–60) — plastic beats metal (lighter, has riffles). The basic tool for testing stream sediment.<br><br><b>Small shovel or hand pick</b> — for soil and sediment samples.<br><br><b>Sieves</b> (about 5mm and 2mm) — to screen out coarse gravel before panning.<br><br><b>Strong magnet</b> (~RM10) — tests for magnetite; pulls the magnetic fraction from black sand.<br><br><b>Dilute hydrochloric acid</b> (10%, small dropper bottle) — fizzes on limestone, identifies carbonate rock. Carry carefully and label it.<br><br><b>Hardness test set</b> — a copper coin (~3.5), a knife blade (~5.5), a piece of quartz (7). Quick way to judge mineral hardness.<br><br><b>Tape measure or folding rule</b> — for vein widths, and as a photo scale.<br><br><b>Field notebook</b> (waterproof paper is better) — phones die, paper does not."><b>淘金盘</b>（约 RM30–60）——塑料的比金属好用（较轻、有沟槽）。检验河床沉积物的基本工具。<br><br><b>小铲或手镐</b>——采集土壤和沉积物样品。<br><br><b>筛子</b>（约 5mm 和 2mm）——淘洗前筛除粗砾。<br><br><b>强力磁铁</b>（约 RM10）——检验磁铁矿；黑砂中吸出磁性组分。<br><br><b>稀盐酸</b>（10%，小滴瓶）——滴在石灰岩上会起泡，用于识别碳酸盐岩。请小心携带并标明。<br><br><b>硬度测试组</b>——一枚铜币（硬度约 3.5）、一把小刀（约 5.5）、一小块石英（7）。用来快速判断矿物硬度。<br><br><b>卷尺或折叠尺</b>——量脉宽，也可作照片比例参照。<br><br><b>野外记录本</b>（防水纸更好）——手机会没电，纸不会。</p></details>
 
@@ -895,7 +928,7 @@ function setLang(l){
   applyLang();
   // rebuild anything drawn from JS so labels follow the language
   renderTargets();renderIndicators();renderMaterialDepth();renderSampleTags();
-  satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();
+  satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();
   updateCloudUI();updateTrailUI();updateReturnDisplay();if(map)updateNet();
   toast(l==='zh'?'已切换为中文':'Switched to English');
 }
@@ -1210,6 +1243,8 @@ function showDef(term){
 function hideDef(){document.getElementById('defModal').classList.remove('on');}
 function renderTargets(){
   const wrap=document.getElementById('targetWrap');if(!wrap)return;
+  // a language switch re-renders these grids; keep whatever was open, open
+  const wasOpen=!wrap.classList.contains('hidden');
   const cur=document.getElementById('target').value;
   wrap.innerHTML='';
   TARGETS.forEach(function(t){
@@ -1227,7 +1262,7 @@ function renderTargets(){
     if(t[0]===cur){tile.classList.add('on');document.getElementById('targetCurrent').textContent=nm[0]+' ('+nm[1]+')';}
     wrap.appendChild(tile);
   });
-  wrap.classList.add('hidden');document.getElementById('targetHead').classList.add('closed');
+  if(!wasOpen){wrap.classList.add('hidden');document.getElementById('targetHead').classList.add('closed');}
 }
 /* Honest, target-specific expectation notes */
 const TARGETNOTES_ZH={
@@ -1292,7 +1327,8 @@ function captureGPS(){
     document.getElementById('capLat').textContent=lastFix.lat.toFixed(6)+'°';
     const lon=document.getElementById('capLon');lon.textContent=lastFix.lon.toFixed(6)+'°';lon.style.fontSize='22px';
     document.getElementById('capMeta').textContent='±'+Math.round(lastFix.acc)+'m'+(lastFix.alt?' · '+Math.round(lastFix.alt)+T('m 海拔','m elev'):'');
-    dot.className='gpsdot live';txt.textContent=T('定位 ±','fix ±')+Math.round(lastFix.acc)+'m';txt.style.color='var(--ok)';
+    dot.className='gpsdot live';txt.textContent=T('定位 ±','fix ±')+Math.round(lastFix.acc)+'m';
+    updateSameSpotUI();txt.style.color='var(--ok)';
   },function(){dot.className='gpsdot';txt.textContent=T('GPS 失败 — 请开启定位','GPS failed — enable location');txt.style.color='var(--warn)';toast(T('GPS 不可用 — 请检查权限','GPS unavailable — check permission'),true);},
   {enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
@@ -1331,6 +1367,7 @@ const DEPTHS=[['Surface','⬆️',''],['0–20 cm','🥄','shallow'],['20–50 c
 
 function renderChoiceGrid(gridId,headId,curId,selectId,items,defaultVal){
   const wrap=document.getElementById(gridId);if(!wrap)return;
+  const wasOpen=!wrap.classList.contains('hidden');
   const sel=document.getElementById(selectId);
   const cur=sel.value||defaultVal;
   wrap.innerHTML='';
@@ -1347,7 +1384,7 @@ function renderChoiceGrid(gridId,headId,curId,selectId,items,defaultVal){
     if(name===cur){tile.classList.add('on');document.getElementById(curId).textContent=zh?zh[0]:name;}
     wrap.appendChild(tile);
   });
-  wrap.classList.add('hidden');document.getElementById(headId).classList.add('closed');
+  if(!wasOpen){wrap.classList.add('hidden');document.getElementById(headId).classList.add('closed');}
 }
 function renderMaterialDepth(){
   renderChoiceGrid('matWrap','matHead','matCurrent','sMat',MATERIALS,'Stream sediment');
@@ -1362,6 +1399,7 @@ const MODES=[
 ];
 function renderModeTiles(){
   const wrap=document.getElementById('modeWrap');if(!wrap)return;
+  const wasOpen=!wrap.classList.contains('hidden');
   const sel=document.getElementById('trackMode');
   const cur=trail.mode||sel.value||'15';
   sel.value=cur;
@@ -1379,7 +1417,7 @@ function renderModeTiles(){
     if(m[0]===cur){tile.classList.add('on');document.getElementById('modeCurrent').textContent=mz[0];}
     wrap.appendChild(tile);
   });
-  wrap.classList.add('hidden');document.getElementById('modeHead').classList.add('closed');
+  if(!wasOpen){wrap.classList.add('hidden');document.getElementById('modeHead').classList.add('closed');}
 }
 
 /* Quick tags follow the selected target, so whatever you can observe in Estimate you can
@@ -1395,6 +1433,14 @@ function currentTagList(){
 function matLabel(v){return (LANG==='zh'&&MAT_ZH[v])?MAT_ZH[v][0]:v;}
 function depthLabel(v){return (LANG==='zh'&&DEPTH_ZH[v])?DEPTH_ZH[v][0]:v;}
 function tagLabel(v){return (LANG==='zh')?(IND_ZH[v]||TAG_ZH[v]||v):v;}
+
+/* The "log another here" option only makes sense once there is a fix worth reusing */
+function updateSameSpotUI(){
+  const b=document.getElementById('saveAnotherBtn'),hint=document.getElementById('sameSpotHint');
+  const show=!!lastFix;
+  if(b)b.style.display=show?'block':'none';
+  if(hint)hint.style.display=show?'block':'none';
+}
 
 function renderSampleTags(){
   const w=document.getElementById('sTags');if(!w)return;
@@ -1413,7 +1459,7 @@ function renderSampleTags(){
 }
 
 /* ============ save ============ */
-async function saveSample(){
+async function saveSample(keepSpot){
   const id=document.getElementById('sId').value.trim()||('SMP-'+String(samples.length+1).padStart(3,'0'));
   const t=Date.now();
   const photoKeys=[];
@@ -1428,8 +1474,25 @@ async function saveSample(){
     score:(lastScoreTarget===document.getElementById('target').value)?lastScore:null};
   s.flag=s.tags.some(function(x){return['Gossan','Gold colour','Sulphides','Black sand','Quartz vein'].indexOf(x)>-1;});
   samples.unshift(s);save();
+
+  // always clear the per-sample fields
   document.getElementById('sId').value='';document.getElementById('sNote').value='';
-  sampleTags.clear();renderSampleTags();pendingPhotos=[];renderThumbs();lastFix=null;
+  pendingPhotos=[];renderThumbs();
+
+  if(keepSpot){
+    /* Same location, different material — at one outcrop you might chip the rock,
+       take stream sediment below it and pan a concentrate. Those are separate samples
+       sharing a GPS fix, so keep the fix, tags and score and stay on this screen. */
+    renderLog();refreshMarkers();rebuildNavOptions();
+    const mh=document.getElementById('matWrap'),mhd=document.getElementById('matHead');
+    if(mh){mh.classList.remove('hidden');mhd.classList.remove('closed');}   // reopen material picker
+    toast(T(s.id+' 已保存 — 同一地点，请选择下一个样品类型',s.id+' saved — same spot, pick the next material'));
+    window.scrollTo(0,0);
+    return;
+  }
+
+  // normal save: clear everything and go to the log
+  sampleTags.clear();renderSampleTags();lastFix=null;updateSameSpotUI();
   picked.clear();lastScore=0;lastScoreTarget=null;renderIndicators();
   document.getElementById('capLat').textContent='— . —';
   const lon=document.getElementById('capLon');lon.textContent=T('点击定位','tap to capture');lon.style.fontSize='16px';
@@ -1529,7 +1592,9 @@ async function purgeSample(i){
     await askConfirm(T('记录轨迹期间无法删除',"Can't delete while tracking"),T('你仍在野外。请先在"轨迹"页停止记录，再永久删除任何内容。','You are still out in the field. Stop trail tracking from the Trail tab before permanently deleting anything.'),T('明白了','Understood'),false);
     return;
   }
-  const ok=await askConfirm(T('永久删除？','Delete forever?'),'This permanently removes '+s.id+' and its photos. It cannot be undone.','Delete forever');
+  const ok=await askConfirm(T('永久删除？','Delete forever?'),
+    T('这将永久删除 '+s.id+' 及其照片，无法撤销。','This permanently removes '+s.id+' and its photos. It cannot be undone.'),
+    T('永久删除','Delete forever'));
   if(!ok)return;
   const keys=s.photoKeys||[];
   for(let k=0;k<keys.length;k++){await idbDel(keys[k]);}
@@ -1913,15 +1978,42 @@ const SATADV=[
   ['ferrous','Ferrous iron','2nd iron signal','🔶'],
   ['alteration','Alteration','composite','🌈']
 ];
-let satTilesBuilt=false;
+let satTilesBuilt=false,satTilesEverBuilt=false;
+function updateSatAdvLabel(){
+  const k=currentSatKind;
+  const nameFor=function(list,key){
+    const row=list.filter(function(x){return x[0]===key;})[0];
+    if(!row)return null;
+    return (LANG==='zh'&&SAT_ZH[key])?SAT_ZH[key][0]:row[1];
+  };
+  // advanced header
+  const advCur=document.getElementById('satAdvCurrent');
+  if(advCur){
+    const nm=nameFor(SATADV,k);
+    advCur.textContent=(k&&k!=='off'&&nm)?nm:T('关闭','Off');
+  }
+  // instant-view header
+  const cur=document.getElementById('satBasicCurrent');
+  if(cur){
+    const nm=nameFor(SATBASIC,k);
+    if(nm)cur.textContent=nm;
+    else if(k&&k!=='off')cur.textContent=T('关闭（高级图层已启用）','Off (advanced active)');
+    else cur.textContent=nameFor(SATBASIC,'off')||'Off';
+  }
+}
 function renderSatTiles(){
   if(satTilesBuilt)return; // build once so the active selection isn't wiped on tab switch
-  satTilesBuilt=true;
-  // returning user who already has an instance ID: open Advanced, collapse the instant view
-  if(satId){
+  const firstBuild=!satTilesEverBuilt;
+  satTilesBuilt=true;satTilesEverBuilt=true;
+  // Only on the very first build: a returning user with an instance ID gets Advanced open
+  // and the instant view collapsed. A language switch must not override their choices.
+  if(firstBuild&&satId){
     const adv=document.getElementById('advDetails');if(adv)adv.setAttribute('open','');
     const wrap=document.getElementById('satBasicWrap'),head=document.getElementById('satBasicHead');
     if(wrap){wrap.classList.add('hidden');head.classList.add('closed');}
+    // a user with an ID uses these layers, so open the grid for them
+    const ag=document.getElementById('satChips'),ah=document.getElementById('satAdvHead');
+    if(ag){ag.classList.remove('hidden');ah.classList.remove('closed');}
   }
   [['satBasicChips',SATBASIC],['satChips',SATADV]].forEach(function(pair){
     const wrap=document.getElementById(pair[0]);if(!wrap)return;
@@ -1929,7 +2021,8 @@ function renderSatTiles(){
     pair[1].forEach(function(s){
       const sz=(LANG==='zh'&&SAT_ZH[s[0]])?SAT_ZH[s[0]]:[s[1],s[2]];
       const tile=makeTile(s[3],sz[0],sz[1],function(el){setSatLayer(s[0],el);},s[1]);
-      if(s[0]==='off')tile.classList.add('on');
+      // highlight whichever layer is genuinely active (survives a language rebuild)
+      if(s[0]===(currentSatKind||'off'))tile.classList.add('on');
       wrap.appendChild(tile);
     });
   });
@@ -1938,6 +2031,9 @@ function renderSatTiles(){
 function setSatLayer(kind,chip){
   clearAllSatChips();chip.classList.add('on');
   currentSatKind=kind;
+  // Update the collapsed header BEFORE any early return — the user has made a choice
+  // and it must show, even if the map library has not loaded.
+  updateSatAdvLabel();
   if(typeof L==='undefined'||!map){
     const m0=document.getElementById('satMsg');
     if(m0)m0.textContent=T('地图尚未就绪（需要联网加载地图库）。','Map not ready — the map library needs internet to load.');
@@ -1945,15 +2041,11 @@ function setSatLayer(kind,chip){
   }
   if(satLayer){map.removeLayer(satLayer);satLayer=null;}
   const msg=document.getElementById('satMsg');
-  // keep the collapsed header label in sync, and tidy the screen automatically
-  const basicNames={off:'Off',esri:'Satellite photo',esrired:'Reddish ground'};
-  const head=document.getElementById('satBasicHead'),wrap=document.getElementById('satBasicWrap'),cur=document.getElementById('satBasicCurrent');
-  if(basicNames[kind]){
-    if(cur)cur.textContent=basicNames[kind];
-  }else{
+  const head=document.getElementById('satBasicHead'),wrap=document.getElementById('satBasicWrap');
+  const isBasic=(kind==='off'||kind==='esri'||kind==='esrired');
+  if(!isBasic&&wrap&&!wrap.classList.contains('hidden')){
     // an advanced layer is now active — collapse the instant section to free up the map
-    if(cur)cur.textContent=T('关闭（高级图层已启用）','Off (advanced active)');
-    if(wrap&&!wrap.classList.contains('hidden')){wrap.classList.add('hidden');head.classList.add('closed');}
+    wrap.classList.add('hidden');head.classList.add('closed');
   }
   if(kind==='off'){msg.textContent='';return;}
   if(!navigator.onLine){msg.textContent=T('⚠ 你处于离线状态——卫星视图需要网络。请在出发前使用，并下载该区域供离线使用。','⚠ You are offline — satellite view needs signal. Use it before heading in, then download the area for offline.');}
@@ -2187,6 +2279,96 @@ function bearing(a,b,c,d){
   return (Math.atan2(y,x)*toD+360)%360;
 }
 let targetBearing=0;
+/* ============ MAGNETIC DECLINATION ============
+   A physical compass points to MAGNETIC north; GPS bearings are TRUE north.
+   The difference (declination) is near zero in Malaysia but is 10°+ in Chile,
+   Canada and parts of PNG — at 2 km a 10° error puts you ~350 m off target.
+   This is a coarse global model: good to a couple of degrees, which is well
+   inside what anyone can steer by eye on a handheld compass. */
+let declManual=localStorage.getItem('pf_decl');
+declManual=(declManual===null||declManual==='')?null:parseFloat(declManual);
+
+/* Confidence of the dipole estimate. It is good near the equator but poor over
+   the South Atlantic Anomaly (southern Africa / South America), where the real
+   field departs strongly from a simple dipole. We surface that rather than
+   presenting a wrong number as fact. */
+function declinationConfidence(lat,lon){
+  // worst region: roughly southern Africa through the South Atlantic
+  if(lat>-40&&lat<10&&lon>-70&&lon<50)return 'low';
+  if(Math.abs(lat)>55)return 'low';          // near the poles the model degrades
+  if(Math.abs(lat)<25)return 'good';         // equatorial belt, small declination
+  return 'fair';
+}
+function estimateDeclination(lat,lon){
+  /* Low-order dipole approximation. Returns degrees,
+     positive = magnetic north lies EAST of true north.
+     Typical error: <1° near the equator, several degrees at mid-latitudes,
+     and over 10° in the South Atlantic Anomaly — hence declinationConfidence(). */
+  const d2r=Math.PI/180;
+  const la=lat*d2r, lo=lon*d2r;
+  // geomagnetic north pole (approx, drifts slowly)
+  const pLat=80.7*d2r, pLon=-72.7*d2r;
+  const cosC=Math.sin(pLat)*Math.sin(la)+Math.cos(pLat)*Math.cos(la)*Math.cos(pLon-lo);
+  const C=Math.acos(Math.max(-1,Math.min(1,cosC)));
+  if(Math.abs(Math.sin(C))<1e-6)return 0;
+  const sinD=Math.cos(pLat)*Math.sin(pLon-lo)/Math.sin(C);
+  const cosD=(Math.sin(pLat)-Math.sin(la)*cosC)/(Math.cos(la)*Math.sin(C));
+  let dec=Math.atan2(sinD,cosD)/d2r;
+  while(dec>180)dec-=360; while(dec<-180)dec+=360;
+  return dec;
+}
+function currentDeclination(){
+  if(declManual!==null&&!isNaN(declManual))return declManual;
+  if(curPos)return estimateDeclination(curPos.lat,curPos.lon);
+  return 0;
+}
+function fmtDecl(d){
+  const a=Math.abs(d);
+  if(a<0.5)return T('约 0°（可忽略）','about 0° (negligible)');
+  return a.toFixed(1)+'° '+(d>0?T('东偏','E'):T('西偏','W'));
+}
+/* True bearing -> the number to steer on a handheld magnetic compass */
+function magneticBearing(trueBearing){
+  let m=trueBearing-currentDeclination();
+  while(m<0)m+=360; while(m>=360)m-=360;
+  return m;
+}
+function setDeclination(){
+  const cur=(declManual!==null&&!isNaN(declManual))?declManual:currentDeclination().toFixed(1);
+  const v=prompt(T('磁偏角（度）。东偏为正，西偏为负。留空则自动estimate。','Magnetic declination in degrees. East positive, West negative. Leave blank to auto-estimate.'),cur);
+  if(v===null)return;
+  if(v.trim()===''){declManual=null;localStorage.removeItem('pf_decl');}
+  else{const f=parseFloat(v);if(isNaN(f))return toast(T('无效数值','Invalid number'),true);
+       declManual=f;localStorage.setItem('pf_decl',String(f));}
+  updateNavReadout();updateCompassPanel();
+  toast(T('磁偏角已更新','Declination updated'));
+}
+
+/* Show the number to steer on a handheld compass, plus the declination behind it. */
+function updateCompassPanel(dist){
+  const p=document.getElementById('magPanel');if(!p)return;
+  if(!navTargetSample||!curPos){p.style.display='none';return;}
+  p.style.display='block';
+  const mag=magneticBearing(targetBearing);
+  document.getElementById('magBearing').textContent=Math.round(mag)+'°';
+  const d=(typeof dist==='number')?dist:null;
+  const dtxt=(d===null)?'':(d<1000?Math.round(d)+' m':(d/1000).toFixed(2)+' km');
+  document.getElementById('magSub').textContent=
+    T('走 '+Math.round(mag)+'°'+(dtxt?'，约 '+dtxt:'')+'　（真方位 '+Math.round(targetBearing)+'°）',
+      'Walk '+Math.round(mag)+'°'+(dtxt?' for '+dtxt:'')+'  (true bearing '+Math.round(targetBearing)+'°)');
+  const dec=currentDeclination();
+  const conf=curPos?declinationConfidence(curPos.lat,curPos.lon):'good';
+  const manual=(declManual!==null&&!isNaN(declManual));
+  let txt=T('磁偏角：','Declination: ')+fmtDecl(dec)+(manual?T('（手动设定）','  (set manually)'):T('（自动估算）','  (auto-estimated)'));
+  if(conf==='low'&&!manual){
+    txt+=T('　⚠ 此区域自动估算可能有较大误差，出发前请查询当地磁偏角并手动设定。',
+           '  ⚠ The auto-estimate is unreliable in this region — look up the local declination and set it manually before you set off.');
+  }
+  const el=document.getElementById('magDecl');
+  el.innerHTML=txt;
+  el.className='mag-decl'+((conf==='low'&&!manual)?' mag-warn':'');
+}
+
 function updateNavReadout(){
   if(!navTargetSample||!curPos){return;}
   const dist=haversine(curPos.lat,curPos.lon,navTargetSample.lat,navTargetSample.lon);
@@ -2194,6 +2376,7 @@ function updateNavReadout(){
   document.getElementById('navDist').textContent=dist<1000?Math.round(dist)+' m':(dist/1000).toFixed(2)+' km';
   document.getElementById('navBear').textContent=Math.round(targetBearing)+'°';
   document.getElementById('arrived').className='arrived'+(dist<=15?' on':'');
+  updateCompassPanel(dist);
   document.getElementById('navMsg').textContent=T('实时 — GPS ±'+Math.round(curPos.acc)+'m。箭头指向 '+navTargetSample.id+'。若箭头卡住，走几米（需要移动才能定向）。','Live — GPS ±'+Math.round(curPos.acc)+'m. Arrow points toward '+navTargetSample.id+'. Move a few metres if the arrow seems stuck (needs motion to orient).');
   updateNeedle();
 }
@@ -2242,6 +2425,20 @@ function renderBattery(){
   el.textContent=msg;
   el.className=(!battRef.charging&&pct<=20)?'batt-low':'';
   if(!battRef.charging&&pct<=15&&trail.active&&!battRef._warned){battRef._warned=true;toast(T('电量偏低 — 建议现在就原路返回','Battery low — consider retracing now'),true);}
+  /* At 20% surface the compass bearing home while there is still a screen to read it.
+     Written on paper or skin, that one number survives a dead battery. */
+  if(!battRef.charging&&pct<=20&&trail.active&&trail.start&&curPos&&!battRef._bearingShown){
+    battRef._bearingShown=true;
+    const b=bearing(curPos.lat,curPos.lon,trail.start.lat,trail.start.lon);
+    const m=Math.round(magneticBearing(b));
+    const d=haversine(curPos.lat,curPos.lon,trail.start.lat,trail.start.lon);
+    const dtxt=d<1000?Math.round(d)+' m':(d/1000).toFixed(2)+' km';
+    askConfirm(T('电量 '+pct+'% — 请记下这个方位','Battery '+pct+'% — write this down'),
+      T('用实体指南针走 '+m+'°，约 '+dtxt+' 回到起点。\n\n把这个数字写在纸上或手上。手机没电后它仍然有效。',
+        'Steer '+m+'° on your physical compass for about '+dtxt+' to reach your start point.\n\nWrite this number down on paper or your hand. It still works after the phone dies.'),
+      T('已记下','Written down'),false);
+  }
+  if(battRef.charging)battRef._bearingShown=false;
   if(battRef.charging)battRef._warned=false;
 }
 
@@ -2611,7 +2808,7 @@ function nav(v,btn){
   if(v==='sample'){
     // carry over whatever was ticked in Estimate so you do not re-enter it
     if(picked.size){picked.forEach(function(x){sampleTags.add(x);});}
-    renderSampleTags();renderMaterialDepth();
+    renderSampleTags();renderMaterialDepth();updateSameSpotUI();
   }
   if(v==='log')renderLog();
   if(v==='map'){renderSatTiles();setTimeout(function(){
@@ -2627,7 +2824,7 @@ let tTimer;function toast(msg,warn){const t=document.getElementById('toast');t.t
 
 /* ============ init ============ */
 idbOpen().then(function(){renderLog();}).catch(function(){toast(T('照片数据库不可用','Photo database unavailable'),true);});
-applyLang();renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();rebuildNavOptions();initBattery();
+applyLang();renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
 
 /* ---- PWA service worker ----
    A blob-URL worker cannot control the page, so offline support needs a real file
@@ -2655,6 +2852,8 @@ window.addEventListener('beforeinstallprompt',function(e){
   e.preventDefault();deferredInstall=e;
   const b=document.getElementById('installBtn');
   if(b)b.style.display='block';
+  // native prompt wins — hide the written fallback
+  const a=document.getElementById('androidInstall');if(a)a.style.display='none';
 });
 function installApp(){
   if(!deferredInstall)return;
@@ -2664,19 +2863,35 @@ function installApp(){
     const b=document.getElementById('installBtn');if(b)b.style.display='none';
   });
 }
-/* iOS has no install prompt — show instructions instead, unless already standalone */
+/* Install guidance. iOS never fires beforeinstallprompt, so it always needs written
+   steps. Android usually shows the native button — but not always (Firefox, Samsung
+   Internet, or when Chrome decides not to fire), so show written steps as a fallback
+   if no prompt has arrived shortly after load. */
 (function(){
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+  const ua=navigator.userAgent;
+  const isIOS=/iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
+  const isAndroid=/Android/.test(ua);
   const standalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
-  if(isIOS&&!standalone){
-    window.addEventListener('load',function(){
+  if(standalone)return;                       // already installed, say nothing
+  window.addEventListener('load',function(){
+    if(isIOS){
       const el=document.getElementById('iosInstall');if(el)el.style.display='block';
-    });
-  }
+      return;
+    }
+    if(isAndroid){
+      // give the native prompt a moment; only fall back to instructions if it never fires
+      setTimeout(function(){
+        if(deferredInstall)return;            // native button is showing instead
+        const el=document.getElementById('androidInstall');if(el)el.style.display='block';
+      },2500);
+    }
+  });
 })();
 
 window.addEventListener('appinstalled',function(){
   const b=document.getElementById('installBtn');if(b)b.style.display='none';
+  const a=document.getElementById('androidInstall');if(a)a.style.display='none';
+  const i=document.getElementById('iosInstall');if(i)i.style.display='none';
   toast(T('已安装到主屏幕','Installed to your home screen'));
 });
 </script>
