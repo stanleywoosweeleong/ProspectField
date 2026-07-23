@@ -261,7 +261,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
   <div class="card">
     <h2><span data-zh="🎯 矿点潜力评估" data-en="🎯 Site potential estimator">🎯 矿点潜力评估</span></h2>
     <p class="hint" data-html data-zh="野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。" data-en="A field checklist, not an assay. Tick surface indicators you actually observe. Score suggests whether a spot is worth a proper sample + lab test — it never confirms a deposit.">野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。</p>
-    <label for="target"><span data-zh="你要勘察什么？" data-en="What are you scouting for?">你要勘察什么？</span></label>
+    <div class="fieldhead"><span data-zh="你要勘察什么？" data-en="What are you scouting for?">你要勘察什么？</span></div>
     <select id="target" aria-label="你要勘察什么" data-zh-al="你要勘察什么" data-en-al="What are you scouting for" onchange="renderIndicators()" style="display:none">
       <option value="gold">Gold (placer / lode)</option>
       <option value="ree">Rare earth elements (REE)</option>
@@ -313,7 +313,7 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
     <div class="tile-grid" id="depWrap"></div>
     <label for="sNote"><span data-zh="野外观察" data-en="Field observations">野外观察</span></label>
     <textarea id="sNote" aria-label="野外观察" data-zh-al="野外观察" data-en-al="Field observations" placeholder="例如：石英脉上有红褐色铁染，似铁帽；淘出 3 个细金点" data-zh-ph="例如：石英脉上有红褐色铁染，似铁帽；淘出 3 个细金点" data-en-ph="e.g. reddish iron staining on quartz vein, gossan-like; panned 3 fine gold colours"></textarea>
-    <label for="sPhoto"><span data-zh="照片 " data-en="Photos ">照片 </span><span style="color:var(--ink3);font-weight:400"><span data-zh="（存于设备数据库 — 无固定上限）" data-en="(stored in device database — no fixed limit)">（存于设备数据库 — 无固定上限）</span></span></label>
+    <div class="fieldhead"><span data-zh="照片 " data-en="Photos ">照片 </span><span style="color:var(--ink3);font-weight:400"><span data-zh="（存于设备数据库 — 无固定上限）" data-en="(stored in device database — no fixed limit)">（存于设备数据库 — 无固定上限）</span></span></div>
     <div class="scale-tip">
       <span class="scale-ic">📏</span>
       <span data-html data-zh="<b>务必放入比例参照物。</b>硬币、笔或地质锤——没有它，日后几乎无法判断标本大小。拍三张：环境全景、特征特写、贴好标签的样品袋。" data-en="<b>Always include something for scale.</b> A coin, pen or hammer — without it the specimen size is almost impossible to judge later. Take three shots: the wider setting, a close-up, and the labelled bag."><b>务必放入比例参照物。</b>硬币、笔或地质锤——没有它，日后几乎无法判断标本大小。拍三张：环境全景、特征特写、贴好标签的样品袋。</span>
@@ -448,8 +448,8 @@ details p{font-size:13px;color:var(--ink2);margin:8px 0 0}
         <div><label for="scNum" style="margin-top:0"><span data-zh="对方 WhatsApp 号码" data-en="Their WhatsApp number">对方 WhatsApp 号码</span></label><input id="scNum" aria-label="紧急联系人 WhatsApp 号码" data-zh-al="紧急联系人 WhatsApp 号码" data-en-al="Emergency contact WhatsApp number" placeholder="例如 60123456789" data-zh-ph="例如 60123456789" data-en-ph="e.g. 60123456789" inputmode="tel" onchange="saveShareCfg()"></div>
         <div><label for="scName" style="margin-top:0"><span data-zh="对方姓名" data-en="Their name">对方姓名</span></label><input id="scName" aria-label="紧急联系人姓名" data-zh-al="紧急联系人姓名" data-en-al="Emergency contact name" placeholder="例如：黄金宝" data-zh-ph="例如：黄金宝" data-en-ph="e.g. Golden Wong" onchange="saveShareCfg()"></div>
       </div>
-      <label for="scReturn"><span data-zh="预计返回日期与时间" data-en="Expected return date &amp; time">预计返回日期与时间</span></label>
-      <input id="scReturn" type="hidden">
+      <div class="fieldhead"><span data-zh="预计返回日期与时间" data-en="Expected return date &amp; time">预计返回日期与时间</span></div>
+      <input id="scReturn" type="hidden" aria-label="预计返回日期与时间" data-zh-al="预计返回日期与时间" data-en-al="Expected return date and time">
       <button class="btn ghost" style="width:100%;text-align:left;padding:16px" onclick="openPicker()">
         <span style="font-size:20px">📅</span> <span id="returnDisplay" style="font-weight:700;font-size:16px">未设定</span>
       </button>
