@@ -5,7 +5,7 @@
    - Everything else: network-first, falling back to cache.
    Bump SW_VERSION when the app changes so users get the new build.
 */
-const SW_VERSION = 'pf-v1';
+const SW_VERSION = 'pf-v2';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const TILE_CACHE  = 'pf-tiles';          // shared with the in-app region downloader
 const RUNTIME     = SW_VERSION + '-runtime';
@@ -31,7 +31,10 @@ self.addEventListener('install', function (e) {
       return Promise.all(SHELL.map(function (url) {
         return c.add(new Request(url, { cache: 'reload' })).catch(function () { /* skip */ });
       }));
-    }).then(function () { return self.skipWaiting(); })
+    })
+    // deliberately NOT calling skipWaiting() here: the page asks the user first,
+    // then posts 'skipWaiting'. Swapping mid-session could reload the app while
+    // someone is logging a sample.
   );
 });
 
