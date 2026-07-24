@@ -5,9 +5,10 @@
    - Everything else: network-first, falling back to cache.
    Bump SW_VERSION when the app changes so users get the new build.
 */
-const SW_VERSION = 'pf-v3';
+const SW_VERSION = 'pf-v4';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const TILE_CACHE  = 'pf-tiles';          // shared with the in-app region downloader
+const ELEV_CACHE  = 'pf-elev';           // terrain elevation profiles (persist across versions)
 const RUNTIME     = SW_VERSION + '-runtime';
 
 /* Files the app needs to start with no network at all. */
@@ -42,8 +43,8 @@ self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) {
-        // keep the tile cache (expensive to rebuild), drop old app versions
-        if (k === TILE_CACHE) return null;
+        // keep the tile + elevation caches (expensive to rebuild), drop old app versions
+        if (k === TILE_CACHE || k === ELEV_CACHE) return null;
         if (k.indexOf(SW_VERSION) === 0) return null;
         return caches.delete(k);
       }));
@@ -75,6 +76,18 @@ self.addEventListener('fetch', function (e) {
           });
         });
       })
+    );
+    return;
+  }
+
+  /* 1b. Terrain elevation — network-first, cached so a fetched cross-section still
+         draws when you are back offline. Small JSON, safe to keep across versions. */
+  if (url.hostname.indexOf('api.open-meteo.com') > -1) {
+    e.respondWith(
+      fetch(req).then(function (res) {
+        if (res && res.ok) { const copy = res.clone(); caches.open(ELEV_CACHE).then(function (c) { c.put(req, copy); }); }
+        return res;
+      }).catch(function () { return caches.match(req); })
     );
     return;
   }

@@ -203,6 +203,29 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
    and stay aligned. Positioning is via transform on the tile, so we only touch size. */
 .pf-seamless-256 .leaflet-tile{width:257px!important;height:257px!important}
 .pf-seamless-512 .leaflet-tile{width:513px!important;height:513px!important}
+/* live position: heading beam + solid core dot (a Leaflet divIcon) */
+.me-dot{position:relative;width:0;height:0}
+.me-dot .beam{position:absolute;left:-32px;top:-32px;width:64px;height:64px;transform-origin:50% 50%;transition:transform .12s linear;will-change:transform}
+.me-dot .core{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#4a9d7f;border:2px solid #06140e;box-shadow:0 0 0 3px rgba(74,157,127,.3)}
+/* overlays sit above the map + rails; they must not swallow map touches */
+.mapoverlay{position:absolute;z-index:600;pointer-events:none}
+.compass-rose{right:10px;top:10px;width:58px;height:58px;border-radius:50%;
+  background:rgba(20,15,10,.74);border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.compass-rose .cr-n{position:absolute;top:3px;left:0;right:0;text-align:center;font-size:10px;font-weight:800;color:var(--ore)}
+.compass-rose .cr-needle{position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:50% 50%;transition:transform .12s linear}
+.compass-rose .cr-needle::before{content:"";position:absolute;left:-4px;top:-22px;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:16px solid #d16b4a}
+.compass-rose .cr-needle::after{content:"";position:absolute;left:-3px;top:-2px;width:6px;height:20px;background:#6b5b45;border-radius:0 0 3px 3px}
+.compass-rose .cr-deg{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:10px;font-weight:700;color:var(--ink)}
+.alti-badge{left:10px;bottom:10px;background:rgba(20,15,10,.74);border:1px solid var(--line);border-radius:10px;
+  padding:6px 10px;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.4);line-height:1.35}
+.alti-badge b{font-size:15px;color:var(--ore)}
+.alti-badge .au{font-size:10px;color:var(--ink3);font-weight:600}
+.alti-badge .asub{font-size:10.5px;color:var(--ink2)}
+/* terrain cross-section panel */
+.prof-wrap{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-top:12px}
+.prof-wrap svg{width:100%;height:150px;display:block;background:var(--bg2);border-radius:8px;margin-top:8px}
+.prof-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-top:8px}
+.prof-stats b{color:var(--ore)}
 .map-tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .netpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);color:var(--ink2)}
 .dlbar{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin-top:8px;display:none}
@@ -417,11 +440,28 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <span class="netpill" id="netPill"><span class="gpsdot" id="netDot"></span><span id="netTxt" data-zh="检查中…" data-en="checking…">检查中…</span></span>
       <button class="btn ghost sm" onclick="fitPins()"><span data-zh="⊹ 适配标记" data-en="⊹ Fit pins">⊹ 适配标记</span></button>
       <button class="btn ghost sm" onclick="locateOnMap()"><span data-zh="📍 我的位置" data-en="📍 My position">📍 我的位置</span></button>
+      <button class="btn ghost sm" onclick="startProfilePick()"><span data-zh="📈 地形剖面" data-en="📈 Terrain profile">📈 地形剖面</span></button>
     </div>
     <div class="map-wrap">
       <div id="map"></div>
       <div class="map-rail map-rail-l" aria-hidden="true"></div>
       <div class="map-rail map-rail-r" aria-hidden="true"></div>
+      <div class="mapoverlay compass-rose" id="compassRose" style="display:none" aria-hidden="true">
+        <div class="cr-n">N</div><div class="cr-needle" id="crNeedle"></div><div class="cr-deg" id="crDeg">—</div>
+      </div>
+      <div class="mapoverlay alti-badge" id="altiBadge" style="display:none" aria-hidden="true">
+        <div><b id="altiNow">—</b> <span class="au" id="altiAcc"></span></div>
+        <div class="asub" id="altiClimb"></div>
+      </div>
+    </div>
+    <div class="prof-wrap" id="profWrap" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <b style="color:var(--ore);font-size:13.5px" data-zh="📈 地形剖面" data-en="📈 Terrain profile">📈 地形剖面</b>
+        <button class="btn ghost sm" style="width:auto;padding:4px 10px;font-size:12px" onclick="closeProfile()">✕</button>
+      </div>
+      <p class="hint" id="profMsg" style="margin:6px 0 0"></p>
+      <div id="profChart"></div>
+      <div class="prof-stats" id="profStats" style="display:none"></div>
     </div>
     <div class="sat-box">
       <div class="tile-head" id="satBasicHead" onclick="toggleSection('satBasicWrap','satBasicHead')">
@@ -672,7 +712,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 
     <details><summary><span data-zh="②b 三个自定义脚本（复制到 Copernicus）" data-en="②b The three custom scripts (copy these into Copernicus)">②b 三个自定义脚本（复制到 Copernicus）</span></summary>
       <p data-html data-zh="请把每个脚本粘贴到 Copernicus 配置工具中对应图层的 Custom script 框内。" data-en="Paste each into its matching layer's Custom script box in the Configuration Utility.">请把每个脚本粘贴到 Copernicus 配置工具中对应图层的 Custom script 框内。</p>
-      <p style="margin-top:10px"><b>IRON-RATIO</b> — bright red = rusty, iron-stained ground &amp; gossans</p>
+      <p style="margin-top:10px" data-html data-zh="<b>IRON-RATIO</b> — 亮红色＝锈色、铁染地面与铁帽" data-en="<b>IRON-RATIO</b> — bright red = rusty, iron-stained ground &amp; gossans"><b>IRON-RATIO</b> — 亮红色＝锈色、铁染地面与铁帽</p>
       <textarea id="scriptIron" aria-label="IRON-RATIO custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:170px">//VERSION=3
 function setup() {
   return { input: ["B02","B04","B08","B11"], output: { bands: 3 } };
@@ -690,7 +730,7 @@ function evaluatePixel(s) {
   return [0.10 + 0.90*v, 0.35*(1-v), 0.30*(1-v)];
 }</textarea>
       <button class="btn ghost sm" style="width:100%;margin-top:6px" onclick="copyScript('scriptIron',this)">📋 Copy IRON-RATIO script</button>
-      <p style="margin-top:10px"><b>FERROUS-IRON</b> — a second, different iron signature</p>
+      <p style="margin-top:10px" data-html data-zh="<b>FERROUS-IRON</b> — 第二种、不同的铁矿物信号" data-en="<b>FERROUS-IRON</b> — a second, different iron signature"><b>FERROUS-IRON</b> — 第二种、不同的铁矿物信号</p>
       <textarea id="scriptFerrous" aria-label="FERROUS-IRON custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:170px">//VERSION=3
 function setup() {
   return { input: ["B04","B08","B11"], output: { bands: 3 } };
@@ -706,7 +746,7 @@ function evaluatePixel(s) {
   return [0.10 + 0.85*v, 0.25 + 0.65*v, 0.12*(1-v)];
 }</textarea>
       <button class="btn ghost sm" style="width:100%;margin-top:6px" onclick="copyScript('scriptFerrous',this)">📋 Copy FERROUS-IRON script</button>
-      <p style="margin-top:10px"><b>ALTERATION</b> — red=iron, green=clay, blue=ferrous. Reddish-yellow = iron+clay together, the classic alteration signature</p>
+      <p style="margin-top:10px" data-html data-zh="<b>ALTERATION</b> — 红＝铁，绿＝黏土，蓝＝亚铁。偏红黄＝铁＋黏土同时出现，即典型的蚀变标志" data-en="<b>ALTERATION</b> — red=iron, green=clay, blue=ferrous. Reddish-yellow = iron+clay together, the classic alteration signature"><b>ALTERATION</b> — 红＝铁，绿＝黏土，蓝＝亚铁。偏红黄＝铁＋黏土同时出现，即典型的蚀变标志</p>
       <textarea id="scriptAlter" aria-label="ALTERATION custom script" readonly onclick="this.select()" style="font-family:monospace;font-size:11px;min-height:200px">//VERSION=3
 function setup() {
   return { input: ["B02","B04","B08","B11","B12"], output: { bands: 3 } };
@@ -1797,6 +1837,7 @@ function initMap(){
     errorTileUrl:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#140f0a"/><g stroke="#3a2e21" stroke-width="1"><line x1="0" y1="64" x2="256" y2="64"/><line x1="0" y1="128" x2="256" y2="128"/><line x1="0" y1="192" x2="256" y2="192"/><line x1="64" y1="0" x2="64" y2="256"/><line x1="128" y1="0" x2="128" y2="256"/><line x1="192" y1="0" x2="192" y2="256"/></g><text x="128" y="132" fill="#8a7a63" font-size="12" text-anchor="middle" font-family="monospace">no tile (offline)</text></svg>')
   }).addTo(map);
   markerLayer=L.layerGroup().addTo(map);
+  map.on('click',onMapClickForProfile);   // used only while picking a profile target
   refreshMarkers();fitPins();updateNet();
   restoreSatUI();
 }
@@ -2198,8 +2239,8 @@ function setSatLayer(kind,chip){
       className:(kind==='esrired'?'sat-redfilter pf-seamless-256':'pf-seamless-256')});
     satLayer.addTo(map);
     msg.innerHTML=(kind==='esrired')
-      ? 'Reddish-ground hint: rusty/red-brown patches are pushed brighter. A <b>rough</b> steer toward possible iron staining — could also be red soil or a roof. Ground-check.'
-      : 'Real satellite photo. Spot bare ground, rivers, tracks and old workings to plan your route. High-res where available.';
+      ? T('偏红地面提示：锈色／红棕色斑块被提亮显示。这是对可能铁染的<b>粗略</b>指示——也可能是红土或屋顶。请实地核查。','Reddish-ground hint: rusty/red-brown patches are pushed brighter. A <b>rough</b> steer toward possible iron staining — could also be red soil or a roof. Ground-check.')
+      : T('真实卫星照片。找出裸露地面、河流、道路和旧矿坑来规划路线。部分区域为高分辨率。','Real satellite photo. Spot bare ground, rivers, tracks and old workings to plan your route. High-res where available.');
     return;
   }
 
@@ -2235,8 +2276,17 @@ function setSatLayer(kind,chip){
       else msg.innerHTML=T('⚠ 光学图块未能加载。在<b>仅晴空影像</b>模式下，此处可能没有无云的过境影像——可点击<b>影像质量</b>改为允许多云，改用 📡 雷达，或稍作平移。','⚠ Optical tiles didn\'t load. In <b>Clear scenes only</b> mode there may be no cloud-free pass for this exact spot — tap <b>Image quality</b> to allow cloudier scenes, try 📡 Radar, or pan slightly.');
     });
     satLayer.addTo(map);
-    const labels={truecolor:'True-colour Sentinel-2. Real ground imagery.',iron:'Geology layer (highlights mineral/rock differences incl. iron). Ground-check.',clay:'SWIR layer — sensitive to clays / alteration minerals. Ground-check.',ndvi:'Vegetation index: low/bare = orange-ish, where geology is visible on foot.',radar:'Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.',ironratio:'Iron-oxide ratio (B04/B02): bright = rusty, iron-stained ground & gossans — a gold/base-metal pathfinder. Ground-check.',ferrous:'Ferrous-iron ratio (B11/B08): bright = a different iron mineralogy; use alongside the oxide ratio.',alteration:'Alteration composite: false-colour combo where hydrothermally altered ground stands out. Reddish/yellow patches worth investigating. Ground-check.'};
-    msg.textContent=labels[kind]+(isRadar?' Works in cloud & at night. Zoom in if blank.':' Zoom into a town; if blank it\'s cloud — try Radar.');
+    const labels={
+      truecolor:T('真彩色 Sentinel-2 影像。真实的地面影像。','True-colour Sentinel-2. Real ground imagery.'),
+      iron:T('地质图层（突出矿物／岩石差异，含铁元素）。请实地核查。','Geology layer (highlights mineral/rock differences incl. iron). Ground-check.'),
+      clay:T('短波红外图层——对黏土／蚀变矿物敏感。请实地核查。','SWIR layer — sensitive to clays / alteration minerals. Ground-check.'),
+      ndvi:T('植被指数：植被少／裸露地面偏橙色，那里可在地面上看到地质情况。','Vegetation index: low/bare = orange-ish, where geology is visible on foot.'),
+      radar:T('雷达：可穿透云层。笔直的明／暗线状构造＝山脊与断层；金脉常沿断层分布。','Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'),
+      ironratio:T('氧化铁比值（B04/B02）：明亮＝锈色、铁染地面与铁帽——金／贱金属的找矿标志。请实地核查。','Iron-oxide ratio (B04/B02): bright = rusty, iron-stained ground & gossans — a gold/base-metal pathfinder. Ground-check.'),
+      ferrous:T('亚铁比值（B11/B08）：明亮＝不同的铁矿物组合；与氧化铁比值配合使用。','Ferrous-iron ratio (B11/B08): bright = a different iron mineralogy; use alongside the oxide ratio.'),
+      alteration:T('蚀变综合：假彩色组合，热液蚀变地面会突出显示。偏红／黄色斑块值得调查。请实地核查。','Alteration composite: false-colour combo where hydrothermally altered ground stands out. Reddish/yellow patches worth investigating. Ground-check.')
+    };
+    msg.textContent=labels[kind]+(isRadar?T(' 可在云层下与夜间工作。若空白请放大。',' Works in cloud & at night. Zoom in if blank.'):T(' 放大到城镇附近查看；若空白则是云层——试试雷达。',' Zoom into a town; if blank it\'s cloud — try Radar.'));
   }catch(err){
     msg.innerHTML=T('⚠ 启动该图层时出错：','⚠ Error starting that layer: ')+(err&&err.message?err.message:err)+T('。点击"测试我的 ID"进行诊断。','. Tap Test my ID to diagnose.');
   }
@@ -2295,17 +2345,159 @@ function fitPins(){
   if(g.length===1){map.setView([g[0].lat,g[0].lon],15);return;}
   map.fitBounds(L.latLngBounds(g.map(function(s){return[s.lat,s.lon];})).pad(0.2));
 }
+/* ===== Live "me" on the map: heading beam + compass rose + altimeter =====
+   Reuses onOrient()/curHeading (magnetic) and currentDeclination() so the beam
+   points to TRUE north, matching the north-up map. GPS altitude feeds the
+   altimeter; it is coarse (±10-30 m on phones) but enough to read the trend. */
+let meWatchId=null,mePos=null,meCentred=false;
+let altStart=null,altMin=Infinity,altMax=-Infinity;
+function meBeamEl(){return meMarker&&meMarker._icon?meMarker._icon.querySelector('.beam'):null;}
+function makeMeIcon(){
+  const beam='<svg class="beam" viewBox="0 0 64 64"><defs>'+
+    '<linearGradient id="mebg" x1="0" y1="1" x2="0" y2="0">'+
+    '<stop offset="0" stop-color="#4a9d7f" stop-opacity=".6"/>'+
+    '<stop offset="1" stop-color="#4a9d7f" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="M32 32 L19 5 Q32 0 45 5 Z" fill="url(#mebg)"/></svg>';
+  return L.divIcon({className:'',html:'<div class="me-dot">'+beam+'<div class="core"></div></div>',iconSize:[0,0],iconAnchor:[0,0]});
+}
 function locateOnMap(){
   if(typeof L==='undefined'||!map)return toast(T('地图尚未就绪','Map not ready'),true);
   if(!navigator.geolocation)return toast(T('无 GPS','No GPS'),true);
+  if(meWatchId!=null){ if(mePos)map.setView([mePos.lat,mePos.lon],Math.max(15,map.getZoom())); return; }
   toast(T('正在定位…','Locating…'));
-  navigator.geolocation.getCurrentPosition(function(p){
-    const ll=[p.coords.latitude,p.coords.longitude];
-    if(meMarker)map.removeLayer(meMarker);
-    meMarker=L.circleMarker(ll,{radius:8,color:'#4a9d7f',fillColor:'#4a9d7f',fillOpacity:.9}).addTo(map);
-    map.setView(ll,15);
-  },function(){toast(T('GPS 失败 — 请检查权限','GPS failed — check permission'),true);},{enableHighAccuracy:true,timeout:15000});
+  meCentred=false;altStart=null;altMin=Infinity;altMax=-Infinity;
+  document.getElementById('altiBadge').style.display='block';
+  document.getElementById('compassRose').style.display='block';
+  meWatchId=navigator.geolocation.watchPosition(onMeFix,
+    function(){toast(T('GPS 失败 — 请检查权限','GPS failed — check permission'),true);},
+    {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+  startHeading();
 }
+function onMeFix(p){
+  const ll=[p.coords.latitude,p.coords.longitude];
+  mePos={lat:ll[0],lon:ll[1],acc:p.coords.accuracy};
+  if(!meMarker){meMarker=L.marker(ll,{icon:makeMeIcon(),interactive:false,keyboard:false}).addTo(map);updateMeBeam();}
+  else meMarker.setLatLng(ll);
+  if(!meCentred){map.setView(ll,Math.max(15,map.getZoom()));meCentred=true;}
+  updateAltimeter(p.coords.altitude,p.coords.altitudeAccuracy);
+}
+function stopMe(){
+  if(meWatchId!=null){navigator.geolocation.clearWatch(meWatchId);meWatchId=null;}
+  stopHeading();
+  const cr=document.getElementById('compassRose');if(cr)cr.style.display='none';
+}
+/* shared heading listeners (mirrors the nav-page pattern so the two never clash) */
+function startHeading(){
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(function(r){
+      if(r==='granted')window.addEventListener('deviceorientation',onOrient,true);
+      else toast(T('指南针权限被拒绝 — 方向箭头不可用','Compass permission denied — no facing arrow'),true);
+    }).catch(function(){});
+  }else{
+    window.addEventListener('deviceorientationabsolute',onOrient,true);
+    window.addEventListener('deviceorientation',onOrient,true);
+  }
+}
+function stopHeading(){
+  if(navWatchId!=null)return; // nav page still needs the sensor
+  window.removeEventListener('deviceorientationabsolute',onOrient,true);
+  window.removeEventListener('deviceorientation',onOrient,true);
+}
+function updateMeBeam(){
+  const t=(curHeading+currentDeclination()+360)%360; // magnetic -> true (map is north-up)
+  const b=meBeamEl();if(b)b.style.transform='rotate('+t+'deg)';
+  const n=document.getElementById('crNeedle');if(n)n.style.transform='rotate('+t+'deg)';
+  const d=document.getElementById('crDeg');if(d)d.textContent=Math.round(t)+'°';
+}
+function updateAltimeter(alt,accAlt){
+  const now=document.getElementById('altiNow'),acc=document.getElementById('altiAcc'),climb=document.getElementById('altiClimb');
+  if(!now)return;
+  if(alt==null||isNaN(alt)){now.textContent=T('海拔 —','elev —');acc.textContent=T('（此设备无高程）','(no altitude here)');climb.textContent='';return;}
+  if(altStart==null)altStart=alt;
+  altMin=Math.min(altMin,alt);altMax=Math.max(altMax,alt);
+  now.innerHTML=Math.round(alt)+' m';
+  acc.textContent=(accAlt!=null&&!isNaN(accAlt))?'±'+Math.round(accAlt)+' m':'';
+  const net=alt-altStart;
+  climb.textContent=T('自开始 ','since start ')+(net>=0?'↑':'↓')+Math.abs(Math.round(net))+' m'+
+    '  ·  ↕'+Math.round((altMax-altMin))+' m';
+}
+/* ===== Terrain cross-section: you -> a tapped point (Open-Meteo DEM) ===== */
+let profPicking=false;
+function startProfilePick(){
+  if(typeof L==='undefined'||!map)return toast(T('地图尚未就绪','Map not ready'),true);
+  const from=mePos||(curPos&&{lat:curPos.lat,lon:curPos.lon,acc:curPos.acc});
+  if(!from){toast(T('请先点击"我的位置"确定起点','Tap “My position” first to set the start'),true);return;}
+  profPicking=true;
+  toast(T('在地图上点击目标点（例如山顶）','Tap your target on the map (e.g. a summit)'));
+}
+function onMapClickForProfile(e){
+  if(!profPicking)return;
+  profPicking=false;
+  const from=mePos||curPos;
+  if(!from)return;
+  drawProfile({lat:from.lat,lon:from.lon},{lat:e.latlng.lat,lon:e.latlng.lng});
+}
+function profKey(a,b){const r=function(x){return x.toFixed(4);};return 'pf_prof_'+r(a.lat)+','+r(a.lon)+'_'+r(b.lat)+','+r(b.lon);}
+async function drawProfile(a,b){
+  const wrap=document.getElementById('profWrap'),msg=document.getElementById('profMsg');
+  wrap.style.display='block';document.getElementById('profStats').style.display='none';
+  document.getElementById('profChart').innerHTML='';
+  window.scrollTo(0,document.body.scrollHeight);
+  const N=48;
+  const lats=[],lons=[];
+  for(let i=0;i<N;i++){const f=i/(N-1);lats.push(a.lat+(b.lat-a.lat)*f);lons.push(a.lon+(b.lon-a.lon)*f);}
+  const totalDist=haversine(a.lat,a.lon,b.lat,b.lon);
+  const key=profKey(a,b);
+  let elev=null;
+  try{const cached=localStorage.getItem(key);if(cached)elev=JSON.parse(cached);}catch(e){}
+  if(!elev){
+    if(!navigator.onLine){msg.textContent=T('需要联网获取一次地形高程。联网后点击此处附近再试一次即可离线复用。','Needs signal once to fetch terrain heights. Do it online here and it is cached for offline reuse.');return;}
+    msg.textContent=T('正在获取地形高程…','Fetching terrain heights…');
+    try{
+      const url='https://api.open-meteo.com/v1/elevation?latitude='+lats.map(function(x){return x.toFixed(5);}).join(',')+'&longitude='+lons.map(function(x){return x.toFixed(5);}).join(',');
+      const res=await fetch(url);const j=await res.json();
+      elev=j.elevation;
+      if(!elev||!elev.length)throw new Error('no data');
+      try{localStorage.setItem(key,JSON.stringify(elev));}catch(e){}
+    }catch(err){msg.textContent=T('获取高程失败 — 请检查信号后重试。','Couldn’t fetch elevation — check signal and retry.');return;}
+  }
+  renderProfileChart(elev,totalDist,a,b);
+}
+function renderProfileChart(elev,totalDist,a,b){
+  const msg=document.getElementById('profMsg');msg.textContent='';
+  const W=320,H=150,padL=34,padR=8,padT=10,padB=20;
+  const n=elev.length;
+  let lo=Math.min.apply(null,elev),hi=Math.max.apply(null,elev);
+  if(hi-lo<10){hi=lo+10;} // avoid a flat line filling the panel on gentle ground
+  const x=function(i){return padL+(W-padL-padR)*(i/(n-1));};
+  const y=function(v){return padT+(H-padT-padB)*(1-(v-lo)/(hi-lo));};
+  let d='M'+x(0)+' '+y(elev[0]);
+  for(let i=1;i<n;i++)d+=' L'+x(i)+' '+y(elev[i]);
+  const area=d+' L'+x(n-1)+' '+(H-padB)+' L'+x(0)+' '+(H-padB)+' Z';
+  const gy=[lo,(lo+hi)/2,hi];
+  let grid='';gy.forEach(function(v){const yy=y(v).toFixed(1);grid+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#3a2e21" stroke-width="1"/><text x="'+(padL-4)+'" y="'+(y(v)+3).toFixed(1)+'" fill="#8a7a63" font-size="9" text-anchor="end">'+Math.round(v)+'</text>';});
+  const svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+
+    grid+
+    '<path d="'+area+'" fill="rgba(74,157,127,.18)"/>'+
+    '<path d="'+d+'" fill="none" stroke="#4a9d7f" stroke-width="2"/>'+
+    '<circle cx="'+x(0)+'" cy="'+y(elev[0])+'" r="4" fill="#d9a441"/>'+
+    '<circle cx="'+x(n-1)+'" cy="'+y(elev[n-1])+'" r="4" fill="#d16b4a"/>'+
+    '<text x="'+x(0)+'" y="'+(H-6)+'" fill="#d9a441" font-size="9" text-anchor="start">'+T('你','you')+'</text>'+
+    '<text x="'+(W-padR)+'" y="'+(H-6)+'" fill="#d16b4a" font-size="9" text-anchor="end">'+T('目标','target')+'</text>'+
+    '</svg>';
+  document.getElementById('profChart').innerHTML=svg;
+  const dz=elev[n-1]-elev[0], peak=Math.max.apply(null,elev);
+  const st=document.getElementById('profStats');st.style.display='flex';
+  st.innerHTML=
+    '<span>'+T('距离','Distance')+' <b>'+fmtDist(totalDist)+'</b></span>'+
+    '<span>'+T('目标高差','Target Δ')+' <b>'+(dz>=0?'+':'')+Math.round(dz)+' m</b></span>'+
+    '<span>'+T('沿途最高','Highest')+' <b>'+Math.round(peak)+' m</b></span>'+
+    '<span style="flex-basis:100%;color:var(--ink3);font-size:11px">'+
+      (dz>15?T('目标更高——爬上去通常能改善手机信号。','Target is higher — climbing usually improves phone signal.')
+      :dz<-15?T('目标更低——你已在相对高处。','Target is lower — you are already on higher ground.')
+      :T('地势相近——高度上信号差别不大。','Similar height — little signal gain from elevation here.'))+'</span>';
+}
+function closeProfile(){document.getElementById('profWrap').style.display='none';profPicking=false;}
 function updateNet(){
   const on=navigator.onLine;
   const dot=document.getElementById('netDot'),txt=document.getElementById('netTxt');
@@ -2406,7 +2598,7 @@ function onOrient(e){
   let h=null;
   if(e.webkitCompassHeading!=null)h=e.webkitCompassHeading;         // iOS: degrees from north
   else if(e.alpha!=null)h=360-e.alpha;                               // Android approx
-  if(h!=null){curHeading=h;updateNeedle();}
+  if(h!=null){curHeading=h;updateNeedle();if(meWatchId!=null)updateMeBeam();}
 }
 function haversine(a,b,c,d){
   const R=6371000,toR=Math.PI/180;
@@ -2838,7 +3030,7 @@ function buildHeadingIn(){
     T('\n预计返回时间：','\nExpected back by: ')+ret+
     T('\n\n如果到时你没有我的消息，请打电话给我。若仍联系不上，请把这个位置提供给有关当局。我出来后会给你发消息。谢谢。','\n\nIf you do not hear from me by then, please call me. If you still cannot reach me, please share this location with the authorities. I will message you when I am out. Thank you.');
   shareFallback(msg);openWhatsApp(msg);
-  document.getElementById('shareMsg').innerHTML='Opening WhatsApp with your start point and return time. If it didn\'t open, the message is copied — paste it to '+(shareCfg.name||'your contact')+'.';
+  document.getElementById('shareMsg').innerHTML=T('正在打开 WhatsApp，附上你的起点与预计返回时间。如果没有自动打开，消息已复制——请粘贴发送给','Opening WhatsApp with your start point and return time. If it didn\'t open, the message is copied — paste it to')+' '+(shareCfg.name||T('你的联系人','your contact'))+T('。','.');
 }
 function shareCheckin(){
   saveShareCfg();
@@ -2999,6 +3191,7 @@ function nav(v,btn){
     refreshMarkers();drawTrail();updateNet();
   },60);}
   if(v==='nav'){rebuildNavOptions();if(navTargetSample)startNavWatch();}else{stopNavWatch();}
+  if(v!=='map'){stopMe();const ab=document.getElementById('altiBadge');if(ab)ab.style.display='none';}
   if(v==='trail'){updateTrailUI();renderModeTiles();renderBattery();loadShareCfg();}
   window.scrollTo(0,0);
 }
