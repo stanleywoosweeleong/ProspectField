@@ -209,6 +209,8 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .me-dot{position:relative;width:0;height:0}
 .me-dot .beam{position:absolute;left:-32px;top:-32px;width:64px;height:64px;transform-origin:50% 50%;transition:transform .12s linear;will-change:transform}
 .me-dot .core{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#4a9d7f;border:2px solid #06140e;box-shadow:0 0 0 3px rgba(74,157,127,.3)}
+/* terrain-profile target dot (matches the red 'target' end of the chart) */
+.prof-target{width:14px;height:14px;border-radius:50%;background:#d16b4a;border:2px solid #06140e;box-shadow:0 0 0 3px rgba(209,107,74,.35)}
 /* Live readout STRIP above the map — compass + altimeter live here, NOT over the map,
    so they never cover a target when a satellite analysis layer is on. */
 .map-live{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;
@@ -232,6 +234,12 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .prof-wrap svg{width:100%;height:150px;display:block;background:var(--bg2);border-radius:8px;margin-top:8px}
 .prof-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-top:8px}
 .prof-stats b{color:var(--ore)}
+/* the elevation→signal hint. Safety info, so it is readable, not greyed out. */
+.prof-hint{flex-basis:100%;margin-top:6px;font-size:13px;line-height:1.45;color:var(--ink2)}
+/* "climb for signal" case — emphasised with the app's gold accent (like the menu),
+   not pure white, so it stands out without stealing focus. */
+.prof-hint.signal{font-size:13px;font-weight:700;color:var(--ore);
+  background:rgba(217,164,65,.10);border-left:3px solid var(--ore);border-radius:8px;padding:8px 11px}
 .map-tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .netpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);color:var(--ink2)}
 .dlbar{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin-top:8px;display:none}
@@ -2466,19 +2474,24 @@ function updateAltimeter(alt,accAlt){
     '  ·  ↕'+Math.round((altMax-altMin))+' m';
 }
 /* ===== Terrain cross-section: you -> a tapped point (Open-Meteo DEM) ===== */
-let profPicking=false,lastProfile=null;
+let profPicking=false,lastProfile=null,profTargetMarker=null,profLine=null;
+/* remove the on-map target dot + transect line (on close, or before a new pick) */
+function clearProfileMark(){
+  if(!map)return;
+  if(profTargetMarker){map.removeLayer(profTargetMarker);profTargetMarker=null;}
+  if(profLine){map.removeLayer(profLine);profLine=null;}
+}
 function startProfilePick(){
   if(typeof L==='undefined'||!map)return toast(T('地图尚未就绪','Map not ready'),true);
   const from=mePos||(curPos&&{lat:curPos.lat,lon:curPos.lon,acc:curPos.acc});
   if(!from){toast(T('请先点击"我的位置"确定起点','Tap “My position” first to set the start'),true);return;}
   profPicking=true;
-  toast(T('在地图上点击目标点（例如山顶）','Tap your target on the map (e.g. a summit)'));
+  toast(T('在地图上点击目标点（例如山顶）；可再次点击更换目标','Tap your target on the map (e.g. a summit) — tap again to change it'));
 }
 function onMapClickForProfile(e){
-  if(!profPicking)return;
-  profPicking=false;
+  if(!profPicking)return;   // stays armed while the panel is open, so a new tap re-picks
   const from=mePos||curPos;
-  if(!from)return;
+  if(!from){profPicking=false;return;}
   drawProfile({lat:from.lat,lon:from.lon},{lat:e.latlng.lat,lon:e.latlng.lng});
 }
 function profKey(a,b){const r=function(x){return x.toFixed(4);};return 'pf_prof_'+r(a.lat)+','+r(a.lon)+'_'+r(b.lat)+','+r(b.lon);}
@@ -2486,6 +2499,13 @@ async function drawProfile(a,b){
   const wrap=document.getElementById('profWrap'),msg=document.getElementById('profMsg');
   wrap.style.display='block';document.getElementById('profStats').style.display='none';
   document.getElementById('profChart').innerHTML='';
+  // mark the target on the map immediately (replacing any previous pick) so it is
+  // clear where the profile runs to — visible even while heights are still fetching
+  if(map){
+    clearProfileMark();
+    profLine=L.polyline([[a.lat,a.lon],[b.lat,b.lon]],{color:'#d9a441',weight:2,opacity:.85,dashArray:'5,6'}).addTo(map);
+    profTargetMarker=L.marker([b.lat,b.lon],{icon:L.divIcon({className:'',html:'<div class="prof-target"></div>',iconSize:[18,18],iconAnchor:[9,9]}),interactive:false,keyboard:false}).addTo(map);
+  }
   // bring the profile panel into view (not the very bottom of the page)
   wrap.scrollIntoView({behavior:'smooth',block:'center'});
   const N=48;
@@ -2533,17 +2553,23 @@ function renderProfileChart(elev,totalDist,a,b){
     '</svg>';
   document.getElementById('profChart').innerHTML=svg;
   const dz=elev[n-1]-elev[0], peak=Math.max.apply(null,elev);
+  // elevation -> phone-signal hint. The "climb for signal" case is safety info, so it
+  // gets the bright, highlighted treatment; the others stay clearly readable.
+  let hintCls='prof-hint',hintTxt;
+  if(dz>15){hintCls='prof-hint signal';
+    hintTxt=T('📶 目标更高约 '+Math.round(dz)+' 米——爬上去通常能改善手机信号。','📶 Target is ~'+Math.round(dz)+' m higher — climbing usually improves phone signal.');}
+  else if(dz<-15){
+    hintTxt=T('目标更低——你已在相对高处；若需信号，应向上走而非向下。','Target is lower — you are already on higher ground; for signal, head up rather than down.');}
+  else{
+    hintTxt=T('地势相近——高度上信号差别不大。','Similar height — little signal gain from elevation here.');}
   const st=document.getElementById('profStats');st.style.display='flex';
   st.innerHTML=
     '<span>'+T('距离','Distance')+' <b>'+fmtDist(totalDist)+'</b></span>'+
     '<span>'+T('目标高差','Target Δ')+' <b>'+(dz>=0?'+':'')+Math.round(dz)+' m</b></span>'+
     '<span>'+T('沿途最高','Highest')+' <b>'+Math.round(peak)+' m</b></span>'+
-    '<span style="flex-basis:100%;color:var(--ink3);font-size:11px">'+
-      (dz>15?T('目标更高——爬上去通常能改善手机信号。','Target is higher — climbing usually improves phone signal.')
-      :dz<-15?T('目标更低——你已在相对高处。','Target is lower — you are already on higher ground.')
-      :T('地势相近——高度上信号差别不大。','Similar height — little signal gain from elevation here.'))+'</span>';
+    '<span class="'+hintCls+'">'+hintTxt+'</span>';
 }
-function closeProfile(){document.getElementById('profWrap').style.display='none';profPicking=false;}
+function closeProfile(){document.getElementById('profWrap').style.display='none';profPicking=false;clearProfileMark();}
 function updateNet(){
   const on=navigator.onLine;
   const dot=document.getElementById('netDot'),txt=document.getElementById('netTxt');
@@ -3237,7 +3263,7 @@ function nav(v,btn){
     refreshMarkers();drawTrail();updateNet();
   },60);}
   if(v==='nav'){rebuildNavOptions();if(navTargetSample)startNavWatch();}else{stopNavWatch();}
-  if(v!=='map'){stopMe();}   // stopMe() also hides the live readout strip
+  if(v!=='map'){stopMe();profPicking=false;}   // stopMe() also hides the live readout strip
   if(v==='trail'){updateTrailUI();renderModeTiles();renderBattery();loadShareCfg();}
   window.scrollTo(0,0);
 }
