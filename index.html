@@ -203,24 +203,30 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
    and stay aligned. Positioning is via transform on the tile, so we only touch size. */
 .pf-seamless-256 .leaflet-tile{width:257px!important;height:257px!important}
 .pf-seamless-512 .leaflet-tile{width:513px!important;height:513px!important}
-/* live position: heading beam + solid core dot (a Leaflet divIcon) */
+/* live position: heading beam + solid core dot (a Leaflet divIcon).
+   This stays on the map because it marks WHERE you are + which way you face; it is
+   small and sits on your own position, not over distant target areas. */
 .me-dot{position:relative;width:0;height:0}
 .me-dot .beam{position:absolute;left:-32px;top:-32px;width:64px;height:64px;transform-origin:50% 50%;transition:transform .12s linear;will-change:transform}
 .me-dot .core{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#4a9d7f;border:2px solid #06140e;box-shadow:0 0 0 3px rgba(74,157,127,.3)}
-/* overlays sit above the map + rails; they must not swallow map touches */
-.mapoverlay{position:absolute;z-index:600;pointer-events:none}
-.compass-rose{right:10px;top:10px;width:58px;height:58px;border-radius:50%;
-  background:rgba(20,15,10,.74);border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.4)}
-.compass-rose .cr-n{position:absolute;top:3px;left:0;right:0;text-align:center;font-size:10px;font-weight:800;color:var(--ore)}
+/* Live readout STRIP above the map — compass + altimeter live here, NOT over the map,
+   so they never cover a target when a satellite analysis layer is on. */
+.map-live{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.map-live.on{display:flex}
+.ml-alt{line-height:1.3}
+.ml-alt b{font-size:16px;color:var(--ore)}
+.ml-alt .au{font-size:10.5px;color:var(--ink3);font-weight:600}
+.ml-alt .asub{font-size:11px;color:var(--ink2)}
+.ml-spacer{flex:1 1 auto}
+.ml-compass{display:flex;align-items:center;gap:8px}
+.ml-compass .cr-deg{font-size:15px;font-weight:800;color:var(--ink);min-width:44px;text-align:right}
+.compass-rose{position:relative;width:44px;height:44px;border-radius:50%;flex:0 0 auto;
+  background:var(--bg2);border:1px solid var(--line)}
+.compass-rose .cr-n{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9px;font-weight:800;color:var(--ore)}
 .compass-rose .cr-needle{position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:50% 50%;transition:transform .12s linear}
-.compass-rose .cr-needle::before{content:"";position:absolute;left:-4px;top:-22px;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:16px solid #d16b4a}
-.compass-rose .cr-needle::after{content:"";position:absolute;left:-3px;top:-2px;width:6px;height:20px;background:#6b5b45;border-radius:0 0 3px 3px}
-.compass-rose .cr-deg{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:10px;font-weight:700;color:var(--ink)}
-.alti-badge{left:10px;bottom:10px;background:rgba(20,15,10,.74);border:1px solid var(--line);border-radius:10px;
-  padding:6px 10px;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.4);line-height:1.35}
-.alti-badge b{font-size:15px;color:var(--ore)}
-.alti-badge .au{font-size:10px;color:var(--ink3);font-weight:600}
-.alti-badge .asub{font-size:10.5px;color:var(--ink2)}
+.compass-rose .cr-needle::before{content:"";position:absolute;left:-3px;top:-17px;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:13px solid #d16b4a}
+.compass-rose .cr-needle::after{content:"";position:absolute;left:-2px;top:-1px;width:4px;height:15px;background:#6b5b45;border-radius:0 0 2px 2px}
 /* terrain cross-section panel */
 .prof-wrap{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-top:12px}
 .prof-wrap svg{width:100%;height:150px;display:block;background:var(--bg2);border-radius:8px;margin-top:8px}
@@ -442,17 +448,21 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <button class="btn ghost sm" onclick="locateOnMap()"><span data-zh="📍 我的位置" data-en="📍 My position">📍 我的位置</span></button>
       <button class="btn ghost sm" onclick="startProfilePick()"><span data-zh="📈 地形剖面" data-en="📈 Terrain profile">📈 地形剖面</span></button>
     </div>
+    <div class="map-live" id="mapLive">
+      <div class="ml-alt">
+        <div><b id="altiNow">—</b> <span class="au" id="altiAcc"></span></div>
+        <div class="asub" id="altiClimb"></div>
+      </div>
+      <div class="ml-spacer"></div>
+      <div class="ml-compass" title="facing / 朝向">
+        <div class="compass-rose"><div class="cr-n">N</div><div class="cr-needle" id="crNeedle"></div></div>
+        <span class="cr-deg" id="crDeg">—</span>
+      </div>
+    </div>
     <div class="map-wrap">
       <div id="map"></div>
       <div class="map-rail map-rail-l" aria-hidden="true"></div>
       <div class="map-rail map-rail-r" aria-hidden="true"></div>
-      <div class="mapoverlay compass-rose" id="compassRose" style="display:none" aria-hidden="true">
-        <div class="cr-n">N</div><div class="cr-needle" id="crNeedle"></div><div class="cr-deg" id="crDeg">—</div>
-      </div>
-      <div class="mapoverlay alti-badge" id="altiBadge" style="display:none" aria-hidden="true">
-        <div><b id="altiNow">—</b> <span class="au" id="altiAcc"></span></div>
-        <div class="asub" id="altiClimb"></div>
-      </div>
     </div>
     <div class="prof-wrap" id="profWrap" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -1043,9 +1053,20 @@ function setLang(l){
   applyLang();
   // rebuild anything drawn from JS so labels follow the language
   renderTargets();renderIndicators();renderMaterialDepth();renderSampleTags();
-  satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();
+  satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();redrawSatMsg();
   updateCloudUI();updateTrailUI();updateReturnDisplay();if(map)updateNet();
+  redrawMapExtras();   // altimeter + terrain profile carry baked-in labels — redraw them
   toast(l==='zh'?'已切换为中文':'Switched to English');
+}
+/* The altimeter text and the terrain-profile chart embed their labels at draw time,
+   so a language switch must redraw them from the last values rather than wait for the
+   next GPS fix / re-tap. */
+function redrawMapExtras(){
+  if(lastAlt!==null){updateAltimeter(lastAlt.alt,lastAlt.accAlt);}
+  const pw=document.getElementById('profWrap');
+  if(lastProfile&&pw&&pw.style.display!=='none'){
+    renderProfileChart(lastProfile.elev,lastProfile.totalDist,lastProfile.a,lastProfile.b);
+  }
 }
 function T(zh,en){return LANG==='zh'?zh:en;}
 
@@ -2211,6 +2232,40 @@ function renderSatTiles(){
   });
 }
 
+/* Steady-state description for a layer, resolved in the CURRENT language each call so
+   a language switch can regenerate it. Transient messages (offline / no-ID / tile
+   errors / zoomed-in) are NOT here — they are situational and left as-is. */
+function satLayerDescription(kind){
+  const D={
+    esri:T('真实卫星照片。找出裸露地面、河流、道路和旧矿坑来规划路线。部分区域为高分辨率。','Real satellite photo. Spot bare ground, rivers, tracks and old workings to plan your route. High-res where available.'),
+    esrired:T('偏红地面提示：锈色／红棕色斑块被提亮显示。这是对可能铁染的<b>粗略</b>指示——也可能是红土或屋顶。请实地核查。','Reddish-ground hint: rusty/red-brown patches are pushed brighter. A <b>rough</b> steer toward possible iron staining — could also be red soil or a roof. Ground-check.'),
+    truecolor:T('真彩色 Sentinel-2 影像。真实的地面影像。','True-colour Sentinel-2. Real ground imagery.'),
+    iron:T('地质图层（突出矿物／岩石差异，含铁元素）。请实地核查。','Geology layer (highlights mineral/rock differences incl. iron). Ground-check.'),
+    clay:T('短波红外图层——对黏土／蚀变矿物敏感。请实地核查。','SWIR layer — sensitive to clays / alteration minerals. Ground-check.'),
+    ndvi:T('植被指数：植被少／裸露地面偏橙色，那里可在地面上看到地质情况。','Vegetation index: low/bare = orange-ish, where geology is visible on foot.'),
+    radar:T('雷达：可穿透云层。笔直的明／暗线状构造＝山脊与断层；金脉常沿断层分布。','Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'),
+    ironratio:T('氧化铁比值（B04/B02）：明亮＝锈色、铁染地面与铁帽——金／贱金属的找矿标志。请实地核查。','Iron-oxide ratio (B04/B02): bright = rusty, iron-stained ground & gossans — a gold/base-metal pathfinder. Ground-check.'),
+    ferrous:T('亚铁比值（B11/B08）：明亮＝不同的铁矿物组合；与氧化铁比值配合使用。','Ferrous-iron ratio (B11/B08): bright = a different iron mineralogy; use alongside the oxide ratio.'),
+    alteration:T('蚀变综合：假彩色组合，热液蚀变地面会突出显示。偏红／黄色斑块值得调查。请实地核查。','Alteration composite: false-colour combo where hydrothermally altered ground stands out. Reddish/yellow patches worth investigating. Ground-check.')
+  };
+  if(!(kind in D))return null;
+  let s=D[kind];
+  const ADV={truecolor:1,iron:1,clay:1,ndvi:1,radar:1,ironratio:1,ferrous:1,alteration:1};
+  if(ADV[kind]){
+    s+=(kind==='radar')?T(' 可在云层下与夜间工作。若空白请放大。',' Works in cloud & at night. Zoom in if blank.')
+                       :T(' 放大到城镇附近查看；若空白则是云层——试试雷达。',' Zoom into a town; if blank it\'s cloud — try Radar.');
+  }
+  return s;
+}
+/* Re-apply the current layer's description in the active language (called from setLang).
+   Only when a describable layer is genuinely shown (satLayer present) — never overwrites
+   a situational message like "needs an instance ID". */
+function redrawSatMsg(){
+  if(!currentSatKind||currentSatKind==='off'||!satLayer)return;
+  const d=satLayerDescription(currentSatKind);
+  if(d==null)return;
+  const m=document.getElementById('satMsg');if(m)m.innerHTML=d;
+}
 function setSatLayer(kind,chip){
   clearAllSatChips();chip.classList.add('on');
   currentSatKind=kind;
@@ -2238,9 +2293,7 @@ function setSatLayer(kind,chip){
     satLayer=L.tileLayer(ESRI_IMAGERY,{maxZoom:18,opacity:1,crossOrigin:true,
       className:(kind==='esrired'?'sat-redfilter pf-seamless-256':'pf-seamless-256')});
     satLayer.addTo(map);
-    msg.innerHTML=(kind==='esrired')
-      ? T('偏红地面提示：锈色／红棕色斑块被提亮显示。这是对可能铁染的<b>粗略</b>指示——也可能是红土或屋顶。请实地核查。','Reddish-ground hint: rusty/red-brown patches are pushed brighter. A <b>rough</b> steer toward possible iron staining — could also be red soil or a roof. Ground-check.')
-      : T('真实卫星照片。找出裸露地面、河流、道路和旧矿坑来规划路线。部分区域为高分辨率。','Real satellite photo. Spot bare ground, rivers, tracks and old workings to plan your route. High-res where available.');
+    msg.innerHTML=satLayerDescription(kind);
     return;
   }
 
@@ -2276,17 +2329,7 @@ function setSatLayer(kind,chip){
       else msg.innerHTML=T('⚠ 光学图块未能加载。在<b>仅晴空影像</b>模式下，此处可能没有无云的过境影像——可点击<b>影像质量</b>改为允许多云，改用 📡 雷达，或稍作平移。','⚠ Optical tiles didn\'t load. In <b>Clear scenes only</b> mode there may be no cloud-free pass for this exact spot — tap <b>Image quality</b> to allow cloudier scenes, try 📡 Radar, or pan slightly.');
     });
     satLayer.addTo(map);
-    const labels={
-      truecolor:T('真彩色 Sentinel-2 影像。真实的地面影像。','True-colour Sentinel-2. Real ground imagery.'),
-      iron:T('地质图层（突出矿物／岩石差异，含铁元素）。请实地核查。','Geology layer (highlights mineral/rock differences incl. iron). Ground-check.'),
-      clay:T('短波红外图层——对黏土／蚀变矿物敏感。请实地核查。','SWIR layer — sensitive to clays / alteration minerals. Ground-check.'),
-      ndvi:T('植被指数：植被少／裸露地面偏橙色，那里可在地面上看到地质情况。','Vegetation index: low/bare = orange-ish, where geology is visible on foot.'),
-      radar:T('雷达：可穿透云层。笔直的明／暗线状构造＝山脊与断层；金脉常沿断层分布。','Radar: sees through cloud. Straight bright/dark lineaments = ridges & faults; gold veins often follow faults.'),
-      ironratio:T('氧化铁比值（B04/B02）：明亮＝锈色、铁染地面与铁帽——金／贱金属的找矿标志。请实地核查。','Iron-oxide ratio (B04/B02): bright = rusty, iron-stained ground & gossans — a gold/base-metal pathfinder. Ground-check.'),
-      ferrous:T('亚铁比值（B11/B08）：明亮＝不同的铁矿物组合；与氧化铁比值配合使用。','Ferrous-iron ratio (B11/B08): bright = a different iron mineralogy; use alongside the oxide ratio.'),
-      alteration:T('蚀变综合：假彩色组合，热液蚀变地面会突出显示。偏红／黄色斑块值得调查。请实地核查。','Alteration composite: false-colour combo where hydrothermally altered ground stands out. Reddish/yellow patches worth investigating. Ground-check.')
-    };
-    msg.textContent=labels[kind]+(isRadar?T(' 可在云层下与夜间工作。若空白请放大。',' Works in cloud & at night. Zoom in if blank.'):T(' 放大到城镇附近查看；若空白则是云层——试试雷达。',' Zoom into a town; if blank it\'s cloud — try Radar.'));
+    msg.innerHTML=satLayerDescription(kind);
   }catch(err){
     msg.innerHTML=T('⚠ 启动该图层时出错：','⚠ Error starting that layer: ')+(err&&err.message?err.message:err)+T('。点击"测试我的 ID"进行诊断。','. Tap Test my ID to diagnose.');
   }
@@ -2366,8 +2409,7 @@ function locateOnMap(){
   if(meWatchId!=null){ if(mePos)map.setView([mePos.lat,mePos.lon],Math.max(15,map.getZoom())); return; }
   toast(T('正在定位…','Locating…'));
   meCentred=false;altStart=null;altMin=Infinity;altMax=-Infinity;
-  document.getElementById('altiBadge').style.display='block';
-  document.getElementById('compassRose').style.display='block';
+  document.getElementById('mapLive').classList.add('on');
   meWatchId=navigator.geolocation.watchPosition(onMeFix,
     function(){toast(T('GPS 失败 — 请检查权限','GPS failed — check permission'),true);},
     {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
@@ -2384,7 +2426,7 @@ function onMeFix(p){
 function stopMe(){
   if(meWatchId!=null){navigator.geolocation.clearWatch(meWatchId);meWatchId=null;}
   stopHeading();
-  const cr=document.getElementById('compassRose');if(cr)cr.style.display='none';
+  const ml=document.getElementById('mapLive');if(ml)ml.classList.remove('on');
 }
 /* shared heading listeners (mirrors the nav-page pattern so the two never clash) */
 function startHeading(){
@@ -2409,7 +2451,9 @@ function updateMeBeam(){
   const n=document.getElementById('crNeedle');if(n)n.style.transform='rotate('+t+'deg)';
   const d=document.getElementById('crDeg');if(d)d.textContent=Math.round(t)+'°';
 }
+let lastAlt=null;
 function updateAltimeter(alt,accAlt){
+  lastAlt={alt:alt,accAlt:accAlt};   // remembered so a language switch can redraw
   const now=document.getElementById('altiNow'),acc=document.getElementById('altiAcc'),climb=document.getElementById('altiClimb');
   if(!now)return;
   if(alt==null||isNaN(alt)){now.textContent=T('海拔 —','elev —');acc.textContent=T('（此设备无高程）','(no altitude here)');climb.textContent='';return;}
@@ -2422,7 +2466,7 @@ function updateAltimeter(alt,accAlt){
     '  ·  ↕'+Math.round((altMax-altMin))+' m';
 }
 /* ===== Terrain cross-section: you -> a tapped point (Open-Meteo DEM) ===== */
-let profPicking=false;
+let profPicking=false,lastProfile=null;
 function startProfilePick(){
   if(typeof L==='undefined'||!map)return toast(T('地图尚未就绪','Map not ready'),true);
   const from=mePos||(curPos&&{lat:curPos.lat,lon:curPos.lon,acc:curPos.acc});
@@ -2442,7 +2486,8 @@ async function drawProfile(a,b){
   const wrap=document.getElementById('profWrap'),msg=document.getElementById('profMsg');
   wrap.style.display='block';document.getElementById('profStats').style.display='none';
   document.getElementById('profChart').innerHTML='';
-  window.scrollTo(0,document.body.scrollHeight);
+  // bring the profile panel into view (not the very bottom of the page)
+  wrap.scrollIntoView({behavior:'smooth',block:'center'});
   const N=48;
   const lats=[],lons=[];
   for(let i=0;i<N;i++){const f=i/(N-1);lats.push(a.lat+(b.lat-a.lat)*f);lons.push(a.lon+(b.lon-a.lon)*f);}
@@ -2464,6 +2509,7 @@ async function drawProfile(a,b){
   renderProfileChart(elev,totalDist,a,b);
 }
 function renderProfileChart(elev,totalDist,a,b){
+  lastProfile={elev:elev,totalDist:totalDist,a:a,b:b};   // for language-switch redraw
   const msg=document.getElementById('profMsg');msg.textContent='';
   const W=320,H=150,padL=34,padR=8,padT=10,padB=20;
   const n=elev.length;
@@ -3191,7 +3237,7 @@ function nav(v,btn){
     refreshMarkers();drawTrail();updateNet();
   },60);}
   if(v==='nav'){rebuildNavOptions();if(navTargetSample)startNavWatch();}else{stopNavWatch();}
-  if(v!=='map'){stopMe();const ab=document.getElementById('altiBadge');if(ab)ab.style.display='none';}
+  if(v!=='map'){stopMe();}   // stopMe() also hides the live readout strip
   if(v==='trail'){updateTrailUI();renderModeTiles();renderBattery();loadShareCfg();}
   window.scrollTo(0,0);
 }

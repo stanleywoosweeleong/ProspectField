@@ -5,7 +5,7 @@
    - Everything else: network-first, falling back to cache.
    Bump SW_VERSION when the app changes so users get the new build.
 */
-const SW_VERSION = 'pf-v4';
+const SW_VERSION = 'pf-v8';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const TILE_CACHE  = 'pf-tiles';          // shared with the in-app region downloader
 const ELEV_CACHE  = 'pf-elev';           // terrain elevation profiles (persist across versions)
