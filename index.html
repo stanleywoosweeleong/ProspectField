@@ -110,6 +110,19 @@ button{cursor:pointer;font-family:inherit;border:none}
 .coordbox{background:var(--bg2);border:1px dashed var(--ore2);border-radius:12px;padding:14px;text-align:center;margin-bottom:6px}
 .coordbox .big{font-size:22px;font-weight:700;color:var(--ore)}
 .site-pin{width:30px;height:30px;border-radius:50%;background:rgba(217,164,65,.25);border:2px solid var(--ore);color:var(--ore);font-size:18px;line-height:26px;text-align:center;font-weight:700;box-shadow:0 0 10px rgba(217,164,65,.6)}
+.seg{display:flex;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;margin:4px 0 8px}
+.seg button{flex:1;padding:10px 6px;border-radius:9px;background:transparent;color:var(--ink2);font-weight:700;font-size:13.5px}
+.seg button.on{background:var(--copper);color:#fff}
+.lvl{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:1px}
+.lvl.strong{background:var(--ore);color:#1a1207}
+.lvl.moderate{background:var(--copper);color:#fff}
+.lvl.weak{background:var(--bg2);color:var(--ink3);border:1px solid var(--line)}
+.sl-pin{width:26px;height:26px;border-radius:50%;background:#7c5cff;border:2px solid #fff;color:#fff;font-size:13px;line-height:22px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.55)}
+.sl-pin.visited{background:#2f9e6a}.sl-pin.sampled{background:#1e7fa8}.sl-pin.rejected{background:#666;opacity:.75}
+.sl-item.rejected{opacity:.55}
+.sl-item .acts{gap:6px}
+.sl-item .acts button,.sl-item .acts select{padding:6px 9px;font-size:12.5px}
+.sl-stat{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2);margin-left:6px}
 .coordbox .meta{font-size:14px;color:var(--ink2);margin-top:5px;font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .chip{padding:8px 13px;border-radius:20px;background:var(--bg2);border:1px solid var(--line);font-size:13px;color:var(--ink2);transition:.15s}
@@ -128,7 +141,8 @@ button{cursor:pointer;font-family:inherit;border:none}
 .samp .tg{font-size:12.5px;padding:4px 9px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
 .samp .note{font-size:14px;color:var(--ink2);margin-top:8px;line-height:1.5}
 .samp .del{background:none;color:var(--ink3);font-size:12px;padding:4px}
-.samp .acts{display:flex;gap:8px;margin-top:10px}
+.samp .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.samp .acts select{width:auto;padding:7px 8px;font-size:13px;border-radius:8px}
 .samp .acts button{font-size:13px;padding:8px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);color:var(--ink2)}
 .samp .photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .samp .photos img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
@@ -184,9 +198,11 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
    instead of scrolling the page and the user gets stuck. These transparent strips down
    each edge pass touches through to the page. Hidden on wide screens where the map
    does not span the full width. */
-.map-rail{position:absolute;top:0;bottom:0;width:34px;z-index:500;
+/* z-index: above the map (which is its own layer at z 1) but BELOW the fixed bottom nav (z 60),
+   or the strips swallow taps on Estimate / Log when the map reaches the bottom of the screen. */
+.map-rail{position:absolute;top:0;bottom:0;width:34px;z-index:50;
   touch-action:pan-y;background:transparent;pointer-events:auto}
-.map-rail-l{left:0;border-radius:14px 0 0 14px}
+.map-rail-l{left:0;top:96px;border-radius:0}   /* start below the +/- zoom buttons */
 .map-rail-r{right:0;border-radius:0 14px 14px 0}
 /* Rails are invisible touch-catch strips only. The old "edge hint" gradient painted
    the dark background at 45% down each side, which read as two vertical shadow bars
@@ -394,15 +410,37 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <button class="btn sm" style="flex:none;padding:9px 18px" onclick="setSiteFromInput()"><span data-zh="设定" data-en="Set">设定</span></button>
     </div>
     <p class="hint" style="margin:6px 0 0;font-size:12.5px" data-zh="接受十进制度（4.5975, 101.0901）或度分秒（4°35'51&quot;N 101°05'24&quot;E）。南纬、西经用负号或 S / W。" data-en="Accepts decimal degrees (4.5975, 101.0901) or degrees-minutes-seconds (4°35'51&quot;N 101°05'24&quot;E). Use minus or S / W for south and west.">接受十进制度（4.5975, 101.0901）或度分秒（4°35'51"N 101°05'24"E）。南纬、西经用负号或 S / W。</p>
-    <div class="row" id="siteActs" style="margin-top:12px;display:none">
+    <div class="row" id="siteActs" style="margin-top:12px;display:none;flex-wrap:wrap">
       <button class="btn sm" style="flex:1" onclick="scanSiteOnMap()"><span data-zh="🛰️ 在地图上远程查看" data-en="🛰️ Scan remotely on map">🛰️ 在地图上远程查看</span></button>
       <button class="btn ghost sm" style="flex:1" onclick="navigateToSite()"><span data-zh="🧭 导航前往" data-en="🧭 Navigate there">🧭 导航前往</span></button>
+      <button class="btn ghost sm" style="flex:1 1 100%" onclick="addSiteToShortlist()"><span data-zh="📌 加入候选清单" data-en="📌 Add to shortlist">📌 加入候选清单</span></button>
     </div>
     <button class="btn ghost sm" id="siteClear" style="width:100%;margin-top:8px;display:none" onclick="clearSite()"><span data-zh="清除位置" data-en="Clear location">清除位置</span></button>
   </div>
+  <div class="card" id="slCard">
+    <h2><span data-zh="📌 候选清单" data-en="📌 Shortlist — candidate sites">📌 候选清单</span></h2>
+    <p class="hint" data-html data-zh="值得细看的地点：来自卫星扫描、手动输入或导入的文件。为每个地点标记「待查看 → 已到访 → 已取样／已排除」。把几个高分地点安排在同一趟行程里，可以大幅节省路费。" data-en="Places worth a closer look — from satellite scans, coordinates you type, or files you import. Move each one from &quot;to check&quot; to visited, sampled or rejected. Grouping several strong sites into one trip is the biggest saving on travel.">值得细看的地点：来自卫星扫描、手动输入或导入的文件。为每个地点标记「待查看 → 已到访 → 已取样／已排除」。把几个高分地点安排在同一趟行程里，可以大幅节省路费。</p>
+    <div class="hint" id="slSummary" style="margin-bottom:6px"></div>
+    <div id="slList"></div>
+    <details style="margin-top:10px"><summary><span data-zh="➕ 批量添加或导入地点" data-en="➕ Add several points or import a file">➕ 批量添加或导入地点</span></summary>
+      <p class="hint" style="margin:8px 0" data-zh="每行一个地点：名称（可选）, 纬度, 经度。可直接粘贴旧矿点记录、论坛或谷歌地图中的坐标。" data-en="One place per line: name (optional), latitude, longitude. Paste coordinates from old mine records, forums or Google Maps.">每行一个地点：名称（可选）, 纬度, 经度。可直接粘贴旧矿点记录、论坛或谷歌地图中的坐标。</p>
+      <textarea id="slPaste" rows="4" aria-label="粘贴坐标" data-zh-al="粘贴坐标" data-en-al="Paste coordinates" placeholder="旧矿坑 A, 4.5975, 101.0901" data-zh-ph="旧矿坑 A, 4.5975, 101.0901" data-en-ph="Old mine A, 4.5975, 101.0901"></textarea>
+      <button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="addPastedToShortlist()"><span data-zh="➕ 加入候选清单" data-en="➕ Add to shortlist">➕ 加入候选清单</span></button>
+      <input type="file" id="slFile" accept=".csv,.txt,.kml,.gpx" onchange="importShortlistFile(this)" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden" aria-label="导入文件" data-zh-al="导入文件" data-en-al="Import file">
+      <button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="document.getElementById('slFile').click()"><span data-zh="📂 导入 CSV / KML / GPX 文件" data-en="📂 Import a CSV / KML / GPX file">📂 导入 CSV / KML / GPX 文件</span></button>
+    </details>
+    <div class="row" style="margin-top:10px">
+      <button class="btn ghost sm" style="flex:1" onclick="exportShortlist('kml')"><span data-zh="⬇ KML（谷歌地球）" data-en="⬇ KML (Google Earth)">⬇ KML（谷歌地球）</span></button>
+      <button class="btn ghost sm" style="flex:1" onclick="exportShortlist('gpx')"><span data-zh="⬇ GPX" data-en="⬇ GPX">⬇ GPX</span></button>
+    </div>
+  </div>
   <div class="card">
     <h2><span data-zh="🎯 矿点潜力评估" data-en="🎯 Site potential estimator">🎯 矿点潜力评估</span></h2>
-    <p class="hint" data-html data-zh="野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。" data-en="A field checklist, not an assay. Tick surface indicators you actually observe. Score suggests whether a spot is worth a proper sample + lab test — it never confirms a deposit.">野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。</p>
+    <div class="seg" id="estModeSeg">
+      <button data-m="desk" onclick="setEstMode('desk')"><span data-zh="🏠 远程评估（在家）" data-en="🏠 Desk check (from home)">🏠 远程评估（在家）</span></button>
+      <button data-m="field" onclick="setEstMode('field')"><span data-zh="🥾 实地评估" data-en="🥾 On site">🥾 实地评估</span></button>
+    </div>
+    <p class="hint" id="estIntro"></p>
     <div class="fieldhead"><span data-zh="你要勘察什么？" data-en="What are you scouting for?">你要勘察什么？</span></div>
     <select id="target" aria-label="你要勘察什么" data-zh-al="你要勘察什么" data-en-al="What are you scouting for" onchange="renderIndicators()" style="display:none">
       <option value="gold">Gold (placer / lode)</option>
@@ -417,9 +455,15 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
     <div class="tile-grid hidden" id="targetWrap"></div>
 
     <div class="tile-head" id="indHead" onclick="toggleSection('indChips','indHead')">
-      <span><span data-zh="观察到的地表指标 " data-en="Surface indicators observed ">观察到的地表指标 </span><b id="indCount">0</b></span><span class="caret">▾</span>
+      <span><span id="indLbl"></span> <b id="indCount">0</b></span><span class="caret">▾</span>
     </div>
     <div class="tile-grid" id="indChips"></div>
+    <div id="flagBox" style="display:none">
+      <div class="tile-head" id="flagHead" onclick="toggleSection('flagChips','flagHead')">
+        <span><span data-zh="🚩 风险 / 阻碍 " data-en="🚩 Red flags ">🚩 风险 / 阻碍 </span><b id="flagCount">0</b></span><span class="caret">▾</span>
+      </div>
+      <div class="tile-grid" id="flagChips"></div>
+    </div>
     <div id="targetNote"></div>
     <div class="score-wrap" style="margin-top:18px">
       <div class="score-ring" id="ring"><div class="score-inner"><div class="n" id="scoreN">0</div><div class="l"><span data-zh="潜力" data-en="POTENTIAL">潜力</span></div></div></div>
@@ -475,7 +519,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 
 <section class="view" id="v-map">
   <div class="card">
-    <h2><span data-zh="🗺️ 样品地图" data-en="🗺️ Sample map">🗺️ 样品地图</span></h2>
+    <h2><span data-zh="🗺️ 地图与卫星勘察" data-en="🗺️ Map &amp; satellite scout">🗺️ 地图与卫星勘察</span></h2>
     <p class="hint" data-html data-zh="联网时显示真实地形（浏览时自动缓存）。离线时加载已缓存的图块；未缓存的部分会回退为纯网格，你的标记始终可见。" data-en="Online it shows real terrain (auto-cached as you pan). Offline it loads cached tiles; anything uncached falls back to a plain grid so your pins always show.">联网时显示真实地形（浏览时自动缓存）。离线时加载已缓存的图块；未缓存的部分会回退为纯网格，你的标记始终可见。</p>
     <div class="map-tools">
       <span class="netpill" id="netPill"><span class="gpsdot" id="netDot"></span><span id="netTxt" data-zh="检查中…" data-en="checking…">检查中…</span></span>
@@ -551,7 +595,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 
     <div style="margin-top:14px">
       <div class="fieldhead" style="margin-top:0"><span data-zh="预先下载此区域供离线使用" data-en="Pre-download this region for offline use">预先下载此区域供离线使用</span></div>
-      <p class="hint" style="margin-bottom:8px" data-html data-zh="出发前在 WiFi 环境下：平移／缩放到你的执照区块，然后下载。会抓取当前视图在常用缩放级别下的图块。" data-en="On wifi before heading out: pan/zoom to your licence block, then download. Grabs tiles for the current view across working zoom levels.">出发前在 WiFi 环境下：平移／缩放到你的执照区块，然后下载。会抓取当前视图在常用缩放级别下的图块。</p>
+      <p class="hint" style="margin-bottom:8px" data-html data-zh="出发前在 WiFi 环境下：平移／缩放到你的区域，然后下载。会抓取当前视图在常用缩放级别下的地图——若卫星照片图层已开启，也会一并下载。加入候选清单的目标，其扫描影像会自动保存在手机上。" data-en="On wifi before heading out: pan/zoom to your area, then download. Grabs the map for the current view across working zoom levels — plus the satellite photo if that layer is on. Scan images of targets you shortlist are saved on the phone automatically.">出发前在 WiFi 环境下：平移／缩放到你的区域，然后下载。会抓取当前视图在常用缩放级别下的地图——若卫星照片图层已开启，也会一并下载。加入候选清单的目标，其扫描影像会自动保存在手机上。</p>
       <button class="btn ghost sm" style="width:100%" onclick="downloadRegion()" id="dlBtn"><span data-zh="⬇ 下载当前视图供离线使用" data-en="⬇ Download current view for offline">⬇ 下载当前视图供离线使用</span></button>
       <div class="dlbar" id="dlBar"><i id="dlFill"></i></div>
       <div class="hint" id="dlMsg" style="margin:8px 0 0"></div>
@@ -561,9 +605,9 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 
 <section class="view" id="v-nav">
   <div class="card">
-    <h2><span data-zh="🧭 返回标记点" data-en="🧭 Walk back to a pin">🧭 返回标记点</span></h2>
-    <p class="hint" data-html data-zh="选择一个已保存的样品并跟随箭头。它从你所站位置指向该标记点，并显示实时距离。手机请保持水平。" data-en="Pick a saved sample and follow the arrow. It points from where you're standing toward that pin, with live distance. Hold the phone flat.">选择一个已保存的样品并跟随箭头。它从你所站位置指向该标记点，并显示实时距离。手机请保持水平。</p>
-    <label for="navTarget"><span data-zh="目标样品" data-en="Target sample">目标样品</span></label>
+    <h2><span data-zh="🧭 导航到地点" data-en="🧭 Navigate to a point">🧭 导航到地点</span></h2>
+    <p class="hint" data-html data-zh="选择勘察位置、候选清单中的地点或已保存的样品，然后跟随箭头。它从你所站位置指向该点，并显示实时距离。手机请保持水平。" data-en="Pick your prospect location, a shortlisted site or a saved sample and follow the arrow. It points from where you&#39;re standing toward that point, with live distance. Hold the phone flat.">选择勘察位置、候选清单中的地点或已保存的样品，然后跟随箭头。它从你所站位置指向该点，并显示实时距离。手机请保持水平。</p>
+    <label for="navTarget"><span data-zh="目的地" data-en="Destination">目的地</span></label>
     <select id="navTarget" aria-label="选择要导航前往的样品" data-zh-al="选择要导航前往的样品" data-en-al="Choose a sample to navigate to" onchange="setNavTarget()"><option value="">—</option></select>
     <div class="compass-wrap">
       <div class="compass" id="compass">
@@ -1090,7 +1134,7 @@ function setLang(l){
   renderTargets();renderIndicators();renderMaterialDepth();renderSampleTags();
   satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();redrawSatMsg();
   updateCloudUI();updateTrailUI();updateReturnDisplay();if(map)updateNet();
-  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();
+  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();renderShortlist();drawShortlist();
   redrawMapExtras();   // altimeter + terrain profile carry baked-in labels — redraw them
   toast(l==='zh'?'已切换为中文':'Switched to English');
 }
@@ -1454,10 +1498,19 @@ function renderTargetNote(t){
   const src=(LANG==='zh'&&TARGETNOTES_ZH[t])?TARGETNOTES_ZH[t]:TARGETNOTES[t];
   el.innerHTML=src?'<div class="callout" style="margin-top:14px">'+src+'</div>':'';
 }
+function indList(t){return estMode==='desk'?DESK:IND[t];}
 function renderIndicators(){
   const t=document.getElementById('target').value;picked.clear();
   const wrap=document.getElementById('indChips');wrap.innerHTML='';
-  IND[t].forEach(function(pair){
+  document.querySelectorAll('#estModeSeg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-m')===estMode);});
+  const intro=document.getElementById('estIntro');
+  if(intro)intro.innerHTML=estMode==='desk'
+    ?T('出发<b>之前</b>在家完成：用卫星图层、地质图和旧记录勾选你能确认的项目。分数告诉你这个地点是否值得花钱专程前往——它不是化验。','Do this <b>before</b> you travel, from home: tick what you can confirm from satellite layers, geology maps and old records. The score tells you whether the spot is worth paying to visit — it is not an assay.')
+    :T('野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。','A field checklist, not an assay. Tick surface indicators you actually observe. Score suggests whether a spot is worth a proper sample + lab test — it never confirms a deposit.');
+  const lbl=document.getElementById('indLbl');
+  if(lbl)lbl.textContent=estMode==='desk'?T('远程可确认的证据','Evidence you can check from home'):T('观察到的地表指标','Surface indicators observed');
+  renderFlags();
+  indList(t).forEach(function(pair){
     const name=pair[0];
     const label=(LANG==='zh'&&IND_ZH[name])?IND_ZH[name]:name;
     const tile=makeTile(INDICON[name]||'•',label,'',function(el){
@@ -1473,8 +1526,10 @@ function renderIndicators(){
   scoreNow(t);
 }
 function scoreNow(t){
-  const max=IND[t].reduce(function(s,p){return s+p[1];},0);let got=0;IND[t].forEach(function(p){if(picked.has(p[0]))got+=p[1];});
+  const list=indList(t);
+  const max=list.reduce(function(s,p){return s+p[1];},0);let got=0;list.forEach(function(p){if(picked.has(p[0]))got+=p[1];});
   const pct=Math.round(got/max*100);
+  if(estMode==='desk')return scoreDesk(pct);
   lastScore=pct;lastScoreTarget=t;
   document.getElementById('ring').style.setProperty('--pct',pct+'%');
   document.getElementById('scoreN').textContent=pct;
@@ -1486,6 +1541,29 @@ function scoreNow(t){
   else{txt=T('高度关注 — 取样并化验','High interest — sample & assay');col='var(--ore)';guide=T('地表特征强烈。仔细采集代表性样品，就地拍照，标记 GPS，优先送实验室地球化学分析。<b>不要</b>动土——请先遵循"指南"页中的规程。','Strong surface signature. Take a careful representative sample, photograph in place, mark GPS, prioritise for lab geochemistry. Do <b>not</b> start earthworks — follow the protocol in the Guide tab first.');}
   v.textContent=txt;v.style.color=col;
   g.innerHTML=guide+'<div class="callout" style="margin-top:12px"><b>'+T('注意：','Note: ')+'</b>'+T('仅依据可见线索的野外初筛。确认始终需要有资质的实验室化验。','field triage on visible clues only. Confirmation always needs an accredited lab assay.')+'</div>';
+}
+
+function scoreDesk(pct){
+  deskScore=pct;
+  document.getElementById('ring').style.setProperty('--pct',pct+'%');
+  document.getElementById('scoreN').textContent=pct;
+  const v=document.getElementById('verdict'),g=document.getElementById('guidance');
+  let txt,col,guide;
+  if(picked.size===0){txt=T('勾选你在家能确认的项目','Tick what you can confirm from home');col='var(--ink3)';guide=T('完成远程评估后，这里会告诉你该地点是否值得专程前往。','Complete the desk check to see whether this place is worth a trip.');}
+  else if(pct<30){txt=T('低 — 暂不值得专程前往','Low — not worth a trip yet');col='var(--ink3)';guide=T('支持证据很少。先别花路费：在附近继续扫描卫星图层，或查阅地质图寻找更好的地点。','Little points to this spot. Save the travel money: keep scanning nearby on the satellite layers, or check geology maps for better ground.');}
+  else if(pct<60){txt=T('中等 — 加入候选清单','Moderate — add to your shortlist');col='var(--copper)';guide=T('有一些证据。加入候选清单，与其他地点比较，再用卫星图层仔细看看。把几个候选地点安排在同一趟行程里以节省费用。','Some evidence. Add it to your shortlist, compare it with other candidates and look closer on the satellite layers. Combine several shortlisted sites into one trip to cut costs.');}
+  else{txt=T('高 — 值得实地考察','High — worth a field visit');col='var(--ore)';guide=T('多项独立证据相互印证，值得安排行程。出发前：下载该区域供离线使用，确认进出路线与许可，并备好样品袋。到达后切换到「🥾 实地评估」。','Several independent lines of evidence agree — worth planning a trip. Before you go: download the area for offline use, check access and permission, and pack sample bags. On site, switch to "🥾 On site".');}
+  v.textContent=txt;v.style.color=col;
+  let flags='';
+  if(deskFlags.size){
+    flags='<div class="callout" style="margin-bottom:12px"><b>🚩 '+T('出发前先解决：','Sort these out before you travel: ')+'</b>'+
+      [].slice.call(deskFlags).map(function(f){return tagLabel(f);}).join('、')+'. '+
+      T('无法合法进入或开采的地点，再好也是白花钱。','A promising site you cannot legally enter or work is wasted money.')+'</div>';
+  }
+  const btn=picked.size?(siteLoc
+    ?'<button class="btn ghost sm" style="width:100%;margin-top:12px" onclick="saveDeskScoreToShortlist()">📌 '+T('把勘察位置连同此评分加入候选清单','Save prospect location to shortlist with this score')+'</button>'
+    :'<p class="hint" style="margin:12px 0 0">'+T('在上方设定勘察位置后，即可把此评分保存到候选清单。','Set a prospect location above to save this score to your shortlist.')+'</p>'):'';
+  g.innerHTML=flags+guide+btn+'<div class="callout" style="margin-top:12px"><b>'+T('注意：','Note: ')+'</b>'+T('远程评估只帮你决定去哪里，不能代替实地核查与化验。','a desk check only ranks where to go — it never replaces checking on the ground and a lab assay.')+'</div>';
 }
 
 /* ============ GPS ============ */
@@ -1577,7 +1655,7 @@ function renderSite(){
 function setSite(f){
   siteLoc=f;try{localStorage.setItem(SITE_KEY,JSON.stringify(f));}catch(e){}
   setFix(f);          // also pre-fills the Sample tab so you don't locate twice
-  renderSite();drawSiteMarker();
+  renderSite();drawSiteMarker();rebuildNavOptions();renderShortlist();
 }
 function useGpsForSite(){
   requestGPS(function(f){setSite(f);toast(T('已设定为当前 GPS 位置','Location set from GPS'));});
@@ -1595,14 +1673,14 @@ function clearSite(){
   if(lastFix&&lastFix.src==='manual'){lastFix=null;showFixOnSample();updateSameSpotUI();}
   const dot=document.getElementById('gpsDot'),txt=document.getElementById('gpsTxt');
   if(!lastFix){dot.className='gpsdot';txt.style.color='var(--ink3)';txt.textContent=T('GPS 待机 — 在评估页设置位置','GPS idle — set a location on Estimate');}
-  renderSite();drawSiteMarker();
+  renderSite();drawSiteMarker();rebuildNavOptions();renderShortlist();
 }
 function drawSiteMarker(){
   if(!map||typeof L==='undefined')return;
   if(siteMarker){map.removeLayer(siteMarker);siteMarker=null;}
   if(!siteLoc)return;
   siteMarker=L.marker([siteLoc.lat,siteLoc.lon],{icon:L.divIcon({className:'',
-    html:'<div class="site-pin">◎</div>',iconSize:[30,30],iconAnchor:[15,15]})})
+    html:'<div class="site-pin">◎</div>',iconSize:[30,30],iconAnchor:[15,15]}),zIndexOffset:1500})
     .bindPopup('<b>'+T('勘察位置','Prospect location')+'</b><br>'+siteLoc.lat.toFixed(5)+', '+siteLoc.lon.toFixed(5))
     .addTo(map);
 }
@@ -1618,9 +1696,8 @@ function scanSiteOnMap(){
 }
 function navigateToSite(){
   if(!siteLoc)return;
-  navTargetSample={id:T('勘察位置','Prospect location'),lat:siteLoc.lat,lon:siteLoc.lon,mat:'prospect location',flag:false,t:0};
   nav('nav',document.querySelector('nav button[data-v=nav]'));
-  startNavWatch();updateNavReadout();
+  document.getElementById('navTarget').value='site|';setNavTarget();
 }
 
 /* ============ photos (pending, in-memory until save) ============ */
@@ -1938,7 +2015,7 @@ function exportCSV(){if(!activeSamples().length)return toast(T('没有可导出�
   const rows=activeSamples().map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.locSrc||(s.lat==null?'':'gps'),s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
   dl('prospectfield_'+Date.now()+'.csv',head.join(',')+'\n'+rows.join('\n'),'text/csv');toast(T('已导出 CSV','Exported CSV'));}
 async function backup(){
-  if(!activeSamples().length)return toast(T('没有可备份的内容','Nothing to back up'),true);
+  if(!activeSamples().length&&!shortlist.length)return toast(T('没有可备份的内容','Nothing to back up'),true);
   toast(T('正在打包照片…','Bundling photos…'));
   const out=[];
   // include trashed samples too — a backup should preserve anything still recoverable
@@ -1947,7 +2024,9 @@ async function backup(){
     for(let k=0;k<(s.photoKeys||[]).length;k++){const data=await idbGet(s.photoKeys[k]);if(data)photos.push(data);}
     s.photos=photos;out.push(s);
   }
-  dl('prospectfield_backup_'+Date.now()+'.json',JSON.stringify({app:'ProspectField',v:2,exported:Date.now(),samples:out}),'application/json');
+  const slOut=[];
+  for(let i=0;i<shortlist.length;i++){const it=Object.assign({},shortlist[i]);delete it._mk;if(it.snapKey){it.snap=await idbGet(it.snapKey);}slOut.push(it);}
+  dl('prospectfield_backup_'+Date.now()+'.json',JSON.stringify({app:'ProspectField',v:3,exported:Date.now(),samples:out,shortlist:slOut,site:siteLoc}),'application/json');
   toast(T('备份已保存 — 请发邮件给自己','Backup saved — email it to yourself'));
 }
 /* Import a backup file. Merges rather than overwrites. If a sample is in the local trash
@@ -1958,8 +2037,19 @@ function restore(input){
   const r=new FileReader();
   r.onload=async function(e){try{
     const data=JSON.parse(e.target.result);
-    const incoming=Array.isArray(data)?data:data.samples;
+    const incoming=Array.isArray(data)?data:(data.samples||[]);
     if(!Array.isArray(incoming))throw 0;
+    let slAdded=0;
+    if(Array.isArray(data.shortlist)){
+      for(let j=0;j<data.shortlist.length;j++){
+        const it=Object.assign({},data.shortlist[j]);
+        if(slGet(it.id)||typeof it.lat!=='number')continue;
+        if(it.snap&&it.snapKey){await idbPut(it.snapKey,it.snap);}delete it.snap;
+        shortlist.push(it);slAdded++;
+      }
+      if(slAdded){saveShortlist();renderShortlist();drawShortlist();}
+    }
+    if(!siteLoc&&data.site&&typeof data.site.lat==='number'){siteLoc=data.site;try{localStorage.setItem(SITE_KEY,JSON.stringify(siteLoc));}catch(e){}renderSite();drawSiteMarker();}
     const existing=new Map();
     samples.forEach(function(s){existing.set(s.id+s.t,s);});
     let added=0,skipped=0,revived=0;
@@ -1984,11 +2074,353 @@ function restore(input){
     let m=T(added+' 个新样品已加入，'+skipped+' 个已存在',
             added+' new sample'+(added===1?'':'s')+' added, '+skipped+' already present');
     if(revived)m+=T('。已从回收站恢复 '+revived+' 个并重新启用。','. '+revived+' recovered from your trash and made active again.');
-    if(!added&&!revived)m+=T('。没有新增——此备份只包含你已有的样品。','. Nothing new \u2014 this backup only had samples you already have.');
+    if(slAdded)m+=T('。另有 '+slAdded+' 个候选地点已加入清单。','. '+slAdded+' shortlisted site'+(slAdded===1?'':'s')+' added too.');
+    if(!added&&!revived&&!slAdded)m+=T('。没有新增——此备份只包含你已有的样品。','. Nothing new \u2014 this backup only had samples you already have.');
     await askConfirm(T('备份已导入','Backup imported'),m,T('好','OK'),false);
     toast(T('导入完成','Import complete'));
   }catch(_){toast(T('无法读取该备份文件','Could not read that backup file'),true);}};
   r.readAsText(f);
+}
+
+/* ============ SHORTLIST: candidate sites to check before travelling ============
+   Satellite targets, typed coordinates and imported points live here — NOT in the
+   sample log, which is reserved for real material collected on the ground. Each site
+   moves from "to check" to visited / sampled / rejected so the trip can be planned. */
+const SL_KEY='pf_shortlist';
+let shortlist=[];try{shortlist=JSON.parse(localStorage.getItem(SL_KEY)||'[]');}catch(e){shortlist=[];}
+let slSeq=+(localStorage.getItem('pf_sl_seq')||0);
+let slLayer=null,slShowAll=false;
+const SL_FIRST=5;
+const SL_STATUS=[['tocheck','🔍','待查看','To check'],['visited','👣','已到访','Visited'],['sampled','🧪','已取样','Sampled'],['rejected','✖','已排除','Rejected']];
+function slStatusLabel(k){const s=SL_STATUS.filter(function(x){return x[0]===k;})[0]||SL_STATUS[0];return s[1]+' '+T(s[2],s[3]);}
+function esc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function saveShortlist(){try{localStorage.setItem(SL_KEY,JSON.stringify(shortlist,function(k,v){return k==='_mk'?undefined:v;}));localStorage.setItem('pf_sl_seq',String(slSeq));}catch(e){toast(T('存储已满 — 请导出候选清单','Storage full — export your shortlist'),true);}}
+function slGet(id){return shortlist.filter(function(x){return x.id===id;})[0]||null;}
+function slNear(lat,lon,within){return shortlist.filter(function(x){return haversine(lat,lon,x.lat,x.lon)<=(within||30);})[0]||null;}
+function slNextName(){slSeq++;return 'CAND-'+String(slSeq).padStart(3,'0');}
+function levelLabel(l){return {strong:T('强','Strong'),moderate:T('中','Moderate'),weak:T('弱','Weak')}[l]||'';}
+function satName(k){
+  const row=SATADV.concat(SATBASIC).filter(function(x){return x[0]===k;})[0];
+  if(LANG==='zh'&&SAT_ZH[k])return SAT_ZH[k][0];
+  return row?row[1]:(k||'');
+}
+/* Where distances are measured from: a recent live GPS fix if there is one,
+   otherwise the prospect location the user set on the Estimate screen. */
+function refPoint(){
+  const fresh=function(f){return f&&f.src!=='manual'&&(Date.now()-(f.t||0))<15*60000;};
+  if(typeof mePos!=='undefined'&&mePos)return {lat:mePos.lat,lon:mePos.lon,you:true};
+  if(typeof curPos!=='undefined'&&curPos)return {lat:curPos.lat,lon:curPos.lon,you:true};
+  if(fresh(lastFix))return {lat:lastFix.lat,lon:lastFix.lon,you:true};
+  if(siteLoc)return {lat:siteLoc.lat,lon:siteLoc.lon,you:fresh(siteLoc)};
+  return null;
+}
+function fmtDist(d){return d<1000?Math.round(d)+' m':(d<100000?(d/1000).toFixed(1):Math.round(d/1000))+' km';}
+function distLabel(lat,lon){
+  const r=refPoint();if(!r)return '';
+  const d=fmtDist(haversine(r.lat,r.lon,lat,lon));
+  return '📏 '+(r.you?T('距你 '+d,d+' from you'):T('距勘察位置 '+d,d+' from prospect location'));
+}
+function openRoute(lat,lon,app){
+  const url=app==='w'?'https://waze.com/ul?ll='+lat+','+lon+'&navigate=yes'
+                     :'https://www.google.com/maps/dir/?api=1&destination='+lat+','+lon;
+  window.open(url,'_blank','noopener');
+}
+async function addToShortlist(o,quiet){
+  const have=slNear(o.lat,o.lon,30);
+  if(have){
+    ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','deskScore','deskTicks','deskFlags','target'].forEach(function(k){if(o[k]!=null)have[k]=o[k];});
+    if(o.name&&/^CAND-/.test(have.name))have.name=o.name;
+    saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();
+    if(!quiet)toast(T(have.name+' 已在清单中 — 已更新',have.name+' is already on the shortlist — updated'));
+    return have;
+  }
+  const it={id:'sl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    name:(o.name&&String(o.name).trim())||slNextName(),lat:o.lat,lon:o.lon,src:o.src||'manual',
+    status:'tocheck',t:Date.now()};
+  ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','deskScore','deskTicks','deskFlags','target','note'].forEach(function(k){if(o[k]!=null)it[k]=o[k];});
+  shortlist.unshift(it);saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();
+  if(!quiet)toast(T('已加入候选清单：'+it.name,'Added to shortlist: '+it.name));
+  return it;
+}
+function srcLabel(it){
+  if(it.src==='scan')return '🛰️ '+T('卫星扫描','satellite scan')+(it.layer?' · '+satName(it.layer):'');
+  if(it.src==='import')return '📂 '+T('导入','imported');
+  if(it.src==='gps')return '📡 '+T('GPS 位置','GPS position');
+  return '✍️ '+T('手动输入','entered manually');
+}
+function renderShortlist(){
+  const w=document.getElementById('slList'),sm=document.getElementById('slSummary');if(!w)return;
+  if(!shortlist.length){
+    sm.textContent='';
+    w.innerHTML='<div class="hint" style="margin:0">'+T('清单为空。在地图页扫描后点「📌 加入候选清单」，或在上方设定位置后加入。','Empty so far. Scan on the Map tab and tap "📌 Shortlist", or set a location above and add it.')+'</div>';
+    return;
+  }
+  const n={};SL_STATUS.forEach(function(s){n[s[0]]=0;});shortlist.forEach(function(x){n[x.status]=(n[x.status]||0)+1;});
+  sm.innerHTML=SL_STATUS.filter(function(s){return n[s[0]];}).map(function(s){return s[1]+' '+T(s[2],s[3])+' <b>'+n[s[0]]+'</b>';}).join(' · ');
+  const r=refPoint();
+  const order={tocheck:0,visited:1,sampled:2,rejected:3};
+  const lst=shortlist.slice().sort(function(a,b){
+    if(order[a.status]!==order[b.status])return order[a.status]-order[b.status];
+    if(r)return haversine(r.lat,r.lon,a.lat,a.lon)-haversine(r.lat,r.lon,b.lat,b.lon);
+    return b.t-a.t;
+  });
+  const shown=slShowAll?lst:lst.slice(0,SL_FIRST);
+  w.innerHTML=shown.map(function(it){
+    const opts=SL_STATUS.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===it.status?' selected':'')+'>'+s[1]+' '+T(s[2],s[3])+'</option>';}).join('');
+    const extra=[];
+    if(it.level)extra.push(T('信号 ','signal ')+(it.signal!=null?it.signal+'%':'')+'<span class="lvl '+it.level+'">'+levelLabel(it.level)+'</span>');
+    if(it.wM)extra.push(T('约 ','approx ')+it.wM+' × '+it.hM+' m');
+    if(it.deskScore!=null)extra.push(T('远程评分 ','desk score ')+'<b>'+it.deskScore+'%</b>');
+    if(it.deskFlags&&it.deskFlags.length)extra.push('🚩 '+it.deskFlags.map(function(f){return esc(tagLabel(f));}).join(', '));
+    const id="'"+it.id+"'";
+    return '<div class="samp sl-item '+it.status+'"><div class="top"><div>'+
+      '<span class="id">'+esc(it.name)+'</span><span class="sl-stat">'+slStatusLabel(it.status)+'</span>'+
+      '<div class="co mono">📍 '+it.lat.toFixed(5)+', '+it.lon.toFixed(5)+'</div>'+
+      '<div class="co">'+srcLabel(it)+(r?' · '+distLabel(it.lat,it.lon):'')+'</div>'+
+      (extra.length?'<div class="co">'+extra.join(' · ')+'</div>':'')+
+      (it.note?'<div class="note">'+esc(it.note)+'</div>':'')+
+      '</div></div><div class="acts">'+
+      '<select aria-label="'+T('状态','Status')+'" onchange="setSlStatus('+id+',this.value)">'+opts+'</select>'+
+      '<button onclick="slShowOnMap('+id+')">🗺️ '+T('地图','Map')+'</button>'+
+      '<button onclick="slNavigate('+id+')">🧭 '+T('导航','Navigate')+'</button>'+
+      '<button onclick="openRoute('+it.lat+','+it.lon+',\'g\')">🚗 '+T('谷歌地图','Google Maps')+'</button>'+
+      '<button onclick="openRoute('+it.lat+','+it.lon+',\'w\')">Waze</button>'+
+      (it.snapKey?'<button onclick="viewSnapshot('+id+')">🛰️ '+T('扫描影像','Scan image')+'</button>':'')+
+      '<button onclick="slRename('+id+')">✏️ '+T('改名','Rename')+'</button>'+
+      '<button onclick="slDelete('+id+')">🗑</button>'+
+      '</div></div>';
+  }).join('')+(lst.length>SL_FIRST
+    ?'<button class="btn ghost sm" style="width:100%" onclick="slShowAll=!slShowAll;renderShortlist()">'+
+      (slShowAll?T('收起','Show fewer'):T('显示全部（'+lst.length+'）','Show all ('+lst.length+')'))+'</button>':'');
+}
+function setSlStatus(id,v){const it=slGet(id);if(!it)return;it.status=v;saveShortlist();renderShortlist();drawShortlist();}
+function slRename(id){
+  const it=slGet(id);if(!it)return;
+  const v=window.prompt(T('新名称','New name'),it.name);
+  if(v&&v.trim()){it.name=v.trim().slice(0,60);saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();}
+}
+async function slDelete(id){
+  const it=slGet(id);if(!it)return;
+  const ok=await askConfirm(T('从清单中移除？','Remove from shortlist?'),esc(it.name),T('移除','Remove'),true);
+  if(!ok)return;
+  shortlist=shortlist.filter(function(x){return x.id!==id;});
+  if(it.snapKey&&!shortlist.some(function(x){return x.snapKey===it.snapKey;}))idbDel(it.snapKey);
+  saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();
+}
+function slShowOnMap(id){
+  const it=slGet(id);if(!it)return;
+  nav('map',document.querySelector('nav button[data-v=map]'));
+  setTimeout(function(){
+    if(!map)return;
+    drawShortlist();map.setView([it.lat,it.lon],Math.max(15,map.getZoom()));
+    if(it._mk)it._mk.openPopup();
+  },150);
+}
+function slNavigate(id){
+  nav('nav',document.querySelector('nav button[data-v=nav]'));
+  const sel=document.getElementById('navTarget');sel.value='sl|'+id;setNavTarget();
+}
+function drawShortlist(){
+  if(!map||typeof L==='undefined')return;
+  if(!slLayer)slLayer=L.layerGroup().addTo(map);
+  slLayer.clearLayers();
+  shortlist.forEach(function(it){
+    const mk=L.marker([it.lat,it.lon],{zIndexOffset:500,icon:L.divIcon({className:'',
+      html:'<div class="sl-pin '+it.status+'">★</div>',iconSize:[26,26],iconAnchor:[13,13]})});
+    mk.bindPopup('<b>'+esc(it.name)+'</b><br>'+slStatusLabel(it.status)+'<br>'+it.lat.toFixed(5)+', '+it.lon.toFixed(5)+
+      (it.level?'<br>'+levelLabel(it.level)+(it.signal!=null?' · '+it.signal+'%':''):''));
+    it._mk=mk;slLayer.addLayer(mk);
+  });
+}
+/* save the shortlist without the transient marker handles */
+function addSiteToShortlist(){
+  if(!siteLoc)return;
+  addToShortlist({lat:siteLoc.lat,lon:siteLoc.lon,src:siteLoc.src==='manual'?'manual':'gps'});
+}
+/* "name, lat, lon" / "lat, lon" / DMS — tolerant of extra CSV columns */
+function parseLine(line){
+  line=line.trim();if(!line)return null;
+  let c=parseCoords(line);if(c)return {name:'',lat:c.lat,lon:c.lon};
+  const f=line.split(/\t|,|;/).map(function(x){return x.trim().replace(/^"|"$/g,'');});
+  for(let i=0;i<f.length-1;i++){
+    c=parseCoords(f[i]+', '+f[i+1]);
+    if(c){
+      const rest=f.filter(function(x,j){return j!==i&&j!==i+1&&x&&!/^-?[\d.]+$/.test(x);});
+      return {name:(rest[0]||'').slice(0,60),lat:c.lat,lon:c.lon};
+    }
+  }
+  return null;
+}
+async function addPoints(pts,src){
+  let added=0,before=shortlist.length;
+  for(let i=0;i<pts.length;i++){await addToShortlist({name:pts[i].name,lat:pts[i].lat,lon:pts[i].lon,src:src},true);}
+  added=shortlist.length-before;
+  return added;
+}
+async function addPastedToShortlist(){
+  const ta=document.getElementById('slPaste');
+  const lines=ta.value.split(/\r?\n/).filter(function(x){return x.trim();});
+  if(!lines.length)return toast(T('请先粘贴坐标','Paste some coordinates first'),true);
+  const pts=[];let bad=0;
+  lines.forEach(function(l){const r=parseLine(l);if(r)pts.push(r);else bad++;});
+  const added=await addPoints(pts,'manual');
+  if(pts.length)ta.value='';
+  toast(T('已加入 '+added+' 个地点'+(bad?'，'+bad+' 行无法识别':''),added+' added'+(pts.length-added?', '+(pts.length-added)+' already listed':'')+(bad?', '+bad+' line'+(bad===1?'':'s')+' not understood':'')),!pts.length);
+}
+function importShortlistFile(input){
+  const f=input.files[0];input.value='';if(!f)return;
+  const r=new FileReader();
+  r.onload=async function(e){
+    const txt=String(e.target.result||'');const name=f.name.toLowerCase();
+    let pts=[],bad=0;
+    try{
+      if(/\.(kml|gpx)$/.test(name)||/^\s*<\?xml|<kml|<gpx/i.test(txt.slice(0,300))){
+        const doc=new DOMParser().parseFromString(txt,'text/xml');
+        const pm=doc.getElementsByTagName('Placemark');
+        for(let i=0;i<pm.length;i++){
+          const cEl=pm[i].getElementsByTagName('coordinates')[0];if(!cEl){bad++;continue;}
+          const tuples=cEl.textContent.trim().split(/\s+/).map(function(t){return t.split(',').map(Number);}).filter(function(a){return isFinite(a[0])&&isFinite(a[1]);});
+          if(!tuples.length){bad++;continue;}
+          let la=0,lo=0;tuples.forEach(function(a){lo+=a[0];la+=a[1];});   // polygon/line → its centre
+          const nm=pm[i].getElementsByTagName('name')[0];
+          pts.push({name:nm?nm.textContent.trim().slice(0,60):'',lat:la/tuples.length,lon:lo/tuples.length});
+        }
+        const wp=doc.getElementsByTagName('wpt');
+        for(let i=0;i<wp.length;i++){
+          const la=+wp[i].getAttribute('lat'),lo=+wp[i].getAttribute('lon');
+          if(!isFinite(la)||!isFinite(lo)){bad++;continue;}
+          const nm=wp[i].getElementsByTagName('name')[0];
+          pts.push({name:nm?nm.textContent.trim().slice(0,60):'',lat:la,lon:lo});
+        }
+      }else{
+        txt.split(/\r?\n/).forEach(function(l){if(!l.trim())return;const p=parseLine(l);if(p)pts.push(p);else bad++;});
+      }
+    }catch(err){return toast(T('无法读取该文件','Could not read that file'),true);}
+    if(!pts.length)return toast(T('文件中没有找到坐标','No coordinates found in that file'),true);
+    const added=await addPoints(pts,'import');
+    toast(T('已导入 '+added+' 个地点'+(bad?'（跳过 '+bad+' 行）':''),'Imported '+added+' place'+(added===1?'':'s')+(bad?' ('+bad+' line'+(bad===1?'':'s')+' skipped)':'')));
+  };
+  r.readAsText(f);
+}
+function xmlEsc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function slDesc(it){
+  const p=[slStatusLabel(it.status).replace(/^\S+\s/,''),srcLabel(it).replace(/^\S+\s/,'')];
+  if(it.level)p.push(levelLabel(it.level)+(it.signal!=null?' '+it.signal+'%':''));
+  if(it.deskScore!=null)p.push(T('远程评分 ','desk score ')+it.deskScore+'%');
+  if(it.note)p.push(it.note);
+  return p.join(' · ');
+}
+function exportShortlist(fmt){
+  if(!shortlist.length)return toast(T('候选清单为空','Shortlist is empty'),true);
+  let out;
+  if(fmt==='gpx'){
+    out='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="ProspectField" xmlns="http://www.topografix.com/GPX/1/1">\n'+
+      shortlist.map(function(it){return '<wpt lat="'+it.lat.toFixed(7)+'" lon="'+it.lon.toFixed(7)+'"><name>'+xmlEsc(it.name)+'</name><desc>'+xmlEsc(slDesc(it))+'</desc></wpt>';}).join('\n')+'\n</gpx>\n';
+    dl('prospectfield_shortlist_'+Date.now()+'.gpx',out,'application/gpx+xml');
+  }else{
+    out='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>ProspectField shortlist</name>\n'+
+      shortlist.map(function(it){return '<Placemark><name>'+xmlEsc(it.name)+'</name><description>'+xmlEsc(slDesc(it))+'</description><Point><coordinates>'+it.lon.toFixed(7)+','+it.lat.toFixed(7)+',0</coordinates></Point></Placemark>';}).join('\n')+'\n</Document></kml>\n';
+    dl('prospectfield_shortlist_'+Date.now()+'.kml',out,'application/vnd.google-earth.kml+xml');
+  }
+  toast(T('已导出 '+shortlist.length+' 个地点','Exported '+shortlist.length+' place'+(shortlist.length===1?'':'s')));
+}
+/* Saved scan image: lets you compare what the satellite showed with what you see on site,
+   even offline. Drawn with the target's box on top. */
+async function viewSnapshot(id){
+  const it=slGet(id);if(!it||!it.snapKey)return;
+  const data=await idbGet(it.snapKey);
+  if(!data)return toast(T('扫描影像已不在本机','Scan image is no longer on this device'),true);
+  let m=document.getElementById('snapModal');
+  if(!m){m=document.createElement('div');m.id='snapModal';m.className='def-modal';m.onclick=function(){m.classList.remove('on');};document.body.appendChild(m);}
+  m.innerHTML='<div class="def-box" onclick="event.stopPropagation()"><h3>'+esc(it.name)+'</h3>'+
+    '<canvas id="snapCv" style="width:100%;border-radius:8px;border:1px solid var(--line);background:#000"></canvas>'+
+    '<p class="hint" style="margin:8px 0 0">'+(it.layer?satName(it.layer)+' · ':'')+T('扫描于 ','scanned ')+new Date(it.snapT||it.t).toLocaleDateString(LANG==='zh'?'zh-CN':'en-GB')+
+    '. '+T('金色方框为目标位置，十字为中心点。','Gold box = the target, cross = its centre.')+'</p>'+
+    '<button class="btn ghost sm" style="width:100%;margin-top:12px" onclick="document.getElementById(\'snapModal\').classList.remove(\'on\')">'+T('关闭','Close')+'</button></div>';
+  m.classList.add('on');
+  const img=new Image();
+  img.onload=function(){
+    const cv=document.getElementById('snapCv');cv.width=img.width;cv.height=img.height;
+    const c=cv.getContext('2d');c.drawImage(img,0,0);
+    const b=it.snapBounds,x=it.snapBox;if(!b||!x)return;
+    const X=function(lon){return (lon-b.w)/(b.e-b.w)*img.width;},Y=function(lat){return (b.n-lat)/(b.n-b.s)*img.height;};
+    c.strokeStyle='#d9a441';c.lineWidth=Math.max(2,img.width/150);
+    c.strokeRect(X(x.west),Y(x.north),X(x.east)-X(x.west),Y(x.south)-Y(x.north));
+    const cx=X(it.lon),cy=Y(it.lat);c.beginPath();c.moveTo(cx-10,cy);c.lineTo(cx+10,cy);c.moveTo(cx,cy-10);c.lineTo(cx,cy+10);c.stroke();
+  };
+  img.src=data;
+}
+
+/* ============ DESK CHECK: rank a place from home before paying to go there ============ */
+let estMode=localStorage.getItem('pf_est_mode')||'desk';
+let deskFlags=new Set(),deskScore=null;
+const DESK=[
+  ['Satellite anomaly (iron / alteration)',3],
+  ['Inside a known mineral belt',3],
+  ['Old workings visible on imagery',3],
+  ['Recorded occurrence nearby',2],
+  ['Favourable rock or contact on geology map',2],
+  ['Exposed ground, not solid canopy',1],
+  ['Streams to sample',1],
+  ['Road or track within 2 km',1]
+];
+const DESK_FLAGS=['Forest reserve / national park','Existing mining lease / private land','Steep or unsafe access'];
+Object.assign(INDICON,{'Satellite anomaly (iron / alteration)':'🛰️','Inside a known mineral belt':'🗺️','Old workings visible on imagery':'🕳️',
+  'Recorded occurrence nearby':'📜','Favourable rock or contact on geology map':'🧱','Exposed ground, not solid canopy':'🟫',
+  'Streams to sample':'🌊','Road or track within 2 km':'🚙','Forest reserve / national park':'🌳',
+  'Existing mining lease / private land':'⛔','Steep or unsafe access':'⛰️'});
+Object.assign(IND_ZH,{'Satellite anomaly (iron / alteration)':'卫星异常（铁 / 蚀变）','Inside a known mineral belt':'位于已知成矿带内',
+  'Old workings visible on imagery':'影像可见旧矿坑','Recorded occurrence nearby':'附近有矿点记录',
+  'Favourable rock or contact on geology map':'地质图显示有利岩性 / 接触带','Exposed ground, not solid canopy':'有裸露地面（非全被林冠覆盖）',
+  'Streams to sample':'有可取样的溪流','Road or track within 2 km':'2 公里内有道路','Forest reserve / national park':'森林保护区 / 国家公园',
+  'Existing mining lease / private land':'已有矿权 / 私人土地','Steep or unsafe access':'地形陡峭或进出不安全'});
+Object.assign(DEFS,{
+  'Satellite anomaly (iron / alteration)':'The Map tab scan (Iron ratio, Alteration, Clay or Ferrous layer) found a Moderate or Strong patch here. On its own it is only a colour patch — it counts most when it agrees with the geology below.',
+  'Inside a known mineral belt':'The spot lies inside a recognised mineralised belt or district for your target (for gold in Peninsular Malaysia, e.g. the Central Gold Belt). See the Guide tab region notes or a national geological map.',
+  'Old workings visible on imagery':'Pits, shafts, tailings heaps or old dredge ponds show on the satellite photo. Past miners found something here — though they may also have taken it.',
+  'Recorded occurrence nearby':'A geological survey map, mine record, report or reliable local account notes a mineral occurrence within a few km.',
+  'Favourable rock or contact on geology map':'The geology map shows rock types that host your target, or a contact between two (e.g. granite against schist or limestone) — where mineralising fluids often deposit metal.',
+  'Exposed ground, not solid canopy':'Some bare rock, soil, road cuts or riverbanks are visible, so you can actually see and sample geology when you get there.',
+  'Streams to sample':'Creeks drain the area. Stream sediment and panning are the cheapest way to test a whole catchment in one visit.',
+  'Road or track within 2 km':'Practical access. Not geology — but it decides how much a visit costs and whether you can bring samples out.',
+  'Forest reserve / national park':'Protected land. Prospecting here usually needs special permission or is not allowed at all. Check before you travel.',
+  'Existing mining lease / private land':'Someone already holds rights to this ground. You need the owner\'s or leaseholder\'s permission, and any find may not be yours to develop.',
+  'Steep or unsafe access':'Cliffs, deep river crossings or long walks without a track. Plan for safety and a partner, or pick a nearby easier site.'});
+Object.assign(DEFS_ZH,{
+  'Satellite anomaly (iron / alteration)':'地图页的扫描（铁比值、蚀变、黏土或亚铁图层）在此处发现了「中」或「强」级斑块。单靠它只是色斑——与下面的地质证据相互印证时才最有分量。',
+  'Inside a known mineral belt':'该地点位于你的目标矿种公认的成矿带或矿区内（例如半岛的黄金：中央金带）。参见指南页的区域说明或国家地质图。',
+  'Old workings visible on imagery':'卫星照片上可见矿坑、竖井、尾砂堆或旧采锡池。前人在这里发现过东西——当然也可能已被采走。',
+  'Recorded occurrence nearby':'地质调查图、矿山记录、报告或可靠的当地说法表明几公里内有矿点。',
+  'Favourable rock or contact on geology map':'地质图显示有赋存目标矿种的岩石，或两种岩石的接触带（如花岗岩与片岩或石灰岩接触）——成矿热液常在此沉淀金属。',
+  'Exposed ground, not solid canopy':'可见部分裸露岩石、土壤、路堑或河岸，到了现场才真正能看到并采集地质样品。',
+  'Streams to sample':'有溪流流经此区。河流沉积物与淘洗是一次性检验整个汇水区最便宜的方法。',
+  'Road or track within 2 km':'实际可达性。这不是地质指标——但它决定一次考察的花费，以及能否把样品带出来。',
+  'Forest reserve / national park':'受保护土地。在此勘探通常需要特别许可，或完全不被允许。出发前请先查清。',
+  'Existing mining lease / private land':'已有人持有该地的权利。你需要土地主或矿权持有人的许可，任何发现也未必归你开发。',
+  'Steep or unsafe access':'悬崖、深水过河或无路长途步行。请做好安全计划并结伴同行，或改选附近更易到达的地点。'});
+function setEstMode(m){
+  estMode=m;try{localStorage.setItem('pf_est_mode',m);}catch(e){}
+  renderIndicators();
+}
+function renderFlags(){
+  const box=document.getElementById('flagBox'),w=document.getElementById('flagChips');if(!box)return;
+  box.style.display=estMode==='desk'?'block':'none';
+  w.innerHTML='';
+  DESK_FLAGS.forEach(function(name){
+    const tile=makeTile(INDICON[name]||'🚩',LANG==='zh'&&IND_ZH[name]?IND_ZH[name]:name,'',function(el){
+      el.classList.toggle('on');el.classList.contains('on')?deskFlags.add(name):deskFlags.delete(name);
+      document.getElementById('flagCount').textContent=deskFlags.size;
+      scoreNow(document.getElementById('target').value);
+    },name);
+    if(deskFlags.has(name))tile.classList.add('on');
+    w.appendChild(tile);
+  });
+  document.getElementById('flagCount').textContent=deskFlags.size;
+}
+function saveDeskScoreToShortlist(){
+  if(!siteLoc)return toast(T('请先在上方设定勘察位置','Set a prospect location above first'),true);
+  addToShortlist({lat:siteLoc.lat,lon:siteLoc.lon,src:siteLoc.src==='manual'?'manual':'gps',
+    deskScore:deskScore,deskTicks:[].slice.call(picked),deskFlags:[].slice.call(deskFlags),target:document.getElementById('target').value});
 }
 
 /* ============ MAP ============ */
@@ -2011,7 +2443,7 @@ function initMap(){
   }).addTo(map);
   markerLayer=L.layerGroup().addTo(map);
   map.on('click',onMapClickForProfile);   // used only while picking a profile target
-  refreshMarkers();if(!siteLoc)fitPins();drawSiteMarker();updateNet();
+  refreshMarkers();if(!siteLoc)fitPins();drawSiteMarker();drawShortlist();updateNet();
   restoreSatUI();
 }
 
@@ -2057,7 +2489,7 @@ const EVALSCRIPTS={
 /* ============ TARGET SCANNER ============
    Fetches the active analysis layer as a single image over the current map bounds,
    finds clusters of strong signal, and converts pixel positions back to GPS. */
-let scanLayerGroup=null,lastTargets=[];
+let scanLayerGroup=null,lastTargets=[],lastScan=null;
 function scanTargets(){
   const msg=document.getElementById('scanMsg'),btn=document.getElementById('scanBtn');
   const res=document.getElementById('scanResults');res.innerHTML='';
@@ -2068,7 +2500,8 @@ function scanTargets(){
   }
   if(!navigator.onLine){msg.innerHTML=T('⚠ 扫描需要网络信号。','⚠ Scanning needs signal.');return;}
   const b=map.getBounds();
-  const W=384,H=384;
+  // match the screen's shape so pixels are roughly square on the ground
+  const sz=map.getSize();const W=384,H=Math.max(160,Math.min(768,Math.round(384*sz.y/Math.max(1,sz.x))));
   const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
   const today=new Date().toISOString().slice(0,10);
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
@@ -2083,6 +2516,10 @@ function scanTargets(){
     return r.blob();
   }).then(function(blob){
     fill.style.width='60%';msg.textContent=T('正在分析像素…','Analysing pixels…');
+    // keep the image so shortlisted targets can show what the satellite saw, offline
+    const scanT=Date.now();
+    lastScan={t:scanT,kind:currentSatKind,bounds:{w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()},data:null,saved:false};
+    const fr=new FileReader();fr.onload=function(){if(lastScan&&lastScan.t===scanT)lastScan.data=fr.result;};fr.readAsDataURL(blob);
     return createImageBitmap(blob);
   }).then(function(bmp){
     const cv=document.createElement('canvas');cv.width=W;cv.height=H;
@@ -2180,6 +2617,9 @@ function findClusters(data,W,H,bounds,kind){
     c.wM=Math.round(haversine(c.lat,c.west,c.lat,c.east));
     c.hM=Math.round(haversine(c.north,c.lon,c.south,c.lon));
     c.strength=c.mean*Math.log(1+c.n); // size-weighted strength
+    // fixed thresholds, so a dull scene does not dress up weak patches as targets
+    c.level=c.mean>=0.55?'strong':(c.mean>=0.40?'moderate':'weak');
+    c.signal=Math.min(100,Math.round(c.mean*100));
   });
   clusters.sort(function(a,b){return b.strength-a.strength;});
   return clusters.slice(0,8);
@@ -2193,8 +2633,8 @@ function drawTargets(targets){
   targets.forEach(function(t,i){
     const rect=L.rectangle([[t.south,t.west],[t.north,t.east]],
       {color:'#d9a441',weight:2,fillColor:'#d9a441',fillOpacity:0.12});
-    rect.bindPopup('<b>'+T('目标 ','Target ')+(i+1)+'</b><br>'+t.lat.toFixed(5)+', '+t.lon.toFixed(5)+
-      '<br>approx '+t.wM+' × '+t.hM+' m<br>signal '+(t.mean*100).toFixed(0)+'%');
+    rect.bindPopup('<b>'+T('目标 ','Target ')+(i+1)+'</b> <span class="lvl '+t.level+'">'+levelLabel(t.level)+'</span><br>'+t.lat.toFixed(5)+', '+t.lon.toFixed(5)+
+      '<br>'+T('约 ','approx ')+t.wM+' × '+t.hM+' m<br>'+T('信号 ','signal ')+t.signal+'%');
     scanLayerGroup.addLayer(rect);
     const mk=L.marker([t.lat,t.lon],{icon:L.divIcon({
       html:'<div style="background:#d9a441;color:#1a1207;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #1a1207">T'+(i+1)+'</div>',
@@ -2209,39 +2649,49 @@ function renderTargetList(targets){
     msg.innerHTML=T('此范围内未发现明显斑块。通常意味着有云、密林，或确实没有突出目标——可尝试平移、稍微缩小，或换一个图层。','No strong patches found in this view. That usually means cloud, dense jungle, or genuinely nothing standing out — try panning, zooming out a little, or a different layer.');
     return;
   }
-  msg.innerHTML=T('发现 <b>'+targets.length+'</b> 处值得查看的斑块，按信号由强到弱排列。方框已绘制在地图上。','Found <b>'+targets.length+'</b> patch'+(targets.length===1?'':'es')+' worth a look, strongest first. Boxes are drawn on the map.');
+  const good=targets.filter(function(t){return t.level!=='weak';}).length;
+  msg.innerHTML=good
+    ?T('发现 <b>'+targets.length+'</b> 处斑块（其中 <b>'+good+'</b> 处为中或强），按信号由强到弱排列。方框已绘制在地图上。','Found <b>'+targets.length+'</b> patch'+(targets.length===1?'':'es')+' (<b>'+good+'</b> moderate or strong), strongest first. Boxes are drawn on the map.')
+    :T('此范围内<b>没有明显突出的地方</b>——下面只是弱斑块，单凭它们不值得专程前往。可换一个图层或区域再试。','<b>Nothing in this view stands out strongly</b> — the patches below are weak and probably not worth a trip on their own. Try another layer or area.');
   let html='';
+  if(good)html+='<button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="shortlistAllTargets()">📌 '+T('把中、强目标全部加入候选清单','Add all moderate & strong to shortlist')+'</button>';
   targets.forEach(function(t,i){
+    const dl=distLabel(t.lat,t.lon);
     html+='<div class="samp" style="margin-top:8px"><div class="top"><div>'+
-      '<span class="id">'+T('目标 ','Target ')+(i+1)+'</span>'+
+      '<span class="id">'+T('目标 ','Target ')+(i+1)+'</span><span class="lvl '+t.level+'">'+levelLabel(t.level)+'</span>'+
       '<div class="co mono">📍 '+t.lat.toFixed(5)+', '+t.lon.toFixed(5)+'</div>'+
-      '<div class="co">'+T('约 ','approx ')+t.wM+' × '+t.hM+T(' 米 · 信号 ',' m · signal ')+(t.mean*100).toFixed(0)+'%</div>'+
+      '<div class="co">'+T('约 ','approx ')+t.wM+' × '+t.hM+T(' 米 · 信号 ',' m · signal ')+t.signal+'%'+(dl?' · '+dl:'')+'</div>'+
       '</div></div>'+
-      '<div class="acts"><button onclick="targetToSample('+i+')">➕ '+T('保存为样品','Save as sample')+'</button>'+
-      '<button onclick="targetNavigate('+i+')">🧭 Navigate</button></div></div>';
+      '<div class="acts"><button onclick="targetToShortlist('+i+')">📌 '+T('加入候选清单','Shortlist')+'</button>'+
+      '<button onclick="targetNavigate('+i+')">🧭 '+T('导航','Navigate')+'</button>'+
+      '<button onclick="openRoute('+t.lat+','+t.lon+',\'g\')">🚗 '+T('路线','Route')+'</button></div></div>';
   });
   res.innerHTML=html+'<div class="callout" style="margin-top:10px">'+
-    T('<b>⚠ 这些是色斑，不是矿床。</b>扫描只找出所选图层中信号最强的区域。它会滤除灰白色表面（屋顶、道路、混凝土）和丛林，但红瓦屋顶、采石场、裸露农地和河岸仍可能混入。<br><br><b>请在开阔野外扫描，而非市镇</b>——建成区会产生大量误报。把这些当作「先去这里看看」的清单，然后实地核查并送化验确认。',
-      '<b>⚠ These are colour patches, not deposits.</b> The scan finds where the chosen layer is strongest. It filters out grey/white surfaces (roofs, roads, concrete) and jungle, but red-tile roofs, quarries, bare farmland and riverbanks can still slip through.<br><br><b>Scan over open country, not towns</b> — built-up areas produce a lot of false hits. Use these as a "walk here first" list, then confirm on the ground and by assay.')+'</div>';
+    T('<b>⚠ 这些是色斑，不是矿床。</b>扫描只找出所选图层中信号最强的区域。它会滤除灰白色表面（屋顶、道路、混凝土）和丛林，但红瓦屋顶、采石场、裸露农地和河岸仍可能混入。<br><br><b>请在开阔野外扫描，而非市镇</b>——建成区会产生大量误报。先用卫星照片核对，再把值得去的加入候选清单，最后实地核查并送化验确认。',
+      '<b>⚠ These are colour patches, not deposits.</b> The scan finds where the chosen layer is strongest. It filters out grey/white surfaces (roofs, roads, concrete) and jungle, but red-tile roofs, quarries, bare farmland and riverbanks can still slip through.<br><br><b>Scan over open country, not towns</b> — built-up areas produce a lot of false hits. Check each one on the satellite photo, shortlist the ones worth a visit, then confirm on the ground and by assay.')+'</div>';
 }
 
-function targetToSample(i){
-  const t=lastTargets[i];if(!t)return;
-  const s={id:'TGT-'+String(samples.length+1).padStart(3,'0'),t:Date.now(),
-    lat:t.lat,lon:t.lon,acc:Math.max(t.wM,t.hM)/2,
-    mat:'Rock / outcrop',depth:'Surface',
-    note:T('来自'+(currentSatKind||'分析')+'图层的卫星目标。约 '+t.wM+'×'+t.hM+' 米，信号 '+(t.mean*100).toFixed(0)+'%。尚未实地核查。',
-           'Satellite target from '+(currentSatKind||'analysis')+' layer. Approx '+t.wM+'×'+t.hM+' m, signal '+(t.mean*100).toFixed(0)+'%. Not yet ground-checked.'),
-    tags:[],photoKeys:[],target:document.getElementById('target').value,flag:false};
-  samples.unshift(s);save();renderLog();refreshMarkers();rebuildNavOptions();
-  toast(T('已保存为 '+s.id+' — 前往实地取样','Saved as '+s.id+' — visit and sample it'));
+async function targetToShortlist(i,quiet){
+  const t=lastTargets[i];if(!t)return null;
+  const o={name:T('目标 ','Target ')+(i+1)+' · '+satName(currentSatKind),lat:t.lat,lon:t.lon,src:'scan',layer:currentSatKind,
+    level:t.level,signal:t.signal,wM:t.wM,hM:t.hM,snapBox:{west:t.west,east:t.east,north:t.north,south:t.south}};
+  if(lastScan&&lastScan.data){
+    const key='scan_'+lastScan.t;
+    if(!lastScan.saved){try{await idbPut(key,lastScan.data);lastScan.saved=true;}catch(e){}}
+    if(lastScan.saved){o.snapKey=key;o.snapBounds=lastScan.bounds;o.snapT=lastScan.t;}
+  }
+  return addToShortlist(o,quiet);
 }
-function targetNavigate(i){
-  const t=lastTargets[i];if(!t)return;
-  navTargetSample={id:'Target '+(i+1),lat:t.lat,lon:t.lon,mat:'satellite target',flag:false,t:0};
-  nav('nav',document.querySelector('nav button[data-v=nav]'));
-  startNavWatch();updateNavReadout();
-  toast(T('正在导航至目标 '+(i+1),'Navigating to Target '+(i+1)));
+async function shortlistAllTargets(){
+  let n=0;
+  for(let i=0;i<lastTargets.length;i++){if(lastTargets[i].level!=='weak'){await targetToShortlist(i,true);n++;}}
+  toast(T('已加入 '+n+' 个目标到候选清单','Added '+n+' target'+(n===1?'':'s')+' to the shortlist'));
+}
+/* Navigating also shortlists the target, so it stays selectable after leaving the tab */
+async function targetNavigate(i){
+  const it=await targetToShortlist(i,true);if(!it)return;
+  slNavigate(it.id);
+  toast(T('正在导航至 '+it.name+'（已加入候选清单）','Navigating to '+it.name+' (added to shortlist)'));
 }
 
 function b64(str){return btoa(unescape(encodeURIComponent(str)));}
@@ -2535,8 +2985,11 @@ function refreshMarkers(){
   });
 }
 function fitPins(){
-  const g=samples.filter(function(s){return s.lat!=null&&!s.deleted;});if(!map)return;
-  if(!g.length){toast(T('尚无已定位的样品 — 此按钮会缩放地图以显示你保存的全部样品','No samples with GPS yet — this button zooms the map to show all your saved samples'));return;}
+  if(!map)return;
+  const g=samples.filter(function(s){return s.lat!=null&&!s.deleted;})
+    .concat(shortlist.filter(function(x){return x.status!=='rejected';}))
+    .concat(siteLoc?[siteLoc]:[]);
+  if(!g.length){toast(T('地图上还没有标记 — 此按钮会缩放地图以显示你的全部样品与候选地点','Nothing pinned yet — this button zooms the map to show all your samples and shortlisted sites'));return;}
   if(g.length===1){map.setView([g[0].lat,g[0].lon],15);return;}
   map.fitBounds(L.latLngBounds(g.map(function(s){return[s.lat,s.lon];})).pad(0.2));
 }
@@ -2744,7 +3197,14 @@ async function downloadRegion(){
     for(let x=min.x;x<=max.x;x++)for(let y=min.y;y<=max.y;y++)
       urls.push(TILE.replace('{s}',subs[(x+y)%3]).replace('{z}',z).replace('{x}',x).replace('{y}',y));
   }
-  if(urls.length>1500)return toast(T('区域过大（'+urls.length+' 个图块）— 请稍微放大','Region too big ('+urls.length+' tiles) — zoom in a bit'),true);
+  // also keep the satellite photo when that layer is what you're planning with
+  const withSat=(currentSatKind==='esri'||currentSatKind==='esrired');
+  if(withSat){
+    const n=urls.length;
+    for(let k=0;k<n;k++){const m=urls[k].match(/\/(\d+)\/(\d+)\/(\d+)\.png$/);
+      if(m)urls.push(ESRI_IMAGERY.replace('{z}',m[1]).replace('{x}',m[2]).replace('{y}',m[3]));}
+  }
+  if(urls.length>(withSat?3000:1500))return toast(T('区域过大（'+urls.length+' 个图块）— 请稍微放大','Region too big ('+urls.length+' tiles) — zoom in a bit'),true);
   const bar=document.getElementById('dlBar'),fill=document.getElementById('dlFill'),msg=document.getElementById('dlMsg'),btn=document.getElementById('dlBtn');
   bar.classList.add('on');btn.style.opacity=.5;let done=0,ok=0;
   msg.textContent=T('正在下载 '+urls.length+' 个图块…','Downloading '+urls.length+' tiles…');
@@ -2753,7 +3213,7 @@ async function downloadRegion(){
     try{const res=await fetch(urls[i],{mode:'no-cors'});if(cache)await cache.put(urls[i],res.clone());ok++;}catch(e){}
     done++;fill.style.width=(done/urls.length*100)+'%';
   }
-  msg.textContent=T('已缓存 '+ok+' / '+urls.length+' 个图块供离线使用。','Cached '+ok+' / '+urls.length+' tiles for offline use.');
+  msg.textContent=T('已缓存 '+ok+' / '+urls.length+' 个图块供离线使用'+(withSat?'（含卫星照片）':'')+'。','Cached '+ok+' / '+urls.length+' tiles for offline use'+(withSat?' (map + satellite photo)':'')+'.');
   btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1500);
   toast(T('区域已缓存 — 现在可离线使用','Region cached — works offline now'));
 }
@@ -2766,10 +3226,22 @@ function rebuildNavOptions(){
   // <option> cannot contain markup, so the label must be set as plain text per language
   sel.innerHTML='';
   const ph=document.createElement('option');ph.value='';
-  ph.textContent=T('— 选择一个已定位的样品 —','— choose a geolocated sample —');
+  ph.textContent=T('— 选择目的地 —','— choose a destination —');
   sel.appendChild(ph);
+  if(siteLoc){
+    const o=document.createElement('option');o.value='site|';
+    o.textContent='📍 '+T('勘察位置','Prospect location')+' · '+siteLoc.lat.toFixed(4)+', '+siteLoc.lon.toFixed(4);sel.appendChild(o);
+  }
+  const live=shortlist.filter(function(x){return x.status!=='rejected';});
+  if(live.length){
+    const g=document.createElement('optgroup');g.label=T('候选清单','Shortlist');
+    live.forEach(function(it){const o=document.createElement('option');o.value='sl|'+it.id;o.textContent='★ '+it.name;g.appendChild(o);});
+    sel.appendChild(g);
+  }
+  const g2=document.createElement('optgroup');g2.label=T('样品','Samples');
   samples.forEach(function(s){if(s.lat==null||s.deleted)return;
-    const o=document.createElement('option');o.value=s.id+'|'+s.t;o.textContent=s.id+(s.flag?' ★':'')+' · '+s.mat;sel.appendChild(o);});
+    const o=document.createElement('option');o.value=s.id+'|'+s.t;o.textContent=s.id+(s.flag?' ★':'')+' · '+s.mat;g2.appendChild(o);});
+  if(g2.children.length)sel.appendChild(g2);
   sel.value=prev;
 }
 function navigateTo(id){
@@ -2782,7 +3254,14 @@ function setNavTarget(){
   const val=document.getElementById('navTarget').value;
   if(!val){navTargetSample=null;stopNavWatch();document.getElementById('navMsg').textContent=T('选择一个目标以开始。','Choose a target to begin.');return;}
   const parts=val.split('|');
-  navTargetSample=samples.filter(function(s){return s.id===parts[0]&&String(s.t)===parts[1];})[0]||null;
+  if(val==='site|'){
+    navTargetSample=siteLoc?{id:T('勘察位置','Prospect location'),lat:siteLoc.lat,lon:siteLoc.lon,mat:'prospect location',flag:false,t:0}:null;
+  }else if(parts[0]==='sl'){
+    const it=slGet(parts[1]);
+    navTargetSample=it?{id:it.name,lat:it.lat,lon:it.lon,mat:'shortlist',flag:false,t:0}:null;
+  }else{
+    navTargetSample=samples.filter(function(s){return s.id===parts[0]&&String(s.t)===parts[1];})[0]||null;
+  }
   retracing=false;
   startNavWatch();
 }
@@ -3401,12 +3880,13 @@ function nav(v,btn){
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');
   if(v==='sample'){
     // carry over whatever was ticked in Estimate so you do not re-enter it
-    if(picked.size){picked.forEach(function(x){sampleTags.add(x);});}
+    if(estMode==='field'&&picked.size){picked.forEach(function(x){sampleTags.add(x);});}
     // carry a typed-in prospect point over (a stale GPS fix is not reused: you may have moved)
     if(!lastFix&&siteLoc&&siteLoc.src==='manual'){lastFix=siteLoc;showFixOnSample();}
     renderSampleTags();renderMaterialDepth();updateSameSpotUI();
   }
   if(v==='log')renderLog();
+  if(v==='survey')renderShortlist();
   if(v==='map'){renderSatTiles();setTimeout(function(){
     initMap();
     if(map)map.invalidateSize();   // initMap bails out if Leaflet never loaded
@@ -3421,7 +3901,7 @@ let tTimer;function toast(msg,warn){const t=document.getElementById('toast');t.t
 
 /* ============ init ============ */
 idbOpen().then(function(){renderLog();}).catch(function(){toast(T('照片数据库不可用','Photo database unavailable'),true);});
-applyLang();renderSite();if(siteLoc)setGpsBar(siteLoc);renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
+applyLang();renderSite();renderShortlist();if(siteLoc)setGpsBar(siteLoc);renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
 
 /* ---- PWA service worker ----
    A blob-URL worker cannot control the page, so offline support needs a real file
