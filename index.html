@@ -2040,7 +2040,7 @@ function exportCSV(){if(!activeSamples().length)return toast(T('没有可导出�
   const rows=activeSamples().map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.locSrc||(s.lat==null?'':'gps'),s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
   dl('prospectfield_'+Date.now()+'.csv',head.join(',')+'\n'+rows.join('\n'),'text/csv');toast(T('已导出 CSV','Exported CSV'));}
 async function backup(){
-  if(!activeSamples().length&&!shortlist.length)return toast(T('没有可备份的内容','Nothing to back up'),true);
+  if(!samples.length&&!shortlist.length)return toast(T('没有可备份的内容','Nothing to back up'),true);
   toast(T('正在打包照片…','Bundling photos…'));
   const out=[];
   // include trashed samples too — a backup should preserve anything still recoverable
@@ -2134,10 +2134,20 @@ function restore(input){
     try{
       // shortlist
       if(Array.isArray(data.shortlist)){
+        // Imported scan images are stored under NEW keys (shared by items that shared one in
+        // the backup). Reusing the backup's key could overwrite an image an existing target
+        // uses — and a rollback would then delete it.
+        const snapMap={},stamp=String(Date.now());
         for(let j=0;j<data.shortlist.length;j++){
           const it=cleanShortlistItem(data.shortlist[j]);
           if(!it||slGet(it.id))continue;
-          if(it.snap&&it.snapKey){await idbPut(it.snapKey,it.snap);idbWritten.push(it.snapKey);}
+          if(it.snap&&it.snapKey){
+            if(!snapMap[it.snapKey]){
+              const nk='scan_'+stamp+String(Object.keys(snapMap).length).padStart(4,'0');
+              await idbPut(nk,it.snap);idbWritten.push(nk);snapMap[it.snapKey]=nk;
+            }
+            it.snapKey=snapMap[it.snapKey];
+          }
           delete it.snap;shortlist.push(it);newSl.push(it);
         }
       }
@@ -2233,9 +2243,14 @@ function openRoute(lat,lon,app){
 async function addToShortlist(o,quiet){
   const have=slNear(o.lat,o.lon,30);
   if(have){
+    const before=JSON.stringify(have,function(k,v){return k==='_mk'?undefined:v;});
     ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','deskScore','deskTicks','deskFlags','target'].forEach(function(k){if(o[k]!=null)have[k]=o[k];});
     if(o.name&&/^CAND-/.test(have.name))have.name=o.name;
-    saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();
+    if(!saveShortlist()){
+      const old=JSON.parse(before);Object.keys(have).forEach(function(k){if(k!=='_mk')delete have[k];});Object.assign(have,old);
+      slRefresh();return null;
+    }
+    renderShortlist();drawShortlist();rebuildNavOptions();
     if(!quiet)toast(T(have.name+' 已在清单中 — 已更新',have.name+' is already on the shortlist — updated'));
     return have;
   }
@@ -2243,7 +2258,9 @@ async function addToShortlist(o,quiet){
     name:(o.name&&String(o.name).trim())||slNextName(),lat:o.lat,lon:o.lon,src:o.src||'manual',
     status:'tocheck',t:Date.now()};
   ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','deskScore','deskTicks','deskFlags','target','note'].forEach(function(k){if(o[k]!=null)it[k]=o[k];});
-  shortlist.unshift(it);saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();
+  shortlist.unshift(it);
+  if(!saveShortlist()){shortlist.shift();slRefresh();return null;}   // saveShortlist already warned
+  renderShortlist();drawShortlist();rebuildNavOptions();
   if(!quiet)toast(T('已加入候选清单：'+it.name,'Added to shortlist: '+it.name));
   return it;
 }
@@ -2312,19 +2329,23 @@ function slRank(it){
   return best;
 }
 function setSlSort(v){slSort=v;try{localStorage.setItem('pf_sl_sort',v);}catch(e){}renderShortlist();}
-function setSlStatus(id,v){const it=slGet(id);if(!it)return;it.status=v;saveShortlist();renderShortlist();drawShortlist();}
+function slRefresh(){renderShortlist();drawShortlist();rebuildNavOptions();}
+function setSlStatus(id,v){const it=slGet(id);if(!it)return;const old=it.status;it.status=v;if(!saveShortlist())it.status=old;slRefresh();}
 function slRename(id){
   const it=slGet(id);if(!it)return;
   const v=window.prompt(T('新名称','New name'),it.name);
-  if(v&&v.trim()){it.name=v.trim().slice(0,60);saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();}
+  if(v&&v.trim()){const old=it.name;it.name=v.trim().slice(0,60);if(!saveShortlist())it.name=old;slRefresh();}
 }
 async function slDelete(id){
   const it=slGet(id);if(!it)return;
   const ok=await askConfirm(T('从清单中移除？','Remove from shortlist?'),it.name,T('移除','Remove'),true);
   if(!ok)return;
+  const prev=shortlist;
   shortlist=shortlist.filter(function(x){return x.id!==id;});
+  if(!saveShortlist()){shortlist=prev;slRefresh();return;}
+  // only drop the image once the removal is actually saved
   if(it.snapKey&&!shortlist.some(function(x){return x.snapKey===it.snapKey;}))idbDel(it.snapKey);
-  saveShortlist();renderShortlist();drawShortlist();rebuildNavOptions();
+  slRefresh();
 }
 function slShowOnMap(id){
   const it=slGet(id);if(!it)return;
@@ -2372,7 +2393,9 @@ function parseLine(line){
 }
 async function addPoints(pts,src){
   let added=0,before=shortlist.length;
-  for(let i=0;i<pts.length;i++){await addToShortlist({name:pts[i].name,lat:pts[i].lat,lon:pts[i].lon,src:src},true);}
+  for(let i=0;i<pts.length;i++){
+    if(!(await addToShortlist({name:pts[i].name,lat:pts[i].lat,lon:pts[i].lon,src:src},true)))return -1;   // storage full
+  }
   added=shortlist.length-before;
   return added;
 }
@@ -2383,6 +2406,7 @@ async function addPastedToShortlist(){
   const pts=[];let bad=0;
   lines.forEach(function(l){const r=parseLine(l);if(r)pts.push(r);else bad++;});
   const added=await addPoints(pts,'manual');
+  if(added<0)return;   // nothing more could be saved; keep the text so it can be retried
   if(pts.length)ta.value='';
   toast(T('已加入 '+added+' 个地点'+(bad?'，'+bad+' 行无法识别':''),added+' added'+(pts.length-added?', '+(pts.length-added)+' already listed':'')+(bad?', '+bad+' line'+(bad===1?'':'s')+' not understood':'')),!pts.length);
 }
@@ -2417,6 +2441,7 @@ function importShortlistFile(input){
     }catch(err){return toast(T('无法读取该文件','Could not read that file'),true);}
     if(!pts.length)return toast(T('文件中没有找到坐标','No coordinates found in that file'),true);
     const added=await addPoints(pts,'import');
+    if(added<0)return;
     toast(T('已导入 '+added+' 个地点'+(bad?'（跳过 '+bad+' 行）':''),'Imported '+added+' place'+(added===1?'':'s')+(bad?' ('+bad+' line'+(bad===1?'':'s')+' skipped)':'')));
   };
   r.readAsText(f);
@@ -2817,7 +2842,11 @@ async function targetToShortlist(i,quiet){
 }
 async function shortlistAllTargets(){
   let n=0;
-  for(let i=0;i<lastTargets.length;i++){if(lastTargets[i].level!=='weak'){await targetToShortlist(i,true);n++;}}
+  for(let i=0;i<lastTargets.length;i++){
+    if(lastTargets[i].level==='weak')continue;
+    if(!(await targetToShortlist(i,true)))return;   // storage full: saveShortlist already warned, stop here
+    n++;
+  }
   toast(T('已加入 '+n+' 个目标到候选清单','Added '+n+' target'+(n===1?'':'s')+' to the shortlist'));
 }
 /* Navigating also shortlists the target, so it stays selectable after leaving the tab */
