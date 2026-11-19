@@ -1109,7 +1109,7 @@ function idbDel(key){return new Promise(function(res){const tx=db.transaction('p
 /* ============ storage ============ */
 const KEY='prospectfield_v2';
 let samples=JSON.parse(localStorage.getItem(KEY)||'[]');
-const save=function(){try{localStorage.setItem(KEY,JSON.stringify(samples));}catch(e){toast(T('元数据存储已满 — 请导出备份','Metadata storage full — export a backup'),true);}};
+const save=function(){try{localStorage.setItem(KEY,JSON.stringify(samples));return true;}catch(e){toast(T('元数据存储已满 — 请导出备份','Metadata storage full — export a backup'),true);return false;}};
 
 /* ============ indicators ============ */
 const IND={
@@ -1840,7 +1840,18 @@ async function saveSample(keepSpot){
     target:document.getElementById('target').value,
     score:(lastScoreTarget===document.getElementById('target').value)?lastScore:null};
   s.flag=s.tags.some(function(x){return['Gossan','Gold colour','Sulphides','Black sand','Quartz vein'].indexOf(x)>-1;});
-  samples.unshift(s);save();
+  samples.unshift(s);
+  if(!save()){
+    // Nothing was persisted: undo, drop the orphaned photo copies, and leave the form
+    // exactly as it was so the user can free space (export / purge) and try again.
+    samples.shift();
+    for(let i=0;i<photoKeys.length;i++){try{await idbDel(photoKeys[i]);}catch(e){}}
+    await askConfirm(T('样品未保存','Sample NOT saved'),
+      T('手机存储已满，此样品没有被保存。你填写的内容仍保留在表单中。请先导出备份，或在「记录」页永久删除回收站中的项目，然后再点保存。',
+        'Phone storage is full, so this sample was not saved. Everything you entered is still in the form. Export a backup or permanently delete items from the Log trash, then tap Save again.'),
+      T('好','OK'),false);
+    return;
+  }
 
   // always clear the per-sample fields
   document.getElementById('sId').value='';document.getElementById('sNote').value='';
@@ -1909,15 +1920,15 @@ async function renderLog(){
       acts='<div class="acts"><button onclick="restoreSample('+idx+')">\u21a9 '+T('还原','Restore')+'</button>'+
            '<button style="color:var(--warn)" onclick="purgeSample('+idx+')">\ud83d\uddd1 '+T('永久删除','Delete forever')+'</button></div>';
     }else{
-      acts='<div class="acts">'+(s.lat!=null?'<button onclick="navigateTo(\''+s.id+'\')">\ud83e\udded '+T('返回此处','Walk back')+'</button>':'')+
+      acts='<div class="acts">'+(s.lat!=null?'<button onclick="navigateToIdx('+idx+')">\ud83e\udded '+T('返回此处','Walk back')+'</button>':'')+
            '<button onclick="delSample('+idx+')">\ud83d\uddd1 '+T('删除','Delete')+'</button></div>';
     }
-    d.innerHTML='<div class="top"><div><span class="id">'+s.id+'</span>'+(s.flag?' <span style="color:var(--ore)">\u2605</span>':'')+
-      '<div class="co mono">\ud83d\udccd '+co+'</div><div class="co">'+matLabel(s.mat)+' \u00b7 '+depthLabel(s.depth)+' \u00b7 '+date+
+    d.innerHTML='<div class="top"><div><span class="id">'+esc(s.id)+'</span>'+(s.flag?' <span style="color:var(--ore)">\u2605</span>':'')+
+      '<div class="co mono">\ud83d\udccd '+esc(co)+'</div><div class="co">'+esc(matLabel(s.mat))+' \u00b7 '+esc(depthLabel(s.depth))+' \u00b7 '+date+
       (nphoto?' \u00b7 '+nphoto+T(' 张照片',' photo'+(nphoto===1?'':'s')):'')+
-      (s.score!=null?' \u00b7 '+T('评分 ','score ')+s.score+'%':'')+'</div></div></div>'+
-      (s.tags.length?'<div class="tags">'+s.tags.map(function(t){return'<span class="tg">'+tagLabel(t)+'</span>';}).join('')+'</div>':'')+
-      (s.note?'<div class="note">'+s.note.replace(/</g,'&lt;')+'</div>':'')+
+      (s.score!=null?' \u00b7 '+T('评分 ','score ')+esc(s.score)+'%':'')+'</div></div></div>'+
+      (s.tags.length?'<div class="tags">'+s.tags.map(function(t){return'<span class="tg">'+esc(tagLabel(t))+'</span>';}).join('')+'</div>':'')+
+      (s.note?'<div class="note">'+esc(s.note)+'</div>':'')+
       '<div class="photos" id="ph-'+i+'"></div>'+acts;
     w.appendChild(d);
     if(nphoto&&!s.deleted){const holder=d.querySelector('#ph-'+i);
@@ -1926,7 +1937,11 @@ async function renderLog(){
     }
   }
 }
-function viewPhoto(data){const w=window.open();if(w)w.document.write('<img src="'+data+'" style="max-width:100%">');}
+function viewPhoto(data){
+  if(typeof data!=='string'||data.indexOf('data:image/')!==0)return;
+  const w=window.open();if(!w)return;
+  const im=w.document.createElement('img');im.src=data;im.style.maxWidth='100%';w.document.body.appendChild(im);
+}
 
 /* soft delete — recoverable, photos kept until purge.
    Blocked entirely while a trail is active: mid-expedition, a deleted sample could be
@@ -2032,6 +2047,48 @@ async function backup(){
 /* Import a backup file. Merges rather than overwrites. If a sample is in the local trash
    but active in the backup, we bring it BACK — importing a backup is usually an attempt to
    rescue something, and re-deleting is one tap if that was not the intent. */
+/* A backup file is untrusted input: rebuild each record from known fields with the
+   right types, so a crafted file cannot smuggle markup or odd values into the UI. */
+function numOrNull(v){v=(v===null||v===''||v===undefined)?NaN:Number(v);return isFinite(v)?v:null;}
+function str(v,max){return v==null?'':String(v).slice(0,max||200);}
+function cleanSample(x){
+  if(!x||typeof x!=='object')return null;
+  const t=Number(x.t);if(!isFinite(t))return null;
+  const lat=numOrNull(x.lat),lon=numOrNull(x.lon);
+  const ok=lat!=null&&lon!=null&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
+  const s={id:str(x.id,40)||('SMP-'+t),t:t,lat:ok?lat:null,lon:ok?lon:null,acc:ok?numOrNull(x.acc):null,
+    locSrc:x.locSrc==='manual'?'manual':(ok?'gps':null),mat:str(x.mat,60),depth:str(x.depth,30),note:str(x.note,4000),
+    tags:Array.isArray(x.tags)?x.tags.slice(0,50).map(function(g){return str(g,60);}):[],
+    target:str(x.target,20),score:numOrNull(x.score),flag:!!x.flag};
+  if(x.deleted)s.deleted=true;
+  s.photos=Array.isArray(x.photos)?x.photos.filter(function(d){return typeof d==='string'&&d.indexOf('data:image/')===0;}):[];
+  return s;
+}
+function cleanShortlistItem(x){
+  if(!x||typeof x!=='object')return null;
+  const lat=numOrNull(x.lat),lon=numOrNull(x.lon);
+  if(lat==null||lon==null||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+  const id=/^sl_[a-z0-9]{1,24}$/.test(String(x.id))?String(x.id):('sl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  const it={id:id,name:str(x.name,60)||slNextName(),lat:lat,lon:lon,
+    src:['scan','manual','import','gps'].indexOf(x.src)>-1?x.src:'import',
+    status:['tocheck','visited','sampled','rejected'].indexOf(x.status)>-1?x.status:'tocheck',t:numOrNull(x.t)||Date.now()};
+  if(['strong','moderate','weak'].indexOf(x.level)>-1)it.level=x.level;
+  ['signal','wM','hM','deskScore','snapT'].forEach(function(k){const v=numOrNull(x[k]);if(v!=null)it[k]=v;});
+  if(typeof x.layer==='string'&&/^[a-z]{1,20}$/.test(x.layer))it.layer=x.layer;
+  if(typeof x.target==='string')it.target=str(x.target,20);
+  if(x.note)it.note=str(x.note,2000);
+  if(Array.isArray(x.deskFlags))it.deskFlags=x.deskFlags.slice(0,10).map(function(g){return str(g,60);});
+  if(Array.isArray(x.deskTicks))it.deskTicks=x.deskTicks.slice(0,20).map(function(g){return str(g,60);});
+  const box=x.snapBox,bb=x.snapBounds;
+  if(typeof x.snapKey==='string'&&/^scan_\d+$/.test(x.snapKey)&&box&&bb&&typeof x.snap==='string'&&x.snap.indexOf('data:image/')===0){
+    const nb={w:numOrNull(bb.w),s:numOrNull(bb.s),e:numOrNull(bb.e),n:numOrNull(bb.n)},
+          nx={west:numOrNull(box.west),east:numOrNull(box.east),north:numOrNull(box.north),south:numOrNull(box.south)};
+    if([nb.w,nb.s,nb.e,nb.n,nx.west,nx.east,nx.north,nx.south].every(function(v){return v!=null;})){
+      it.snapKey=x.snapKey;it.snapBounds=nb;it.snapBox=nx;it.snap=x.snap;
+    }
+  }
+  return it;
+}
 function restore(input){
   const f=input.files[0];input.value='';if(!f)return;
   const r=new FileReader();
@@ -2042,19 +2099,20 @@ function restore(input){
     let slAdded=0;
     if(Array.isArray(data.shortlist)){
       for(let j=0;j<data.shortlist.length;j++){
-        const it=Object.assign({},data.shortlist[j]);
-        if(slGet(it.id)||typeof it.lat!=='number')continue;
+        const it=cleanShortlistItem(data.shortlist[j]);
+        if(!it||slGet(it.id))continue;
         if(it.snap&&it.snapKey){await idbPut(it.snapKey,it.snap);}delete it.snap;
         shortlist.push(it);slAdded++;
       }
       if(slAdded){saveShortlist();renderShortlist();drawShortlist();}
     }
-    if(!siteLoc&&data.site&&typeof data.site.lat==='number'){siteLoc=data.site;try{localStorage.setItem(SITE_KEY,JSON.stringify(siteLoc));}catch(e){}renderSite();drawSiteMarker();}
+    const sLat=data.site?numOrNull(data.site.lat):null,sLon=data.site?numOrNull(data.site.lon):null;
+    if(!siteLoc&&sLat!=null&&sLon!=null&&Math.abs(sLat)<=90&&Math.abs(sLon)<=180){siteLoc={lat:sLat,lon:sLon,acc:numOrNull(data.site.acc),alt:null,src:data.site.src==='gps'?'gps':'manual',t:numOrNull(data.site.t)||Date.now()};try{localStorage.setItem(SITE_KEY,JSON.stringify(siteLoc));}catch(e){}renderSite();drawSiteMarker();}
     const existing=new Map();
     samples.forEach(function(s){existing.set(s.id+s.t,s);});
     let added=0,skipped=0,revived=0;
     for(let j=0;j<incoming.length;j++){
-      const s=Object.assign({},incoming[j]);
+      const s=cleanSample(incoming[j]);if(!s)continue;
       const key=s.id+s.t;
       const have=existing.get(key);
       if(have){
@@ -2094,7 +2152,7 @@ const SL_FIRST=5;
 const SL_STATUS=[['tocheck','🔍','待查看','To check'],['visited','👣','已到访','Visited'],['sampled','🧪','已取样','Sampled'],['rejected','✖','已排除','Rejected']];
 function slStatusLabel(k){const s=SL_STATUS.filter(function(x){return x[0]===k;})[0]||SL_STATUS[0];return s[1]+' '+T(s[2],s[3]);}
 function esc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function saveShortlist(){try{localStorage.setItem(SL_KEY,JSON.stringify(shortlist,function(k,v){return k==='_mk'?undefined:v;}));localStorage.setItem('pf_sl_seq',String(slSeq));}catch(e){toast(T('存储已满 — 请导出候选清单','Storage full — export your shortlist'),true);}}
+function saveShortlist(){try{localStorage.setItem(SL_KEY,JSON.stringify(shortlist,function(k,v){return k==='_mk'?undefined:v;}));localStorage.setItem('pf_sl_seq',String(slSeq));return true;}catch(e){toast(T('存储已满 — 候选清单未能保存，请导出后清理','Storage full — shortlist not saved. Export it and clear space'),true);return false;}}
 function slGet(id){return shortlist.filter(function(x){return x.id===id;})[0]||null;}
 function slNear(lat,lon,within){return shortlist.filter(function(x){return haversine(lat,lon,x.lat,x.lon)<=(within||30);})[0]||null;}
 function slNextName(){slSeq++;return 'CAND-'+String(slSeq).padStart(3,'0');}
@@ -2215,7 +2273,7 @@ function slRename(id){
 }
 async function slDelete(id){
   const it=slGet(id);if(!it)return;
-  const ok=await askConfirm(T('从清单中移除？','Remove from shortlist?'),esc(it.name),T('移除','Remove'),true);
+  const ok=await askConfirm(T('从清单中移除？','Remove from shortlist?'),it.name,T('移除','Remove'),true);
   if(!ok)return;
   shortlist=shortlist.filter(function(x){return x.id!==id;});
   if(it.snapKey&&!shortlist.some(function(x){return x.snapKey===it.snapKey;}))idbDel(it.snapKey);
@@ -2518,18 +2576,20 @@ function scanTargets(){
     msg.innerHTML=T('⚠ 请先选择一个分析图层——<b>铁比值</b>、<b>蚀变</b>、<b>黏土</b>或<b>亚铁</b>。这些图层才带有值得扫描的矿物信号。','⚠ Pick an analysis layer first — <b>Iron ratio</b>, <b>Alteration</b>, <b>Clay</b> or <b>Ferrous iron</b>. Those carry a mineral signal worth scanning.');return;
   }
   if(!navigator.onLine){msg.innerHTML=T('⚠ 扫描需要网络信号。','⚠ Scanning needs signal.');return;}
+  const scanKind=currentSatKind;   // the layer can change while the request is in flight
   const b=map.getBounds();
   // match the screen's shape so pixels are roughly square on the ground
   const sz=map.getSize();const W=384,H=Math.max(160,Math.min(768,Math.round(384*sz.y/Math.max(1,sz.x))));
   const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
   const today=new Date().toISOString().slice(0,10);
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
-    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS='+(LAYERMAP[currentSatKind]||'IRON-RATIO')+
+    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS='+(LAYERMAP[scanKind]||'IRON-RATIO')+
     '&SRS=EPSG:4326&BBOX='+b.getWest()+','+b.getSouth()+','+b.getEast()+','+b.getNorth()+
     '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC='+maxCC()+'&PRIORITY='+CC_PRIORITY+'&TIME=2023-01-01/'+today;
   const bar=document.getElementById('scanBar'),fill=document.getElementById('scanFill');
   bar.classList.add('on');fill.style.width='25%';btn.style.opacity=.5;
   msg.textContent=T('正在获取此范围的影像…','Fetching imagery for this view…');
+  let scan=null;
   fetch(url).then(function(r){
     if(!r.ok)throw new Error('server returned '+r.status);
     return r.blob();
@@ -2537,8 +2597,8 @@ function scanTargets(){
     fill.style.width='60%';msg.textContent=T('正在分析像素…','Analysing pixels…');
     // keep the image so shortlisted targets can show what the satellite saw, offline
     const scanT=Date.now();
-    lastScan={t:scanT,kind:currentSatKind,bounds:{w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()},data:null,saved:false};
-    const fr=new FileReader();fr.onload=function(){if(lastScan&&lastScan.t===scanT)lastScan.data=fr.result;};fr.readAsDataURL(blob);
+    scan={t:scanT,kind:scanKind,bounds:{w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()},data:null,saved:false};
+    const sc=scan,fr=new FileReader();fr.onload=function(){sc.data=fr.result;};fr.readAsDataURL(blob);
     return createImageBitmap(blob);
   }).then(function(bmp){
     const cv=document.createElement('canvas');cv.width=W;cv.height=H;
@@ -2546,9 +2606,11 @@ function scanTargets(){
     ctx.drawImage(bmp,0,0,W,H);
     const data=ctx.getImageData(0,0,W,H).data;
     fill.style.width='85%';
-    const targets=findClusters(data,W,H,b,currentSatKind);
+    const targets=findClusters(data,W,H,b,scanKind);
+    // each target carries its own scan (layer + image), whatever is selected later
+    targets.forEach(function(t){t.scan=scan;});
     fill.style.width='100%';
-    lastTargets=targets;
+    lastTargets=targets;lastScan=scan;
     drawTargets(targets);
     renderTargetList(targets);
     btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1200);
@@ -2696,12 +2758,13 @@ function renderTargetList(targets){
 
 async function targetToShortlist(i,quiet){
   const t=lastTargets[i];if(!t)return null;
-  const o={name:T('目标 ','Target ')+(i+1)+' · '+satName(currentSatKind),lat:t.lat,lon:t.lon,src:'scan',layer:currentSatKind,
+  const sc=t.scan,kind=sc?sc.kind:currentSatKind;
+  const o={name:T('目标 ','Target ')+(i+1)+' · '+satName(kind),lat:t.lat,lon:t.lon,src:'scan',layer:kind,
     level:t.level,signal:t.signal,wM:t.wM,hM:t.hM,snapBox:{west:t.west,east:t.east,north:t.north,south:t.south}};
-  if(lastScan&&lastScan.data){
-    const key='scan_'+lastScan.t;
-    if(!lastScan.saved){try{await idbPut(key,lastScan.data);lastScan.saved=true;}catch(e){}}
-    if(lastScan.saved){o.snapKey=key;o.snapBounds=lastScan.bounds;o.snapT=lastScan.t;}
+  if(sc&&sc.data){
+    const key='scan_'+sc.t;
+    if(!sc.saved){try{await idbPut(key,sc.data);sc.saved=true;}catch(e){}}
+    if(sc.saved){o.snapKey=key;o.snapBounds=sc.bounds;o.snapT=sc.t;}
   }
   return addToShortlist(o,quiet);
 }
@@ -3003,7 +3066,7 @@ function refreshMarkers(){
     if(s.lat==null||s.deleted)return;
     const num=samples.length-samples.indexOf(s);
     const m=L.marker([s.lat,s.lon],{icon:pinIcon(num,s.flag)});
-    m.bindPopup('<b>'+s.id+'</b><br>'+s.mat+' · '+s.depth+'<br>'+(s.tags.join(', ')||'—'));
+    m.bindPopup('<b>'+esc(s.id)+'</b><br>'+esc(s.mat)+' · '+esc(s.depth)+'<br>'+(esc(s.tags.join(', '))||'—'));
     markerLayer.addLayer(m);
   });
 }
@@ -3213,7 +3276,9 @@ window.addEventListener('online',updateNet);window.addEventListener('offline',up
 async function downloadRegion(){
   if(!map)return;
   if(!navigator.onLine)return toast(T('请先联网再下载图块','Go online first to download tiles'),true);
-  const b=map.getBounds(),z0=Math.max(10,map.getZoom()),z1=Math.min(16,z0+3);
+  // Zoomed in past 16 (up to the map's max of 18) used to give z0 > z1 and download nothing.
+  const b=map.getBounds(),zc=Math.round(map.getZoom()),MAXZ=18;
+  const z0=Math.max(10,Math.min(zc,MAXZ)),z1=Math.min(MAXZ,Math.max(z0,Math.min(16,z0+3),zc));
   const subs=['a','b','c'];let urls=[];
   for(let z=z0;z<=z1;z++){
     const min=deg2tile(b.getNorth(),b.getWest(),z),max=deg2tile(b.getSouth(),b.getEast(),z);
@@ -3227,18 +3292,30 @@ async function downloadRegion(){
     for(let k=0;k<n;k++){const m=urls[k].match(/\/(\d+)\/(\d+)\/(\d+)\.png$/);
       if(m)urls.push(ESRI_IMAGERY.replace('{z}',m[1]).replace('{x}',m[2]).replace('{y}',m[3]));}
   }
+  if(!urls.length)return toast(T('此范围没有可下载的图块','No tiles to download for this view'),true);
+  if(!('caches' in window))return toast(T('此浏览器无法离线保存地图','This browser cannot store maps offline'),true);
   if(urls.length>(withSat?3000:1500))return toast(T('区域过大（'+urls.length+' 个图块）— 请稍微放大','Region too big ('+urls.length+' tiles) — zoom in a bit'),true);
   const bar=document.getElementById('dlBar'),fill=document.getElementById('dlFill'),msg=document.getElementById('dlMsg'),btn=document.getElementById('dlBtn');
   bar.classList.add('on');btn.style.opacity=.5;let done=0,ok=0;
   msg.textContent=T('正在下载 '+urls.length+' 个图块…','Downloading '+urls.length+' tiles…');
-  const cache=('caches'in window)?await caches.open('pf-tiles'):null;
+  const cache=await caches.open('pf-tiles');
   for(let i=0;i<urls.length;i++){
-    try{const res=await fetch(urls[i],{mode:'no-cors'});if(cache)await cache.put(urls[i],res.clone());ok++;}catch(e){}
+    try{
+      /* CORS first: OSM and Esri both allow it, and a readable response is stored at its real
+         size. An opaque (no-cors) response is padded to several MB each in Chrome's quota,
+         which filled storage after ~100 tiles. Fall back to no-cors only if CORS is refused. */
+      let res;
+      try{res=await fetch(urls[i],{mode:'cors'});if(!res.ok)throw new Error('HTTP '+res.status);}
+      catch(e1){res=await fetch(urls[i],{mode:'no-cors'});}
+      await cache.put(urls[i],res);ok++;
+    }catch(e){}
     done++;fill.style.width=(done/urls.length*100)+'%';
   }
   msg.textContent=T('已缓存 '+ok+' / '+urls.length+' 个图块供离线使用'+(withSat?'（含卫星照片）':'')+'。','Cached '+ok+' / '+urls.length+' tiles for offline use'+(withSat?' (map + satellite photo)':'')+'.');
   btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1500);
-  toast(T('区域已缓存 — 现在可离线使用','Region cached — works offline now'));
+  if(ok===urls.length)toast(T('区域已缓存 — 现在可离线使用','Region cached — works offline now'));
+  else if(ok>0)toast(T('只缓存了部分图块（'+ok+'/'+urls.length+'）— 请在信号好时重试','Only part of the area was cached ('+ok+'/'+urls.length+') — retry with better signal'),true);
+  else toast(T('下载失败 — 没有任何图块被缓存','Download failed — nothing was cached'),true);
 }
 function deg2tile(lat,lon,z){const n=Math.pow(2,z);return{x:Math.floor((lon+180)/360*n),y:Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*n)};}
 
@@ -3267,8 +3344,9 @@ function rebuildNavOptions(){
   if(g2.children.length)sel.appendChild(g2);
   sel.value=prev;
 }
-function navigateTo(id){
-  const s=samples.filter(function(x){return x.id===id&&x.lat!=null&&!x.deleted;})[0];
+function navigateToIdx(i){const s=samples[i];if(s)navigateTo(s.id,s.t);}
+function navigateTo(id,t){
+  const s=samples.filter(function(x){return x.id===id&&(t==null||x.t===t)&&x.lat!=null&&!x.deleted;})[0];
   if(!s)return toast(T('该样品没有 GPS 定位','That sample has no GPS fix'),true);
   nav('nav',document.querySelector('nav button[data-v=nav]'));
   document.getElementById('navTarget').value=s.id+'|'+s.t;setNavTarget();
