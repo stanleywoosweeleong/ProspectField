@@ -1829,10 +1829,20 @@ function renderSampleTags(){
 async function saveSample(keepSpot){
   const id=document.getElementById('sId').value.trim()||('SMP-'+String(samples.length+1).padStart(3,'0'));
   const t=Date.now();
-  const photoKeys=[];
+  const photoKeys=[];let photoFail=false;
   for(let i=0;i<pendingPhotos.length;i++){
     const key='ph_'+t+'_'+i;
-    try{await idbPut(key,pendingPhotos[i]);photoKeys.push(key);}catch(e){toast(T('照片保存失败','Photo store failed'),true);}
+    try{await idbPut(key,pendingPhotos[i]);photoKeys.push(key);}catch(e){photoFail=true;break;}
+  }
+  if(photoFail){
+    // Never save a sample with its photos silently missing. Undo the partial copies and
+    // leave the form (photos included) untouched so the user can free space and retry.
+    for(let i=0;i<photoKeys.length;i++){try{await idbDel(photoKeys[i]);}catch(e){}}
+    await askConfirm(T('样品未保存','Sample NOT saved'),
+      T('照片无法存入手机（存储空间可能已满），所以此样品没有被保存。你填写的内容和照片仍保留在表单中。请清理空间（导出备份、永久删除回收站中的项目）后再点保存。',
+        'The photos could not be stored on the phone (storage may be full), so this sample was not saved. Everything you entered, photos included, is still in the form. Free some space (export a backup, permanently delete items from the Log trash), then tap Save again.'),
+      T('好','OK'),false);
+    return;
   }
   const s={id:id,t:t,lat:lastFix?lastFix.lat:null,lon:lastFix?lastFix.lon:null,acc:lastFix?lastFix.acc:null,locSrc:lastFix?(lastFix.src||'gps'):null,
     mat:document.getElementById('sMat').value,depth:document.getElementById('sDepth').value,
@@ -2050,16 +2060,18 @@ async function backup(){
 /* A backup file is untrusted input: rebuild each record from known fields with the
    right types, so a crafted file cannot smuggle markup or odd values into the UI. */
 function numOrNull(v){v=(v===null||v===''||v===undefined)?NaN:Number(v);return isFinite(v)?v:null;}
-function str(v,max){return v==null?'':String(v).slice(0,max||200);}
+function str(v,max){if(v==null)return '';const t=String(v);return max?t.slice(0,max):t;}
 function cleanSample(x){
   if(!x||typeof x!=='object')return null;
   const t=Number(x.t);if(!isFinite(t))return null;
   const lat=numOrNull(x.lat),lon=numOrNull(x.lon);
   const ok=lat!=null&&lon!=null&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
-  const s={id:str(x.id,40)||('SMP-'+t),t:t,lat:ok?lat:null,lon:ok?lon:null,acc:ok?numOrNull(x.acc):null,
-    locSrc:x.locSrc==='manual'?'manual':(ok?'gps':null),mat:str(x.mat,60),depth:str(x.depth,30),note:str(x.note,4000),
-    tags:Array.isArray(x.tags)?x.tags.slice(0,50).map(function(g){return str(g,60);}):[],
-    target:str(x.target,20),score:numOrNull(x.score),flag:!!x.flag};
+  // Types are enforced (everything shown is escaped on render), but values are kept
+  // exactly as exported: truncating an ID would also break duplicate detection on restore.
+  const s={id:str(x.id)||('SMP-'+t),t:t,lat:ok?lat:null,lon:ok?lon:null,acc:ok?numOrNull(x.acc):null,
+    locSrc:x.locSrc==='manual'?'manual':(ok?'gps':null),mat:str(x.mat),depth:str(x.depth),note:str(x.note),
+    tags:Array.isArray(x.tags)?x.tags.map(function(g){return str(g);}):[],
+    target:str(x.target),score:numOrNull(x.score),flag:!!x.flag};
   if(x.deleted)s.deleted=true;
   s.photos=Array.isArray(x.photos)?x.photos.filter(function(d){return typeof d==='string'&&d.indexOf('data:image/')===0;}):[];
   return s;
@@ -2092,51 +2104,86 @@ function cleanShortlistItem(x){
 function restore(input){
   const f=input.files[0];input.value='';if(!f)return;
   const r=new FileReader();
-  r.onload=async function(e){try{
-    const data=JSON.parse(e.target.result);
-    const incoming=Array.isArray(data)?data:(data.samples||[]);
-    if(!Array.isArray(incoming))throw 0;
-    let slAdded=0;
-    if(Array.isArray(data.shortlist)){
-      for(let j=0;j<data.shortlist.length;j++){
-        const it=cleanShortlistItem(data.shortlist[j]);
-        if(!it||slGet(it.id))continue;
-        if(it.snap&&it.snapKey){await idbPut(it.snapKey,it.snap);}delete it.snap;
-        shortlist.push(it);slAdded++;
+  r.onload=async function(e){
+    let data;
+    try{data=JSON.parse(e.target.result);}catch(_){return toast(T('无法读取该备份文件','Could not read that backup file'),true);}
+    const incoming=Array.isArray(data)?data:(data&&Array.isArray(data.samples)?data.samples:(data&&Array.isArray(data.shortlist)?[]:null));
+    if(!incoming)return toast(T('无法读取该备份文件','Could not read that backup file'),true);
+
+    /* Stage everything, then persist, then report. If any write fails, roll back so the
+       library is exactly as it was and say so — never "imported" for data held only in memory. */
+    const idbWritten=[],newSamples=[],revivedList=[],newSl=[];let newSite=null,skipped=0;
+    const rollback=async function(){
+      newSamples.forEach(function(x){const i=samples.indexOf(x);if(i>-1)samples.splice(i,1);});
+      revivedList.forEach(function(x){x.deleted=true;});
+      newSl.forEach(function(x){const i=shortlist.indexOf(x);if(i>-1)shortlist.splice(i,1);});
+      if(newSite){siteLoc=null;try{localStorage.removeItem(SITE_KEY);}catch(_){}}
+      for(let i=0;i<idbWritten.length;i++){try{await idbDel(idbWritten[i]);}catch(_){}}
+      samples.sort(function(a,b){return b.t-a.t;});
+      try{localStorage.setItem(KEY,JSON.stringify(samples));}catch(_){}
+      try{localStorage.setItem(SL_KEY,JSON.stringify(shortlist,function(k,v){return k==='_mk'?undefined:v;}));}catch(_){}
+    };
+    const fail=async function(){
+      await rollback();
+      renderLog();refreshMarkers();rebuildNavOptions();renderShortlist();drawShortlist();renderSite();drawSiteMarker();
+      await askConfirm(T('备份未导入','Backup NOT imported'),
+        T('手机存储空间不足，无法保存导入的内容，因此没有导入任何东西，你现有的记录保持不变。请清理空间后重试。',
+          'There was not enough storage on the phone to save the imported records, so nothing was imported and your existing records are unchanged. Free some space and try again.'),
+        T('好','OK'),false);
+    };
+    try{
+      // shortlist
+      if(Array.isArray(data.shortlist)){
+        for(let j=0;j<data.shortlist.length;j++){
+          const it=cleanShortlistItem(data.shortlist[j]);
+          if(!it||slGet(it.id))continue;
+          if(it.snap&&it.snapKey){await idbPut(it.snapKey,it.snap);idbWritten.push(it.snapKey);}
+          delete it.snap;shortlist.push(it);newSl.push(it);
+        }
       }
-      if(slAdded){saveShortlist();renderShortlist();drawShortlist();}
-    }
-    const sLat=data.site?numOrNull(data.site.lat):null,sLon=data.site?numOrNull(data.site.lon):null;
-    if(!siteLoc&&sLat!=null&&sLon!=null&&Math.abs(sLat)<=90&&Math.abs(sLon)<=180){siteLoc={lat:sLat,lon:sLon,acc:numOrNull(data.site.acc),alt:null,src:data.site.src==='gps'?'gps':'manual',t:numOrNull(data.site.t)||Date.now()};try{localStorage.setItem(SITE_KEY,JSON.stringify(siteLoc));}catch(e){}renderSite();drawSiteMarker();}
-    const existing=new Map();
-    samples.forEach(function(s){existing.set(s.id+s.t,s);});
-    let added=0,skipped=0,revived=0;
-    for(let j=0;j<incoming.length;j++){
-      const s=cleanSample(incoming[j]);if(!s)continue;
-      const key=s.id+s.t;
-      const have=existing.get(key);
-      if(have){
-        // already here — but if it is sitting in our trash and the backup has it active,
-        // bring it back. That is almost always why someone imports a backup.
-        if(have.deleted&&!s.deleted){delete have.deleted;revived++;}
-        else skipped++;
-        continue;
+      // prospect location (only if none is set here)
+      const sLat=data.site?numOrNull(data.site.lat):null,sLon=data.site?numOrNull(data.site.lon):null;
+      if(!siteLoc&&sLat!=null&&sLon!=null&&Math.abs(sLat)<=90&&Math.abs(sLon)<=180){
+        newSite={lat:sLat,lon:sLon,acc:numOrNull(data.site.acc),alt:null,src:data.site.src==='gps'?'gps':'manual',t:numOrNull(data.site.t)||Date.now()};
+        siteLoc=newSite;
       }
-      const keys=[];
-      if(s.photos&&s.photos.length){
-        for(let k=0;k<s.photos.length;k++){const pk='ph_'+s.t+'_'+k;await idbPut(pk,s.photos[k]);keys.push(pk);}
+      // samples
+      const existing=new Map();
+      samples.forEach(function(x){existing.set(x.id+'\u0000'+x.t,x);});
+      for(let j=0;j<incoming.length;j++){
+        const x=cleanSample(incoming[j]);if(!x)continue;
+        const key=x.id+'\u0000'+x.t;
+        const have=existing.get(key);
+        if(have){
+          // already here — but if it is sitting in our trash and the backup has it active,
+          // bring it back. That is almost always why someone imports a backup.
+          if(have.deleted&&!x.deleted){delete have.deleted;revivedList.push(have);}
+          else skipped++;
+          continue;
+        }
+        const keys=[],tag=Date.now().toString(36)+j;   // unique keys: never overwrite another sample's photos
+        for(let k=0;k<x.photos.length;k++){const pk='ph_'+x.t+'_r'+tag+'_'+k;await idbPut(pk,x.photos[k]);idbWritten.push(pk);keys.push(pk);}
+        delete x.photos;x.photoKeys=keys;samples.push(x);newSamples.push(x);existing.set(key,x);
       }
-      delete s.photos;s.photoKeys=keys;samples.push(s);existing.set(key,s);added++;
-    }
-    samples.sort(function(a,b){return b.t-a.t;});save();renderLog();refreshMarkers();rebuildNavOptions();
+    }catch(err){return fail();}   // a photo / scan image could not be stored
+
+    samples.sort(function(a,b){return b.t-a.t;});
+    let ok=save();
+    if(ok&&newSl.length)ok=saveShortlist();
+    if(ok&&newSite){try{localStorage.setItem(SITE_KEY,JSON.stringify(newSite));}catch(_){ok=false;}}
+    if(!ok)return fail();
+
+    renderLog();refreshMarkers();rebuildNavOptions();renderShortlist();drawShortlist();
+    if(newSite){renderSite();drawSiteMarker();}
+    const added=newSamples.length,revived=revivedList.length,slAdded=newSl.length;
     let m=T(added+' 个新样品已加入，'+skipped+' 个已存在',
             added+' new sample'+(added===1?'':'s')+' added, '+skipped+' already present');
     if(revived)m+=T('。已从回收站恢复 '+revived+' 个并重新启用。','. '+revived+' recovered from your trash and made active again.');
     if(slAdded)m+=T('。另有 '+slAdded+' 个候选地点已加入清单。','. '+slAdded+' shortlisted site'+(slAdded===1?'':'s')+' added too.');
-    if(!added&&!revived&&!slAdded)m+=T('。没有新增——此备份只包含你已有的样品。','. Nothing new \u2014 this backup only had samples you already have.');
+    if(!added&&!revived&&!slAdded)m+=T('。没有新增——此备份只包含你已有的记录。','. Nothing new — this backup only had records you already have.');
     await askConfirm(T('备份已导入','Backup imported'),m,T('好','OK'),false);
     toast(T('导入完成','Import complete'));
-  }catch(_){toast(T('无法读取该备份文件','Could not read that backup file'),true);}};
+  };
   r.readAsText(f);
 }
 
