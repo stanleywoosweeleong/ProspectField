@@ -109,6 +109,7 @@ button{cursor:pointer;font-family:inherit;border:none}
 .btn.sm{width:auto;padding:9px 14px;font-size:13px;border-radius:9px}
 .coordbox{background:var(--bg2);border:1px dashed var(--ore2);border-radius:12px;padding:14px;text-align:center;margin-bottom:6px}
 .coordbox .big{font-size:22px;font-weight:700;color:var(--ore)}
+.site-pin{width:30px;height:30px;border-radius:50%;background:rgba(217,164,65,.25);border:2px solid var(--ore);color:var(--ore);font-size:18px;line-height:26px;text-align:center;font-weight:700;box-shadow:0 0 10px rgba(217,164,65,.6)}
 .coordbox .meta{font-size:14px;color:var(--ink2);margin-top:5px;font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .chip{padding:8px 13px;border-radius:20px;background:var(--bg2);border:1px solid var(--line);font-size:13px;color:var(--ink2);transition:.15s}
@@ -366,13 +367,34 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
     style="position:absolute;top:10px;right:16px;background:var(--panel2);border:1px solid var(--line);color:var(--ore);border-radius:8px;padding:6px 12px;font-weight:700;font-size:13px">中</button>
   <div class="gpsbar">
     <span class="gpsdot" id="gpsDot"></span>
-    <span id="gpsTxt" class="mono" style="color:var(--ink3)"><span data-zh="GPS 待机 — 在取样页点击定位" data-en="GPS idle — tap Locate on a sample">GPS 待机 — 在取样页点击定位</span></span>
+    <span id="gpsTxt" class="mono" style="color:var(--ink3)"><span data-zh="GPS 待机 — 在评估页设置位置" data-en="GPS idle — set a location on Estimate">GPS 待机 — 在评估页设置位置</span></span>
   </div>
 </header>
 
 <main>
 
 <section class="view active" id="v-survey">
+  <div class="card" id="siteCard">
+    <h2><span data-zh="📍 勘察位置" data-en="📍 Prospect location">📍 勘察位置</span></h2>
+    <p class="hint" data-html data-zh="先在这里设定位置——用手机当前 GPS，或手动输入任何地方的坐标（例如从地质图、旧矿点记录或谷歌地图复制）。之后可直接在<b>地图</b>页用卫星图层远程扫描该区域，确认值得前往再出发，省下路费与时间。" data-en="Set the location here first — use your phone's current GPS, or type coordinates for anywhere (e.g. copied from a geological map, an old-workings record or Google Maps). You can then scan that area remotely with satellite layers on the <b>Map</b> tab and only travel once it looks worth the trip — saving time and money.">先在这里设定位置——用手机当前 GPS，或手动输入任何地方的坐标（例如从地质图、旧矿点记录或谷歌地图复制）。之后可直接在<b>地图</b>页用卫星图层远程扫描该区域，确认值得前往再出发，省下路费与时间。</p>
+    <div class="coordbox">
+      <div class="big mono" id="siteLat">— . —</div>
+      <div class="big mono" id="siteLon" style="font-size:16px"><span data-zh="尚未设定" data-en="not set">尚未设定</span></div>
+      <div class="meta" id="siteMeta"></div>
+    </div>
+    <button class="btn ghost sm" style="width:100%" onclick="useGpsForSite()"><span data-zh="📡 使用我当前的 GPS 位置" data-en="📡 Use my current GPS location">📡 使用我当前的 GPS 位置</span></button>
+    <label for="siteInput"><span data-zh="或手动输入坐标" data-en="Or enter coordinates manually">或手动输入坐标</span></label>
+    <div class="row">
+      <input id="siteInput" style="flex:1;min-width:0" inputmode="text" autocomplete="off" spellcheck="false" aria-label="坐标" data-zh-al="坐标" data-en-al="Coordinates" placeholder="例如 4.5975, 101.0901" data-zh-ph="例如 4.5975, 101.0901" data-en-ph="e.g. 4.5975, 101.0901" onkeydown="if(event.key==='Enter')setSiteFromInput()">
+      <button class="btn sm" style="flex:none;padding:9px 18px" onclick="setSiteFromInput()"><span data-zh="设定" data-en="Set">设定</span></button>
+    </div>
+    <p class="hint" style="margin:6px 0 0;font-size:12.5px" data-zh="接受十进制度（4.5975, 101.0901）或度分秒（4°35'51&quot;N 101°05'24&quot;E）。南纬、西经用负号或 S / W。" data-en="Accepts decimal degrees (4.5975, 101.0901) or degrees-minutes-seconds (4°35'51&quot;N 101°05'24&quot;E). Use minus or S / W for south and west.">接受十进制度（4.5975, 101.0901）或度分秒（4°35'51"N 101°05'24"E）。南纬、西经用负号或 S / W。</p>
+    <div class="row" id="siteActs" style="margin-top:12px;display:none">
+      <button class="btn sm" style="flex:1" onclick="scanSiteOnMap()"><span data-zh="🛰️ 在地图上远程查看" data-en="🛰️ Scan remotely on map">🛰️ 在地图上远程查看</span></button>
+      <button class="btn ghost sm" style="flex:1" onclick="navigateToSite()"><span data-zh="🧭 导航前往" data-en="🧭 Navigate there">🧭 导航前往</span></button>
+    </div>
+    <button class="btn ghost sm" id="siteClear" style="width:100%;margin-top:8px;display:none" onclick="clearSite()"><span data-zh="清除位置" data-en="Clear location">清除位置</span></button>
+  </div>
   <div class="card">
     <h2><span data-zh="🎯 矿点潜力评估" data-en="🎯 Site potential estimator">🎯 矿点潜力评估</span></h2>
     <p class="hint" data-html data-zh="野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。" data-en="A field checklist, not an assay. Tick surface indicators you actually observe. Score suggests whether a spot is worth a proper sample + lab test — it never confirms a deposit.">野外核对清单，不是化验。勾选你实际观察到的地表指标。分数提示某地点是否值得正式取样并送化验——它绝不能确认矿床。</p>
@@ -1063,6 +1085,7 @@ function setLang(l){
   renderTargets();renderIndicators();renderMaterialDepth();renderSampleTags();
   satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();redrawSatMsg();
   updateCloudUI();updateTrailUI();updateReturnDisplay();if(map)updateNet();
+  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();
   redrawMapExtras();   // altimeter + terrain profile carry baked-in labels — redraw them
   toast(l==='zh'?'已切换为中文':'Switched to English');
 }
@@ -1462,19 +1485,137 @@ function scoreNow(t){
 
 /* ============ GPS ============ */
 let lastFix=null;
-function captureGPS(){
+/* lastFix.src: 'gps' (live phone fix) or 'manual' (typed coordinates). Manual points
+   have no accuracy figure, so acc stays null and the UI says "entered manually". */
+function fixMeta(f){
+  if(!f)return T('尚未定位','no fix yet');
+  if(f.src==='manual')return T('手动输入的坐标','entered manually');
+  return '±'+Math.round(f.acc)+'m'+(f.alt?' · '+Math.round(f.alt)+T('m 海拔','m elev'):'');
+}
+function showFixOnSample(){
+  const la=document.getElementById('capLat'),lo=document.getElementById('capLon'),me=document.getElementById('capMeta');
+  if(!lastFix){la.textContent='— . —';lo.textContent=T('点击定位','tap to capture');lo.style.fontSize='16px';me.textContent=T('尚未定位','no fix yet');return;}
+  la.textContent=lastFix.lat.toFixed(6)+'°';lo.textContent=lastFix.lon.toFixed(6)+'°';lo.style.fontSize='22px';
+  me.textContent=fixMeta(lastFix);
+}
+function setGpsBar(f){
+  const dot=document.getElementById('gpsDot'),txt=document.getElementById('gpsTxt');
+  dot.className='gpsdot live';txt.style.color='var(--ok)';
+  txt.textContent=f.src==='manual'?T('手动位置 ','manual ')+f.lat.toFixed(4)+', '+f.lon.toFixed(4):T('定位 ±','fix ±')+Math.round(f.acc)+'m';
+}
+function setFix(f){lastFix=f;showFixOnSample();setGpsBar(f);updateSameSpotUI();}
+function requestGPS(onOk){
   const dot=document.getElementById('gpsDot'),txt=document.getElementById('gpsTxt');
   dot.className='gpsdot hunting';txt.textContent=T('正在搜索卫星…','acquiring satellites…');txt.style.color='var(--ore)';
-  if(!navigator.geolocation){txt.textContent=T('此设备无 GPS','no GPS on this device');return;}
+  if(!navigator.geolocation){txt.textContent=T('此设备无 GPS','no GPS on this device');toast(T('此设备无 GPS — 请手动输入坐标','No GPS on this device — enter coordinates manually'),true);return;}
   navigator.geolocation.getCurrentPosition(function(p){
-    lastFix={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,alt:p.coords.altitude};
-    document.getElementById('capLat').textContent=lastFix.lat.toFixed(6)+'°';
-    const lon=document.getElementById('capLon');lon.textContent=lastFix.lon.toFixed(6)+'°';lon.style.fontSize='22px';
-    document.getElementById('capMeta').textContent='±'+Math.round(lastFix.acc)+'m'+(lastFix.alt?' · '+Math.round(lastFix.alt)+T('m 海拔','m elev'):'');
-    dot.className='gpsdot live';txt.textContent=T('定位 ±','fix ±')+Math.round(lastFix.acc)+'m';
-    updateSameSpotUI();txt.style.color='var(--ok)';
-  },function(){dot.className='gpsdot';txt.textContent=T('GPS 失败 — 请开启定位','GPS failed — enable location');txt.style.color='var(--warn)';toast(T('GPS 不可用 — 请检查权限','GPS unavailable — check permission'),true);},
+    onOk({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,alt:p.coords.altitude,src:'gps',t:Date.now()});
+  },function(){dot.className='gpsdot';txt.textContent=T('GPS 失败 — 请开启定位','GPS failed — enable location');txt.style.color='var(--warn)';toast(T('GPS 不可用 — 请检查权限，或手动输入坐标','GPS unavailable — check permission, or enter coordinates manually'),true);},
   {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+function captureGPS(){requestGPS(setFix);}
+
+/* ============ prospect location (Estimate screen) ============
+   Lets the user pick the area to investigate BEFORE travelling: either their live GPS
+   or coordinates typed in for anywhere. The point is remembered across launches,
+   centres the map/satellite scan, pre-fills the Sample tab and can be navigated to. */
+const SITE_KEY='pf_site';
+let siteLoc=null;try{siteLoc=JSON.parse(localStorage.getItem(SITE_KEY)||'null');}catch(e){siteLoc=null;}
+let siteMarker=null;
+
+/* Parse "lat, lon" in decimal degrees or D°M'S" / D°M.m' with optional N/S/E/W.
+   Returns {lat,lon} or null. */
+function parseCoords(str){
+  if(!str)return null;
+  let t=str.trim().toUpperCase()
+    .replace(/[′’‘`]/g,"'").replace(/[″“”]/g,'"').replace(/''/g,'"')
+    .replace(/º|˚/g,'°');
+  // split into two halves: by comma/semicolon, or after the first hemisphere letter,
+  // or on whitespace between two plain numbers
+  let parts=t.split(/\s*[,;]\s*/).filter(Boolean);
+  if(parts.length!==2){
+    const m=t.match(/^(.*?[NS])\s*(.*[EW].*)$/)||t.match(/^([NS].*?)\s+([EW].*)$/);
+    if(m)parts=[m[1],m[2]];
+    else parts=t.split(/\s+/).filter(Boolean);
+  }
+  if(parts.length!==2)return null;
+  function one(p,isLat){
+    let sign=1;
+    const hem=p.match(/[NSEW]/);
+    if(hem){const h=hem[0];if((isLat&&'EW'.indexOf(h)>-1)||(!isLat&&'NS'.indexOf(h)>-1))return NaN;if(h==='S'||h==='W')sign=-1;}
+    p=p.replace(/[NSEW]/g,'').trim();
+    if(/^-/.test(p)){sign*=-1;p=p.slice(1);}
+    const nums=p.split(/[°'"\s:]+/).filter(Boolean);
+    if(!nums.length||nums.length>3||nums.some(function(n){return !/^\d+(\.\d+)?$/.test(n);}))return NaN;
+    const d=+nums[0],m=nums[1]?+nums[1]:0,sec=nums[2]?+nums[2]:0;
+    if(m>=60||sec>=60)return NaN;
+    return sign*(d+m/60+sec/3600);
+  }
+  // allow "101.09 E, 4.59 N" order too
+  if(/[EW]/.test(parts[0])&&/[NS]/.test(parts[1]))parts=[parts[1],parts[0]];
+  const lat=one(parts[0],true),lon=one(parts[1],false);
+  if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+  return {lat:lat,lon:lon};
+}
+function renderSite(){
+  const la=document.getElementById('siteLat'),lo=document.getElementById('siteLon'),me=document.getElementById('siteMeta');
+  if(!la)return;
+  const acts=document.getElementById('siteActs'),clr=document.getElementById('siteClear');
+  if(!siteLoc){
+    la.textContent='— . —';lo.textContent=T('尚未设定','not set');lo.style.fontSize='16px';me.textContent='';
+    acts.style.display='none';clr.style.display='none';return;
+  }
+  la.textContent=siteLoc.lat.toFixed(6)+'°';lo.textContent=siteLoc.lon.toFixed(6)+'°';lo.style.fontSize='22px';
+  me.textContent=siteLoc.src==='manual'?T('手动输入的坐标','entered manually'):T('当前 GPS · ±','current GPS · ±')+Math.round(siteLoc.acc)+'m';
+  acts.style.display='flex';clr.style.display='block';
+}
+function setSite(f){
+  siteLoc=f;try{localStorage.setItem(SITE_KEY,JSON.stringify(f));}catch(e){}
+  setFix(f);          // also pre-fills the Sample tab so you don't locate twice
+  renderSite();drawSiteMarker();
+}
+function useGpsForSite(){
+  requestGPS(function(f){setSite(f);toast(T('已设定为当前 GPS 位置','Location set from GPS'));});
+}
+function setSiteFromInput(){
+  const inp=document.getElementById('siteInput');
+  const c=parseCoords(inp.value);
+  if(!c){toast(T('无法识别坐标 — 请用如 4.5975, 101.0901 的格式','Could not read those coordinates — try e.g. 4.5975, 101.0901'),true);inp.focus();return;}
+  setSite({lat:c.lat,lon:c.lon,acc:null,alt:null,src:'manual',t:Date.now()});
+  inp.value='';inp.blur();
+  toast(T('位置已设定','Location set'));
+}
+function clearSite(){
+  siteLoc=null;try{localStorage.removeItem(SITE_KEY);}catch(e){}
+  if(lastFix&&lastFix.src==='manual'){lastFix=null;showFixOnSample();updateSameSpotUI();}
+  const dot=document.getElementById('gpsDot'),txt=document.getElementById('gpsTxt');
+  if(!lastFix){dot.className='gpsdot';txt.style.color='var(--ink3)';txt.textContent=T('GPS 待机 — 在评估页设置位置','GPS idle — set a location on Estimate');}
+  renderSite();drawSiteMarker();
+}
+function drawSiteMarker(){
+  if(!map||typeof L==='undefined')return;
+  if(siteMarker){map.removeLayer(siteMarker);siteMarker=null;}
+  if(!siteLoc)return;
+  siteMarker=L.marker([siteLoc.lat,siteLoc.lon],{icon:L.divIcon({className:'',
+    html:'<div class="site-pin">◎</div>',iconSize:[30,30],iconAnchor:[15,15]})})
+    .bindPopup('<b>'+T('勘察位置','Prospect location')+'</b><br>'+siteLoc.lat.toFixed(5)+', '+siteLoc.lon.toFixed(5))
+    .addTo(map);
+}
+function scanSiteOnMap(){
+  if(!siteLoc)return;
+  nav('map',document.querySelector('nav button[data-v=map]'));
+  // nav() builds the map after a short delay; centre once it exists
+  setTimeout(function(){
+    if(!map)return;
+    drawSiteMarker();map.setView([siteLoc.lat,siteLoc.lon],14);
+    toast(T('已定位到勘察区域 — 选择卫星图层后点击扫描','Centred on your area — pick a satellite layer, then scan'));
+  },120);
+}
+function navigateToSite(){
+  if(!siteLoc)return;
+  navTargetSample={id:T('勘察位置','Prospect location'),lat:siteLoc.lat,lon:siteLoc.lon,mat:'prospect location',flag:false,t:0};
+  nav('nav',document.querySelector('nav button[data-v=nav]'));
+  startNavWatch();updateNavReadout();
 }
 
 /* ============ photos (pending, in-memory until save) ============ */
@@ -1611,7 +1752,7 @@ async function saveSample(keepSpot){
     const key='ph_'+t+'_'+i;
     try{await idbPut(key,pendingPhotos[i]);photoKeys.push(key);}catch(e){toast(T('照片保存失败','Photo store failed'),true);}
   }
-  const s={id:id,t:t,lat:lastFix?lastFix.lat:null,lon:lastFix?lastFix.lon:null,acc:lastFix?lastFix.acc:null,
+  const s={id:id,t:t,lat:lastFix?lastFix.lat:null,lon:lastFix?lastFix.lon:null,acc:lastFix?lastFix.acc:null,locSrc:lastFix?(lastFix.src||'gps'):null,
     mat:document.getElementById('sMat').value,depth:document.getElementById('sDepth').value,
     note:document.getElementById('sNote').value.trim(),tags:[].slice.call(sampleTags),photoKeys:photoKeys,
     target:document.getElementById('target').value,
@@ -1638,9 +1779,7 @@ async function saveSample(keepSpot){
   // normal save: clear everything and go to the log
   sampleTags.clear();renderSampleTags();lastFix=null;updateSameSpotUI();
   picked.clear();lastScore=0;lastScoreTarget=null;renderIndicators();
-  document.getElementById('capLat').textContent='— . —';
-  const lon=document.getElementById('capLon');lon.textContent=T('点击定位','tap to capture');lon.style.fontSize='16px';
-  document.getElementById('capMeta').textContent=T('尚未定位','no fix yet');
+  showFixOnSample();
   toast(T('样品 '+s.id+' 已保存','Sample '+s.id+' saved'));renderLog();refreshMarkers();rebuildNavOptions();
   nav('log',document.querySelector('nav button[data-v=log]'));
 }
@@ -1680,7 +1819,7 @@ async function renderLog(){
     const idx=samples.indexOf(s);
     const d=document.createElement('div');d.className='samp';
     if(s.deleted)d.style.opacity='0.65';
-    const co=(s.lat!=null)?s.lat.toFixed(5)+', '+s.lon.toFixed(5)+' (\u00b1'+Math.round(s.acc)+'m)':T('无 GPS','no GPS');
+    const co=(s.lat!=null)?s.lat.toFixed(5)+', '+s.lon.toFixed(5)+(s.acc!=null?' (\u00b1'+Math.round(s.acc)+'m)':' ('+T('手动','manual')+')'):T('无 GPS','no GPS');
     const date=new Date(s.t).toLocaleString(LANG==='zh'?'zh-CN':'en-GB',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     const nphoto=(s.photoKeys||[]).length;
     let acts='';
@@ -1790,8 +1929,8 @@ function exportData(){if(!activeSamples().length)return toast(T('没有可导出
   const meta=activeSamples().map(function(o){const c=Object.assign({},o);delete c.photoKeys;return c;});
   dl('prospectfield_'+Date.now()+'.json',JSON.stringify(meta,null,2),'application/json');toast(T('已导出 JSON','Exported JSON'));}
 function exportCSV(){if(!activeSamples().length)return toast(T('没有可导出的内容','Nothing to export'),true);
-  const head=['id','datetime','lat','lon','accuracy_m','material','depth','target','tags','notes','photos'];
-  const rows=activeSamples().map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
+  const head=['id','datetime','lat','lon','accuracy_m','location_source','material','depth','target','tags','notes','photos'];
+  const rows=activeSamples().map(function(s){return[s.id,new Date(s.t).toISOString(),s.lat==null?'':s.lat,s.lon==null?'':s.lon,s.acc?Math.round(s.acc):'',s.locSrc||(s.lat==null?'':'gps'),s.mat,s.depth,s.target,'"'+s.tags.join(';')+'"','"'+(s.note||'').replace(/"/g,'""')+'"',(s.photoKeys||[]).length].join(',');});
   dl('prospectfield_'+Date.now()+'.csv',head.join(',')+'\n'+rows.join('\n'),'text/csv');toast(T('已导出 CSV','Exported CSV'));}
 async function backup(){
   if(!activeSamples().length)return toast(T('没有可备份的内容','Nothing to back up'),true);
@@ -1861,13 +2000,13 @@ function initMap(){
         'The map library could not load (it needs internet on first run).<br>Reconnect and reopen this page.<br><br>Everything else (sampling, trail, guide) still works.')+'</div>';
     return;
   }
-  map=L.map('map',{zoomControl:true,attributionControl:false}).setView([4.2,102.0],7);
+  map=L.map('map',{zoomControl:true,attributionControl:false}).setView(siteLoc?[siteLoc.lat,siteLoc.lon]:[4.2,102.0],siteLoc?14:7);
   onlineTiles=L.tileLayer(TILE,{maxZoom:18,crossOrigin:true,className:'pf-seamless-256',
     errorTileUrl:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#140f0a"/><g stroke="#3a2e21" stroke-width="1"><line x1="0" y1="64" x2="256" y2="64"/><line x1="0" y1="128" x2="256" y2="128"/><line x1="0" y1="192" x2="256" y2="192"/><line x1="64" y1="0" x2="64" y2="256"/><line x1="128" y1="0" x2="128" y2="256"/><line x1="192" y1="0" x2="192" y2="256"/></g><text x="128" y="132" fill="#8a7a63" font-size="12" text-anchor="middle" font-family="monospace">no tile (offline)</text></svg>')
   }).addTo(map);
   markerLayer=L.layerGroup().addTo(map);
   map.on('click',onMapClickForProfile);   // used only while picking a profile target
-  refreshMarkers();fitPins();updateNet();
+  refreshMarkers();if(!siteLoc)fitPins();drawSiteMarker();updateNet();
   restoreSatUI();
 }
 
@@ -3254,6 +3393,8 @@ function nav(v,btn){
   if(v==='sample'){
     // carry over whatever was ticked in Estimate so you do not re-enter it
     if(picked.size){picked.forEach(function(x){sampleTags.add(x);});}
+    // carry a typed-in prospect point over (a stale GPS fix is not reused: you may have moved)
+    if(!lastFix&&siteLoc&&siteLoc.src==='manual'){lastFix=siteLoc;showFixOnSample();}
     renderSampleTags();renderMaterialDepth();updateSameSpotUI();
   }
   if(v==='log')renderLog();
@@ -3271,7 +3412,7 @@ let tTimer;function toast(msg,warn){const t=document.getElementById('toast');t.t
 
 /* ============ init ============ */
 idbOpen().then(function(){renderLog();}).catch(function(){toast(T('照片数据库不可用','Photo database unavailable'),true);});
-applyLang();renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
+applyLang();renderSite();if(siteLoc)setGpsBar(siteLoc);renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
 
 /* ---- PWA service worker ----
    A blob-URL worker cannot control the page, so offline support needs a real file
