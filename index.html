@@ -2453,6 +2453,11 @@ let satLayer=null,currentSatKind=null,satId=localStorage.getItem('pf_sat_id')||'
    'clear' = near cloud-free only; 'any' = accept cloudier scenes when coverage is thin. */
 let cloudMode=localStorage.getItem('pf_cloud_mode')||'clear';
 function maxCC(){return cloudMode==='clear'?10:80;}
+/* MAXCC is a whole-scene average (~100 km Sentinel tile), not the cloud over your patch, and
+   Copernicus defaults to showing the MOST RECENT scene that passes. A scene can be 8% cloudy
+   overall and still have a cloud sitting on your target. leastCC stacks the clearest scenes
+   on top instead, so the filter does what users expect. */
+const CC_PRIORITY='leastCC';
 function toggleCloudMode(){
   cloudMode=(cloudMode==='clear')?'any':'clear';
   localStorage.setItem('pf_cloud_mode',cloudMode);
@@ -2468,10 +2473,10 @@ function updateCloudUI(){
   if(!c)return;
   if(cloudMode==='clear'){
     c.textContent=T('仅晴空影像','Clear scenes only');
-    h.textContent=T('仅接受接近无云的影像（≤10% 云量）。矿床不会移动，因此较旧的晴空影像胜过较新的多云影像。若始终加载不出，可点击改为允许多云影像。','Only accepting near cloud-free imagery (≤10% cloud). A deposit doesn\'t move, so an older clear image beats a recent cloudy one. Tap to allow cloudier scenes if nothing loads.');
+    h.textContent=T('只用整景云量 ≤10% 的影像，并优先显示最晴朗的一景（而非最新的一景）。矿床不会移动，较旧的晴空影像胜过较新的多云影像。云量是按整景（约 100 公里）计算的，因此个别小块云仍可能出现——稍作平移或换个时间段即可。若加载不出，可点击改为允许多云。','Only scenes with ≤10% cloud overall, and the clearest one is shown first — not the newest. A deposit doesn\'t move, so an older clear image beats a recent cloudy one. Cloud % is measured over the whole ~100 km satellite scene, so a stray cloud can still appear over a small spot. Tap to allow cloudier scenes if nothing loads.');
   }else{
     c.textContent=T('允许多云','Allow cloudy');
-    h.textContent=T('接受最高 80% 云量的影像——覆盖更广，但影像模糊，云边缘会产生假目标。点击可切回仅晴空。','Accepting scenes up to 80% cloud — more coverage, but hazy images and false targets from cloud edges. Tap to go back to clear-only.');
+    h.textContent=T('接受整景云量最高 80% 的影像（仍优先显示最晴朗的部分）——覆盖更广，但可能有雾霾，云边缘会产生假目标。点击可切回仅晴空。','Accepting scenes up to 80% cloud (still clearest first) — more coverage where clear scenes are rare, but expect haze and false targets from cloud edges. Tap to go back to clear-only.');
   }
 }
 /* Documented Sentinel-2 band-math. Each returns an RGB image the eye can read. */
@@ -2507,7 +2512,7 @@ function scanTargets(){
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
     '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS='+(LAYERMAP[currentSatKind]||'IRON-RATIO')+
     '&SRS=EPSG:4326&BBOX='+b.getWest()+','+b.getSouth()+','+b.getEast()+','+b.getNorth()+
-    '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC='+maxCC()+'&TIME=2023-01-01/'+today;
+    '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC='+maxCC()+'&PRIORITY='+CC_PRIORITY+'&TIME=2023-01-01/'+today;
   const bar=document.getElementById('scanBar'),fill=document.getElementById('scanFill');
   bar.classList.add('on');fill.style.width='25%';btn.style.opacity=.5;
   msg.textContent=T('正在获取此范围的影像…','Fetching imagery for this view…');
@@ -2920,7 +2925,7 @@ function setSatLayer(kind,chip){
     satLayer=L.tileLayer.wms(base,{
       layers:layerName,
       format:'image/png',transparent:true,version:'1.1.1',tileSize:512,className:'pf-seamless-512',
-      maxcc:isRadar?100:maxCC(),opacity:1.0,minZoom:11,
+      maxcc:isRadar?100:maxCC(),priority:isRadar?'mostRecent':CC_PRIORITY,opacity:1.0,minZoom:11,
       time:'2023-01-01/'+today,
       attribution:''
     });
@@ -2953,7 +2958,7 @@ async function testSatId(){
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
     '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=NATURAL-COLOR'+
     '&SRS=EPSG:4326&BBOX='+(c.lng-d)+','+(c.lat-d)+','+(c.lng+d)+','+(c.lat+d)+
-    '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC='+maxCC()+'&TIME=2023-01-01/'+today;
+    '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC='+maxCC()+'&PRIORITY='+CC_PRIORITY+'&TIME=2023-01-01/'+today;
   try{
     const res=await fetch(url);
     const ct=res.headers.get('content-type')||'';
