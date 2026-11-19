@@ -2089,7 +2089,7 @@ function restore(input){
 const SL_KEY='pf_shortlist';
 let shortlist=[];try{shortlist=JSON.parse(localStorage.getItem(SL_KEY)||'[]');}catch(e){shortlist=[];}
 let slSeq=+(localStorage.getItem('pf_sl_seq')||0);
-let slLayer=null,slShowAll=false;
+let slLayer=null,slShowAll=false,slSort=localStorage.getItem('pf_sl_sort')||'strong';
 const SL_FIRST=5;
 const SL_STATUS=[['tocheck','🔍','待查看','To check'],['visited','👣','已到访','Visited'],['sampled','🧪','已取样','Sampled'],['rejected','✖','已排除','Rejected']];
 function slStatusLabel(k){const s=SL_STATUS.filter(function(x){return x[0]===k;})[0]||SL_STATUS[0];return s[1]+' '+T(s[2],s[3]);}
@@ -2159,11 +2159,15 @@ function renderShortlist(){
   sm.innerHTML=SL_STATUS.filter(function(s){return n[s[0]];}).map(function(s){return s[1]+' '+T(s[2],s[3])+' <b>'+n[s[0]]+'</b>';}).join(' · ');
   const r=refPoint();
   const order={tocheck:0,visited:1,sampled:2,rejected:3};
+  const dist=function(x){return r?haversine(r.lat,r.lon,x.lat,x.lon):0;};
   const lst=shortlist.slice().sort(function(a,b){
     if(order[a.status]!==order[b.status])return order[a.status]-order[b.status];
-    if(r)return haversine(r.lat,r.lon,a.lat,a.lon)-haversine(r.lat,r.lon,b.lat,b.lon);
+    if(slSort==='strong'){const d=slRank(b)-slRank(a);if(d)return d;}
+    if(r)return dist(a)-dist(b);
     return b.t-a.t;
   });
+  sm.innerHTML+='<div class="seg" style="margin-top:8px"><button class="'+(slSort==='strong'?'on':'')+'" onclick="setSlSort(\'strong\')">'+T('💪 最强优先','💪 Strongest first')+'</button>'+
+    '<button class="'+(slSort==='near'?'on':'')+'" onclick="setSlSort(\'near\')">'+T('📏 最近优先','📏 Nearest first')+'</button></div>';
   const shown=slShowAll?lst:lst.slice(0,SL_FIRST);
   w.innerHTML=shown.map(function(it){
     const opts=SL_STATUS.map(function(s){return '<option value="'+s[0]+'"'+(s[0]===it.status?' selected':'')+'>'+s[1]+' '+T(s[2],s[3])+'</option>';}).join('');
@@ -2193,6 +2197,16 @@ function renderShortlist(){
     ?'<button class="btn ghost sm" style="width:100%" onclick="slShowAll=!slShowAll;renderShortlist()">'+
       (slShowAll?T('收起','Show fewer'):T('显示全部（'+lst.length+'）','Show all ('+lst.length+')'))+'</button>':'');
 }
+/* Evidence strength for sorting: satellite level + signal, or the desk-check score.
+   Typed/imported points with no evidence yet sort after both. */
+function slRank(it){
+  const LV={strong:3,moderate:2,weak:1};
+  let best=0;
+  if(it.level)best=Math.max(best,LV[it.level]*100+(it.signal||0));
+  if(it.deskScore!=null)best=Math.max(best,(it.deskScore>=60?3:it.deskScore>=30?2:1)*100+it.deskScore);
+  return best;
+}
+function setSlSort(v){slSort=v;try{localStorage.setItem('pf_sl_sort',v);}catch(e){}renderShortlist();}
 function setSlStatus(id,v){const it=slGet(id);if(!it)return;it.status=v;saveShortlist();renderShortlist();drawShortlist();}
 function slRename(id){
   const it=slGet(id);if(!it)return;
@@ -2626,7 +2640,11 @@ function findClusters(data,W,H,bounds,kind){
     c.level=c.mean>=0.55?'strong':(c.mean>=0.40?'moderate':'weak');
     c.signal=Math.min(100,Math.round(c.mean*100));
   });
-  clusters.sort(function(a,b){return b.strength-a.strength;});
+  // Rank the way the list reads: Strong before Moderate before Weak, then by signal %,
+  // and only then by size. (Ranking by signal×size let a big Moderate patch sit above a
+  // smaller Strong one, which looked unsorted — and could push a Strong one out of the top 8.)
+  const LV={strong:3,moderate:2,weak:1};
+  clusters.sort(function(a,b){return (LV[b.level]-LV[a.level])||(b.signal-a.signal)||(b.n-a.n);});
   return clusters.slice(0,8);
 }
 
