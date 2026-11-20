@@ -685,8 +685,8 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <p class="hint" style="margin-bottom:8px" data-html data-zh="分析你正在查看的卫星图层，用标记、方框和 GPS 坐标标出最强的斑块——让你出发前就知道该走向哪里。请先选择一个分析图层（铁比值、蚀变、黏土），再扫描。" data-en="Analyses the satellite layer you're viewing and marks the strongest patches with pins, boxes and GPS coordinates — so you know where to walk before you set off. Pick an analysis layer first (Iron ratio, Alteration, Clay), then scan." data-ms="Menganalisis lapisan satelit yang sedang anda lihat dan menandakan tompok paling kuat dengan pin, kotak dan koordinat GPS — supaya anda tahu ke mana hendak berjalan sebelum bertolak. Pilih lapisan analisis dahulu (Iron ratio, Alteration, Clay), kemudian imbas.">分析你正在查看的卫星图层，用标记、方框和 GPS 坐标标出最强的斑块——让你出发前就知道该走向哪里。请先选择一个分析图层（铁比值、蚀变、黏土），再扫描。</p>
       <button class="btn ghost sm" style="width:100%" onclick="scanTargets()" id="scanBtn"><span data-zh="🔍 扫描此范围寻找目标" data-en="🔍 Scan this view for targets" data-ms="🔍 Imbas paparan ini untuk sasaran">🔍 扫描此范围寻找目标</span></button>
       <div class="row" style="margin-top:8px">
-        <button class="btn ghost sm" style="flex:1" onclick="findLineamentsInView()"><span data-zh="📐 寻找线性构造（可能的断层）" data-en="📐 Find lineaments (possible faults)" data-ms="📐 Cari lineamen (kemungkinan sesar)">📐 寻找线性构造（可能的断层）</span></button>
-        <button class="btn ghost sm" onclick="clearLineaments()" aria-label="✕">✕</button>
+        <button class="btn ghost sm" style="flex:3 1 0;min-width:0;white-space:normal;line-height:1.25" onclick="findLineamentsInView()"><span data-zh="📐 寻找线性构造（可能的断层）" data-en="📐 Find lineaments (possible faults)" data-ms="📐 Cari lineamen (kemungkinan sesar)">📐 寻找线性构造（可能的断层）</span></button>
+        <button class="btn ghost sm" style="flex:2 1 0;min-width:0;white-space:normal;line-height:1.25" onclick="clearLineaments()"><span data-zh="✕ 清除线条" data-en="✕ Clear lines" data-ms="✕ Padam garisan">✕ 清除线条</span></button>
       </div>
       <div class="hint" id="lineMsg" style="margin-top:6px"></div>
       <div class="dlbar" id="scanBar"><i id="scanFill"></i></div>
