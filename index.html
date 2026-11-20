@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#17110c">
+<script>
+/* Theme: 'auto' follows the phone's light/dark setting; 'light'/'dark' override it.
+   Runs in <head> so the page never flashes in the wrong theme. */
+(function(){
+  var pref='auto';try{pref=localStorage.getItem('pf_theme')||'auto';}catch(e){}
+  if(['auto','light','dark'].indexOf(pref)<0)pref='auto';
+  var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: light)'):null;
+  function apply(){
+    var t=pref==='auto'?(mq&&mq.matches?'light':'dark'):pref;
+    document.documentElement.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t==='light'?'#fffaf0':'#17110c');
+  }
+  apply();
+  if(mq&&mq.addEventListener)mq.addEventListener('change',function(){if(pref==='auto')apply();});
+  window.pfTheme={get:function(){return pref;},set:function(v){pref=v;try{localStorage.setItem('pf_theme',v);}catch(e){}apply();}};
+})();
+</script>
 <title>ProspectField · 地质勘探记录</title>
 
 <!-- PWA -->
@@ -26,13 +43,31 @@
   --ore:#d9a441;--ore2:#b8842c;--copper:#c07b4a;--malachite:#4a9d7f;
   --ink:#f0e6d6;--ink2:#c4b39a;--ink3:#8a7a63;--warn:#d16b4a;--ok:#4a9d7f;
   --shadow:0 8px 28px rgba(0,0,0,.55);
+  /* surfaces that used to be hard-coded */
+  --hdr1:#1f1811;--hdr2:#17110c;--nav2:#140f0a;--mapbg:#0d0a07;--cmp1:#221a12;--cmp2:#140f0a;
+  --chip:rgba(46,36,26,.82);--needle:#6b5b45;
+  /* gold buttons keep a bright face and dark text in both themes */
+  --btn1:#d9a441;--btn2:#b8842c;--onbtn:#1a1207;
+  color-scheme:dark;
+}
+/* Light theme: warm paper and ink. Gold, copper and green are darkened so text and
+   headings keep readable contrast on the light panels. */
+:root[data-theme="light"]{
+  --bg:#f5efe4;--bg2:#ece3d3;--panel:#fffbf3;--panel2:#f3eadb;--line:#dccab0;
+  --ore:#83560c;--ore2:#6e4708;--copper:#a5602f;--malachite:#2f7d62;
+  --ink:#2a2016;--ink2:#54442f;--ink3:#685840;--warn:#b5512f;--ok:#2f7d62;
+  --shadow:0 6px 20px rgba(70,45,10,.16);
+  --hdr1:#fffaf0;--hdr2:#f5efe4;--nav2:#efe6d6;--mapbg:#e9e2d4;--cmp1:#fffaf2;--cmp2:#eadfcc;
+  --chip:rgba(255,251,243,.9);--needle:#a8987e;
+  --btn1:#e3b04f;--btn2:#cc9637;--onbtn:#1f1608;
+  color-scheme:light;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;padding-bottom:78px;overscroll-behavior-y:contain}
 h1,h2,h3{margin:0;font-weight:700;letter-spacing:.2px}
 .mono{font-family:'SF Mono',ui-monospace,'Roboto Mono',monospace}
-header{position:relative;position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#1f1811,#17110c);border-bottom:1px solid var(--line);padding:10px 16px 9px}
+header{position:relative;position:sticky;top:0;z-index:50;background:linear-gradient(180deg,var(--hdr1),var(--hdr2));border-bottom:1px solid var(--line);padding:10px 16px 9px}
 .brand{display:flex;align-items:center;gap:10px}
 
 .brand h1{font-size:19px;background:linear-gradient(90deg,var(--ore),var(--copper));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -42,7 +77,7 @@ header{position:relative;position:sticky;top:0;z-index:50;background:linear-grad
 /* Guide has no tab of its own, so it needs an explicit way out */
 #guideClose{position:fixed;top:calc(env(safe-area-inset-top,0px) + 86px);right:16px;z-index:70;
   display:none;width:42px;height:42px;border-radius:50%;
-  background:rgba(46,36,26,.82);border:1px solid rgba(184,132,44,.28);color:var(--ink2);
+  background:var(--chip);border:1px solid rgba(184,132,44,.28);color:var(--ink2);
   font-size:24px;font-weight:300;line-height:1;
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   box-shadow:0 4px 14px rgba(0,0,0,.35);transition:.15s}
@@ -103,7 +138,7 @@ textarea{resize:vertical;min-height:70px}
 @media (max-width:430px){ .row.stack-sm{flex-direction:column;gap:0} }
 .row>*{flex:1}
 button{cursor:pointer;font-family:inherit;border:none}
-.btn{width:100%;background:linear-gradient(180deg,var(--ore),var(--ore2));color:#1a1207;font-weight:700;font-size:16px;padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(217,164,65,.28);letter-spacing:.3px}
+.btn{width:100%;background:linear-gradient(180deg,var(--btn1),var(--btn2));color:var(--onbtn);font-weight:700;font-size:16px;padding:14px;border-radius:12px;box-shadow:0 4px 14px rgba(217,164,65,.28);letter-spacing:.3px}
 .btn:active{transform:translateY(1px)}
 .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none}
 .btn.sm{width:auto;padding:9px 14px;font-size:13px;border-radius:9px}
@@ -114,7 +149,7 @@ button{cursor:pointer;font-family:inherit;border:none}
 .seg button{flex:1;padding:10px 6px;border-radius:9px;background:transparent;color:var(--ink2);font-weight:700;font-size:13.5px}
 .seg button.on{background:var(--copper);color:#fff}
 .lvl{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:1px}
-.lvl.strong{background:var(--ore);color:#1a1207}
+.lvl.strong{background:var(--btn1);color:var(--onbtn)}
 .lvl.moderate{background:var(--copper);color:#fff}
 .lvl.weak{background:var(--bg2);color:var(--ink3);border:1px solid var(--line)}
 .sl-pin{width:26px;height:26px;border-radius:50%;background:#7c5cff;border:2px solid #fff;color:#fff;font-size:13px;line-height:22px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.55)}
@@ -154,7 +189,7 @@ button{cursor:pointer;font-family:inherit;border:none}
 .kb .mineral{font-size:13px;color:var(--malachite);font-weight:600}
 .callout{background:rgba(209,107,74,.12);border:1px solid var(--warn);border-radius:10px;padding:13px;font-size:14px;color:var(--ink2);line-height:1.55}
 .callout b{color:var(--warn)}
-nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:linear-gradient(180deg,#1f1811,#140f0a);border-top:1px solid var(--line);display:flex;padding:8px 2px 10px}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:linear-gradient(180deg,var(--hdr1),var(--nav2));border-top:1px solid var(--line);display:flex;padding:8px 2px 10px}
 nav button{flex:1;background:none;color:var(--ink3);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px}
 nav button .ic{font-size:22px;transition:.15s;display:flex;align-items:center;justify-content:center;height:24px}
 nav button .ic svg{width:24px;height:24px;display:block;color:currentColor;transition:.15s}
@@ -168,7 +203,7 @@ nav button.on .ic{transform:translateY(-1px)}
   background:var(--panel2);border:1px solid var(--ore);border-radius:14px;padding:10px 10px 10px 14px;box-shadow:var(--shadow);color:var(--ink);font-weight:600;font-size:14.5px}
 .updbar[hidden]{display:none}
 .updbar span{flex:1}
-.updbar #updGo{background:linear-gradient(180deg,var(--ore),var(--ore2));color:#1a1207;font-weight:800;border-radius:10px;padding:9px 14px;font-size:14px}
+.updbar #updGo{background:linear-gradient(180deg,var(--btn1),var(--btn2));color:var(--onbtn);font-weight:800;border-radius:10px;padding:9px 14px;font-size:14px}
 .updbar #updX{background:none;color:var(--ink3);font-size:18px;padding:6px 8px}
  /* first-launch language picker */
 #langpick{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
@@ -196,7 +231,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
      strips down each side. Pull the wrapper out to the card edges. */
   margin-left:-16px;margin-right:-16px}
 .map-wrap #map{border-radius:0;border-left:0;border-right:0}
-#map{height:60vh;min-height:340px;border-radius:14px;border:1px solid var(--line);background:#0d0a07;z-index:1}
+#map{height:60vh;min-height:340px;border-radius:14px;border:1px solid var(--line);background:var(--mapbg);z-index:1}
 /* Scroll rails. On a phone the map fills the width, so a vertical swipe anywhere over
    it pans the map and the page cannot be scrolled past. These narrow strips down each
    edge let the page scroll normally.
@@ -231,7 +266,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .map-rail-l{background:transparent}
 .map-rail-r{background:transparent}
 @media (min-width:700px){ .map-rail{display:none} }
-.leaflet-container{background:#0d0a07;font-family:inherit}
+.leaflet-container{background:var(--mapbg);font-family:inherit}
 /* Sub-pixel tile-seam fix. On phones with a fractional devicePixelRatio, adjacent
    Leaflet tiles land on non-integer boundaries and the browser leaves ~1px gaps that
    expose the dark map background as faint grid lines (mostly read as horizontal).
@@ -270,7 +305,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .compass-rose .cr-n{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9px;font-weight:800;color:var(--ore)}
 .compass-rose .cr-needle{position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:50% 50%;transition:transform .12s linear}
 .compass-rose .cr-needle::before{content:"";position:absolute;left:-3px;top:-17px;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:13px solid #d16b4a}
-.compass-rose .cr-needle::after{content:"";position:absolute;left:-2px;top:-1px;width:4px;height:15px;background:#6b5b45;border-radius:0 0 2px 2px}
+.compass-rose .cr-needle::after{content:"";position:absolute;left:-2px;top:-1px;width:4px;height:15px;background:var(--needle);border-radius:0 0 2px 2px}
 /* terrain cross-section panel */
 .prof-wrap{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-top:12px}
 .prof-wrap svg{width:100%;height:150px;display:block;background:var(--bg2);border-radius:8px;margin-top:8px}
@@ -287,7 +322,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .dlbar{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin-top:8px;display:none}
 .dlbar.on{display:block}
 .dlbar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ore),var(--copper));transition:.2s}
-.pin-num{background:var(--ore);color:#1a1207;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #1a1207;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.pin-num{background:var(--btn1);color:var(--onbtn);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #1a1207;box-shadow:0 2px 6px rgba(0,0,0,.5)}
 .pin-num.flag{background:var(--warn);color:#fff}
 .leaflet-popup-content-wrapper{background:var(--panel);color:var(--ink);border-radius:10px}
 .leaflet-popup-tip{background:var(--panel)}
@@ -299,7 +334,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .thumbstrip .rm{position:absolute;top:-6px;right:-6px;background:var(--warn);color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center}
 /* compass */
 .compass-wrap{text-align:center;padding:6px 0}
-.compass{position:relative;width:230px;height:230px;margin:6px auto;border-radius:50%;background:radial-gradient(circle at 50% 45%,#221a12,#140f0a);border:2px solid var(--line);box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
+.compass{position:relative;width:230px;height:230px;margin:6px auto;border-radius:50%;background:radial-gradient(circle at 50% 45%,var(--cmp1),var(--cmp2));border:2px solid var(--line);box-shadow:inset 0 0 30px rgba(0,0,0,.6)}
 .compass .ring-lbl{position:absolute;font-size:15px;color:var(--ink2);font-weight:800}
 .compass .n{top:8px;left:50%;transform:translateX(-50%);color:var(--warn)}
 .compass .s{bottom:8px;left:50%;transform:translateX(-50%)}
@@ -309,7 +344,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
 .needle .arrow{position:absolute;left:-13px;top:-92px;width:26px;height:92px;
   background:linear-gradient(180deg,var(--ore),var(--ore2));clip-path:polygon(50% 0,100% 100%,50% 78%,0 100%);
   filter:drop-shadow(0 2px 6px rgba(217,164,65,.5))}
-.compass .hub{position:absolute;top:50%;left:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;background:var(--ore);border:3px solid #140f0a;z-index:2}
+.compass .hub{position:absolute;top:50%;left:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;background:var(--ore);border:3px solid var(--cmp2);z-index:2}
 .nav-readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .nav-readout .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
 .nav-readout .box .n{font-size:30px;font-weight:800;color:var(--ore)}
@@ -402,6 +437,8 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
   <div class="brand">
     <div><h1>ProspectField</h1><div class="sub"><b class="sub-zh">地质勘探</b> · Field Recon</div></div>
   </div>
+  <button id="themeBtn" onclick="cycleTheme()" aria-label="主题" data-zh-al="主题：自动 / 浅色 / 深色" data-en-al="Theme: auto / light / dark" data-ms-al="Tema: auto / cerah / gelap"
+    style="position:absolute;top:10px;right:112px;background:var(--panel2);border:1px solid var(--line);color:var(--ore);border-radius:8px;padding:5px 10px;font-size:16px;line-height:1.15;min-width:40px">🌓</button>
   <button id="guideBtn" onclick="openGuide()" aria-label="指南" data-zh-al="指南" data-en-al="Guide" data-ms-al="Panduan"
     style="position:absolute;top:10px;right:64px;background:var(--panel2);border:1px solid var(--line);color:var(--ore);border-radius:8px;padding:5px 12px;font-weight:700;font-size:16px;line-height:1.15">&#9432;</button>
   <button id="langBtn" onclick="showLangPick(true)" aria-label="切换语言" data-zh-al="切换语言" data-en-al="Switch language" data-ms-al="Tukar bahasa"
@@ -1272,6 +1309,16 @@ function setLang(l){
   redrawMapExtras();   // altimeter + terrain profile carry baked-in labels — redraw them
   toast(T('已切换为中文','Switched to English','Bahasa ditukar ke Bahasa Melayu'));
   return true;
+}
+/* Theme switch: Auto (follows phone) → Light → Dark → Auto */
+function themeIcon(){const p=window.pfTheme?pfTheme.get():'auto';return p==='light'?'☀️':(p==='dark'?'🌙':'🌓');}
+function updateThemeBtn(){const b=document.getElementById('themeBtn');if(b)b.textContent=themeIcon();}
+function cycleTheme(){
+  if(!window.pfTheme)return;
+  const next={auto:'light',light:'dark',dark:'auto'}[pfTheme.get()]||'auto';
+  pfTheme.set(next);updateThemeBtn();
+  toast(next==='auto'?T('主题：自动（跟随手机）','Theme: auto (follows your phone)','Tema: auto (ikut telefon)')
+       :next==='light'?T('主题：浅色','Theme: light','Tema: cerah'):T('主题：深色','Theme: dark','Tema: gelap'));
 }
 function showLangPick(on){
   const lp=document.getElementById('langpick');if(!lp)return;
@@ -3598,15 +3645,15 @@ function renderProfileChart(elev,totalDist,a,b){
   for(let i=1;i<n;i++)d+=' L'+x(i)+' '+y(elev[i]);
   const area=d+' L'+x(n-1)+' '+(H-padB)+' L'+x(0)+' '+(H-padB)+' Z';
   const gy=[lo,(lo+hi)/2,hi];
-  let grid='';gy.forEach(function(v){const yy=y(v).toFixed(1);grid+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#3a2e21" stroke-width="1"/><text x="'+(padL-4)+'" y="'+(y(v)+3).toFixed(1)+'" fill="#8a7a63" font-size="9" text-anchor="end">'+Math.round(v)+'</text>';});
+  let grid='';gy.forEach(function(v){const yy=y(v).toFixed(1);grid+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" style="stroke:var(--line)" stroke-width="1"/><text x="'+(padL-4)+'" y="'+(y(v)+3).toFixed(1)+'" style="fill:var(--ink3)" font-size="9" text-anchor="end">'+Math.round(v)+'</text>';});
   const svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+
     grid+
     '<path d="'+area+'" fill="rgba(74,157,127,.18)"/>'+
-    '<path d="'+d+'" fill="none" stroke="#4a9d7f" stroke-width="2"/>'+
+    '<path d="'+d+'" fill="none" style="stroke:var(--malachite)" stroke-width="2"/>'+
     '<circle cx="'+x(0)+'" cy="'+y(elev[0])+'" r="4" fill="#d9a441"/>'+
     '<circle cx="'+x(n-1)+'" cy="'+y(elev[n-1])+'" r="4" fill="#d16b4a"/>'+
-    '<text x="'+x(0)+'" y="'+(H-6)+'" fill="#d9a441" font-size="9" text-anchor="start">'+T('你','you')+'</text>'+
-    '<text x="'+(W-padR)+'" y="'+(H-6)+'" fill="#d16b4a" font-size="9" text-anchor="end">'+T('目标','target')+'</text>'+
+    '<text x="'+x(0)+'" y="'+(H-6)+'" style="fill:var(--ore)" font-size="9" text-anchor="start">'+T('你','you')+'</text>'+
+    '<text x="'+(W-padR)+'" y="'+(H-6)+'" style="fill:var(--warn)" font-size="9" text-anchor="end">'+T('目标','target')+'</text>'+
     '</svg>';
   document.getElementById('profChart').innerHTML=svg;
   const dz=elev[n-1]-elev[0], peak=Math.max.apply(null,elev);
@@ -4459,6 +4506,7 @@ document.getElementById('lpClose').onclick=function(){showLangPick(false);};
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'&&!document.getElementById('langpick').hidden&&!document.getElementById('lpClose').hidden)showLangPick(false);
 });
+updateThemeBtn();
 if(FIRST_LAUNCH)showLangPick(true);
 
 /* ---- PWA service worker: self-updating ----
