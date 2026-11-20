@@ -2290,7 +2290,6 @@ function refPoint(){
   if(siteLoc)return {lat:siteLoc.lat,lon:siteLoc.lon,you:fresh(siteLoc)};
   return null;
 }
-function fmtDist(d){return d<1000?Math.round(d)+' m':(d<100000?(d/1000).toFixed(1):Math.round(d/1000))+' km';}
 function distLabel(lat,lon){
   const r=refPoint();if(!r)return '';
   const d=fmtDist(haversine(r.lat,r.lon,lat,lon));
@@ -3817,12 +3816,19 @@ function renderBattery(){
   if(battRef.charging)battRef._warned=false;
 }
 
-function toggleTrack(){
+async function toggleTrack(){
   if(trail.active){
     trail.active=false;saveTrail();stopTrackWatch();updateTrailUI();
     toast(T('已暂停记录——轨迹保留','Tracking paused — trail kept'));
   }else{
     if(!navigator.geolocation)return toast(T('此设备无 GPS','No GPS on this device'),true);
+    if(trail.pts.length&&trailIsStale()){
+      const go=await askConfirm(T('这是一条旧轨迹','This is an old trail'),
+        T('这条轨迹最后更新于 '+fmtAgo(trailLastSeen())+'。如果你已开始新的行程，请先导出并清除它，再从新的起点开始记录——否则「原路返回」会把你指向旧行程的起点。\n\n仍要继续记录这条旧轨迹吗？',
+          'This trail was last updated '+fmtAgo(trailLastSeen())+'. If this is a new trip, export and clear it first, then start a fresh track at your new starting point — otherwise Retrace will point you to the old trip\'s start.\n\nContinue recording this old trail anyway?'),
+        T('继续旧轨迹','Continue old trail'),false);
+      if(!go)return;
+    }
     trail.active=true;if(!trail.startedAt)trail.startedAt=Date.now();saveTrail();
     startTrackWatch();updateTrailUI();
     toast(T('已开始记录——走你的路线','Tracking on — walk your route'));
@@ -3831,6 +3837,7 @@ function toggleTrack(){
 function logFix(p){
   const pt={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()};
   if(pt.acc>50)return; // ignore very poor fixes so the trail stays honest
+  markTrailSeen(pt.t);
   if(!trail.start){trail.start=pt;}
   const last=trail.pts[trail.pts.length-1];
   if(!last||haversine(last.lat,last.lon,pt.lat,pt.lon)>=MIN_STEP){
@@ -3856,7 +3863,45 @@ function stopTrackWatch(){
   if(trackTimer!=null){clearInterval(trackTimer);trackTimer=null;}
 }
 
-function trailLength(){let d=0;for(let i=1;i<trail.pts.length;i++)d+=haversine(trail.pts[i-1].lat,trail.pts[i-1].lon,trail.pts[i].lat,trail.pts[i].lon);return d;}
+/* A step between two breadcrumbs is a GAP, not walking, when it is over 1 km AND it is
+   faster than anyone moves on foot (> 25 km/h), or comes after more than 2 h without a
+   point, or after more than 30 min at an average above walking pace (> 7 km/h). A slow
+   1 km stretch with no GPS under canopy still counts as walked.
+   That happens when a trail is left on and the app is reopened somewhere else, or after a
+   GPS glitch. Gaps are not counted as distance, not drawn as a line, and split the GPX. */
+const GAP_MIN_M=1000,GAP_MAX_MPS=7,GAP_LONG_MS=2*3600000,GAP_MID_MS=30*60000,GAP_WALK_MPS=2;
+function isGap(a,b){
+  const d=haversine(a.lat,a.lon,b.lat,b.lon);if(d<=GAP_MIN_M)return false;
+  const dt=(b.t||0)-(a.t||0);
+  if(!(dt>0))return true;
+  const v=d/(dt/1000);
+  return v>GAP_MAX_MPS||dt>GAP_LONG_MS||(dt>GAP_MID_MS&&v>GAP_WALK_MPS);
+}
+function trailSegments(){
+  const segs=[];let cur=[];
+  trail.pts.forEach(function(p,i){if(i&&isGap(trail.pts[i-1],p)){segs.push(cur);cur=[];}cur.push(p);});
+  if(cur.length)segs.push(cur);
+  return segs;
+}
+function trailLength(){let d=0;for(let i=1;i<trail.pts.length;i++){const a=trail.pts[i-1],b=trail.pts[i];if(!isGap(a,b))d+=haversine(a.lat,a.lon,b.lat,b.lon);}return d;}
+/* ---- stale trails: tracking left on from an earlier trip ---- */
+const TRAIL_SEEN_KEY='pf_trail_seen',TRAIL_STALE_MS=6*3600000;
+let trailSeenSaved=0;
+function markTrailSeen(t){if(t-trailSeenSaved<60000)return;trailSeenSaved=t;try{localStorage.setItem(TRAIL_SEEN_KEY,String(t));}catch(e){}}
+function trailLastSeen(){
+  let t=+(localStorage.getItem(TRAIL_SEEN_KEY)||0);
+  const last=trail.pts[trail.pts.length-1];
+  if(last&&last.t>t)t=last.t;
+  if(trail.startedAt&&trail.startedAt>t)t=trail.startedAt;
+  return t;
+}
+function trailIsStale(){const t=trailLastSeen();return !!t&&Date.now()-t>TRAIL_STALE_MS;}
+function fmtAgo(t){
+  const m=Math.round((Date.now()-t)/60000);
+  if(m<60)return T(m+' 分钟前',m+' min ago');
+  const h=Math.round(m/60);if(h<48)return T(h+' 小时前',h+' h ago');
+  return T(Math.round(h/24)+' 天前',Math.round(h/24)+' days ago');
+}
 function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(2)+' km';}
 
 function updateTrailUI(){
@@ -3866,6 +3911,9 @@ function updateTrailUI(){
   else{dot.className='ts-dot';main.textContent=trail.pts.length?T('轨迹已保存（暂停）','Trail saved (paused)'):T('未记录','Not tracking');sub.textContent=trail.pts.length?T('可继续、返回或导出','Resume, retrace, or export'):T('出发前先开始记录','Start a track before heading in');btn.textContent=trail.pts.length?T('▶ 继续记录','▶ Resume tracking'):T('▶ 开始记录轨迹','▶ Start tracking');btn.style.background='';btn.style.color='';}
   document.getElementById('trPts').textContent=trail.pts.length;
   document.getElementById('trLen').textContent=fmtDist(trailLength());
+  const gaps=trailSegments().length-1;
+  if(gaps>0)sub.textContent+=T(' · 含 '+gaps+' 处跳跃（未计入距离）',' · '+gaps+' jump'+(gaps===1?'':'s')+' not counted');
+  if(!trail.active&&trail.pts.length&&trailIsStale())sub.textContent=T('旧轨迹（'+fmtAgo(trailLastSeen())+'）— 新行程请先导出并清除','Old trail ('+fmtAgo(trailLastSeen())+') — export & clear before a new trip');
   if(trail.start&&trail.pts.length){const cur=trail.pts[trail.pts.length-1];document.getElementById('trBack').textContent=fmtDist(haversine(cur.lat,cur.lon,trail.start.lat,trail.start.lon));}
   else document.getElementById('trBack').textContent='—';
   if(trail.startedAt){const mins=Math.round((Date.now()-trail.startedAt)/60000);document.getElementById('trTime').textContent=mins<60?mins+' min':(mins/60).toFixed(1)+' h';}
@@ -3877,7 +3925,9 @@ function drawTrail(){
   if(trailLayer){map.removeLayer(trailLayer);trailLayer=null;}
   if(trailStartMarker){map.removeLayer(trailStartMarker);trailStartMarker=null;}
   if(trail.pts.length>1){
-    trailLayer=L.polyline(trail.pts.map(function(p){return[p.lat,p.lon];}),{color:'#4a9d7f',weight:4,opacity:.9,dashArray:'1,0'}).addTo(map);
+    // one line per walked segment — never a straight line across a gap
+    const segs=trailSegments().filter(function(g){return g.length>1;}).map(function(g){return g.map(function(p){return[p.lat,p.lon];});});
+    if(segs.length)trailLayer=L.polyline(segs,{color:'#4a9d7f',weight:4,opacity:.9,dashArray:'1,0'}).addTo(map);
   }
   if(trail.start){
     trailStartMarker=L.marker([trail.start.lat,trail.start.lon],{icon:L.divIcon({html:'<div style="background:#4a9d7f;color:#06140e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid #06140e">▲</div>',className:'',iconSize:[28,28],iconAnchor:[14,14]})}).bindPopup('<b>'+T('起点','Trailhead')+'</b><br>'+T('你出发的地方','where you started')).addTo(map);
@@ -4093,9 +4143,13 @@ let navRetraceTarget=null;
 
 function exportTrail(){
   if(!trail.pts.length)return toast(T('没有可导出的轨迹','No trail to export'),true);
-  let gpx='<?xml version="1.0"?>\n<gpx version="1.1" creator="ProspectField"><trk><name>ProspectField trail</name><trkseg>\n';
-  trail.pts.forEach(function(p){gpx+='<trkpt lat="'+p.lat+'" lon="'+p.lon+'"><time>'+new Date(p.t).toISOString()+'</time></trkpt>\n';});
-  gpx+='</trkseg></trk></gpx>';
+  let gpx='<?xml version="1.0"?>\n<gpx version="1.1" creator="ProspectField" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>ProspectField trail</name>\n';
+  trailSegments().forEach(function(seg){
+    gpx+='<trkseg>\n';
+    seg.forEach(function(p){gpx+='<trkpt lat="'+p.lat+'" lon="'+p.lon+'"><time>'+new Date(p.t).toISOString()+'</time></trkpt>\n';});
+    gpx+='</trkseg>\n';
+  });
+  gpx+='</trk></gpx>';
   dl('prospectfield_trail_'+Date.now()+'.gpx',gpx,'application/gpx+xml');
   trail.exported=true;saveTrail();
   toast(T('轨迹已导出为 GPX — 到家后即可安全清除','Trail exported as GPX \u2014 safe to clear once you are home'));
@@ -4113,8 +4167,9 @@ async function clearTrail(){
 
   // Guard 2: paused, but still far from the trailhead — he may have paused to save
   // battery mid-expedition, so the trail is still his route out.
+  // (skipped for a stale trail: its start is an earlier trip's, possibly far from home)
   const home=trail.start;
-  if(home&&curPos){
+  if(home&&curPos&&!trailIsStale()){
     const away=haversine(curPos.lat,curPos.lon,home.lat,home.lon);
     if(away>250){
       const dstr=(away<1000?Math.round(away)+' m':(away/1000).toFixed(1)+' km');
@@ -4146,8 +4201,22 @@ async function clearTrail(){
   toast(T('轨迹已清除','Trail cleared'));
 }
 
-/* if tracking was on when the app closed/restarted, resume automatically */
-if(trail.active){startTrackWatch();}
+/* If tracking was on when the app closed/restarted, resume automatically — that protects a
+   hike when the phone restarts. But a trail untouched for hours was left on from an earlier
+   trip: resuming it would join today's location to that old route (and Retrace would aim at
+   the old start), so pause it and say why. */
+if(trail.active){
+  if(trailIsStale()){
+    trail.active=false;saveTrail();
+    setTimeout(function(){
+      updateTrailUI();
+      askConfirm(T('轨迹记录已暂停','Trail recording paused'),
+        T('上一条轨迹一直处于记录状态，最后更新于 '+fmtAgo(trailLastSeen())+'。为避免把它和今天的位置连在一起，已暂停记录。\n\n新行程：在「轨迹」页导出并清除旧轨迹，然后在起点重新开始记录。同一行程：点「继续记录」即可。',
+          'The last trail was still set to record and was last updated '+fmtAgo(trailLastSeen())+'. Recording is paused so it is not joined to where you are today.\n\nNew trip: on the Trail tab, export and clear the old trail, then start a fresh track at your starting point. Same trip: tap Resume tracking.'),
+        T('明白了','Got it'),false);
+    },600);
+  }else startTrackWatch();
+}
 
 /* ============ nav / toast ============ */
 /* Guide lives in the header now, not the bottom nav — it has no tab button to highlight */
