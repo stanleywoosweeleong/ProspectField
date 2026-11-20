@@ -903,7 +903,7 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       5. Salin → dalam aplikasi ini pergi ke <b>Peta</b> → buka <b>🔬 Lapisan analisis lanjutan</b> → tampal ke dalam kotak<br>
       6. Ketik <b>🔎 Uji ID saya</b>. Jika ia menunjukkan imej, anda sudah bersambung."><b>第二部分 — 获取实例 ID</b><br>1. 前往 <b>shapps.dataspace.copernicus.eu/dashboard/#/configurations</b><br>2. 用第一部分创建的账户登录<br>3. 你会看到配置列表。可使用现成的 <b>"Simple WMS Instance"</b>，或点击 <b>New configuration</b>，命名（例如 ProspectField），并基于 <b>Simple WMS template</b> 创建<br>4. 进入该配置。<b>实例 ID</b> 就是显示的那串长代码（形如 c32c21b1-84ac-…）。它可能出现在类似 .../wms/<b>那串代码</b> 的网址中——你只需要 /wms/ 之后的代码，而不是整个网址<br>5. 复制它 → 在本应用中进入<b>地图</b>页 → 展开 <b>🔬 高级分析图层</b> → 粘贴到输入框<br>6. 点击 <b>🔎 测试我的 ID</b>。若显示出影像，即表示连接成功。</p>
 
-      <div class="callout" style="margin:10px 0" data-html data-zh="<b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。若要使用<b>地形阴影与线性构造</b>，请再添加一个数据源为 <b>DEM</b>（Copernicus 30）的图层，名称填 <b>DEM</b>。" data-en="<b>✅ You can now skip this.</b> The app sends the analysis scripts below with every request itself, using a Sentinel-2 L2A layer your configuration already has — just paste the instance ID from Part B and tap Test my ID. Only if the test says no Sentinel-2 L2A layer was found do you need to add one (any name); radar needs one Sentinel-1 layer. For <b>terrain shading and lineaments</b>, add one layer with data source <b>DEM</b> (Copernicus 30) and name it <b>DEM</b>." data-ms="<b>✅ Kini anda boleh langkau bahagian ini.</b> Aplikasi menghantar sendiri skrip analisis di bawah bersama setiap permintaan, menggunakan lapisan Sentinel-2 L2A yang sudah ada dalam konfigurasi anda — cuma tampal ID instance dari Bahagian B dan ketik Uji ID saya. Hanya jika ujian menyatakan tiada lapisan Sentinel-2 L2A ditemui, anda perlu menambah satu (apa-apa nama); radar memerlukan satu lapisan Sentinel-1. Untuk <b>bayang rupa bumi dan lineamen</b>, tambah satu lapisan dengan sumber data <b>DEM</b> (Copernicus 30) dan namakan <b>DEM</b>."><b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。若要使用<b>地形阴影与线性构造</b>，请再添加一个数据源为 <b>DEM</b>（Copernicus 30）的图层，名称填 <b>DEM</b>。</div>
+      <div class="callout" style="margin:10px 0" data-html data-zh="<b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。<b>地形阴影与线性构造</b>无需任何图层：它们直接读取免费的 Copernicus DEM。" data-en="<b>✅ You can now skip this.</b> The app sends the analysis scripts below with every request itself, using a Sentinel-2 L2A layer your configuration already has — just paste the instance ID from Part B and tap Test my ID. Only if the test says no Sentinel-2 L2A layer was found do you need to add one (any name); radar needs one Sentinel-1 layer. <b>Terrain shading and lineaments</b> need no layer: they read the free Copernicus DEM directly." data-ms="<b>✅ Kini anda boleh langkau bahagian ini.</b> Aplikasi menghantar sendiri skrip analisis di bawah bersama setiap permintaan, menggunakan lapisan Sentinel-2 L2A yang sudah ada dalam konfigurasi anda — cuma tampal ID instance dari Bahagian B dan ketik Uji ID saya. Hanya jika ujian menyatakan tiada lapisan Sentinel-2 L2A ditemui, anda perlu menambah satu (apa-apa nama); radar memerlukan satu lapisan Sentinel-1. <b>Bayang rupa bumi dan lineamen</b> tidak memerlukan lapisan: ia membaca Copernicus DEM percuma secara terus."><b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。<b>地形阴影与线性构造</b>无需任何图层：它们直接读取免费的 Copernicus DEM。</div>
       <p data-html data-zh="<b>第三部分 — 添加图层</b><br>在你的配置中，为下列每一项点击 <b>＋ New layer</b>。名称须<b>完全一致</b>（大小写与连字符都重要——应用按这些名称查找），选好数据源后保存。<br><br>• <b>SENTINEL-1</b> — 数据源：Sentinel-1 GRD。若提示&quot;请选择预定义产品或输入处理脚本&quot;，随便选一个预定义产品即可（例如 VV 或 VV+VH decibel gamma0）。这就是你的雷达图层。<br>• <b>IRON-RATIO</b> — 数据源：Sentinel-2 L2A，Data Processing → Custom script → 粘贴铁比值脚本<br>• <b>FERROUS-IRON</b> — 数据源：Sentinel-2 L2A → Custom script → 粘贴亚铁脚本<br>• <b>ALTERATION</b> — 数据源：Sentinel-2 L2A → Custom script → 粘贴蚀变脚本<br><br>三个自定义脚本在下一节，请分别复制到对应图层。" data-en="<b>PART C — Add the layers</b><br>
       Inside your configuration, click <b>＋ New layer</b> for each one below. Name them <b>exactly</b> as shown (capitals and hyphens matter — the app looks for these names), pick the data source, then Save.<br><br>
       • <b>SENTINEL-1</b> — data source: Sentinel-1 GRD. If it warns &quot;please select predefined product or enter your processing script&quot;, just pick any predefined product (e.g. VV or VV+VH decibel gamma0). This is your radar layer.<br>
@@ -3414,7 +3414,7 @@ async function scanTargets(){
           scan.data=scanPicture(px,W,H,scanKind);scan.method=withSCL?'measured':'measured-noscl';
           // terrain context (slope, lineaments) when the account has a DEM layer
           let E=null;
-          if(caps.dem&&targets.length){
+          if(targets.length){
             msg.textContent=T('正在读取地形以判断背景…','Reading the terrain for context…','Membaca rupa bumi untuk konteks…');
             try{E=await fetchElevation(scan.bounds,W,H);}catch(e){E=null;}
           }
@@ -3469,15 +3469,149 @@ function decodeElevation(px,W,H){
   }
   E.valid=valid;return E;
 }
-function demMissingMsg(){
-  return T('⚠ 地形功能需要你的 Copernicus 配置中有一个 DEM 图层：在配置中点击「＋ New layer」，数据源选 <b>DEM</b>（Copernicus 30），名称填 <b>DEM</b>，保存后点击「测试我的 ID」。',
-    '⚠ Terrain needs a DEM layer in your Copernicus configuration: click <b>＋ New layer</b>, choose data source <b>DEM</b> (Copernicus 30), name it <b>DEM</b>, save, then tap Test my ID.',
-    '⚠ Rupa bumi memerlukan lapisan DEM dalam konfigurasi Copernicus anda: klik <b>＋ New layer</b>, pilih sumber data <b>DEM</b> (Copernicus 30), namakan <b>DEM</b>, simpan, kemudian ketik Uji ID saya.');
+/* ---- Copernicus DEM GLO-30 straight from OpenTopography's public store ----
+   The same ESA/Airbus Copernicus DEM (TanDEM-X 2011–2015, 30 m), published as one
+   cloud-optimised GeoTIFF per 1°×1° square, open to browsers (CORS) and readable in
+   pieces (HTTP Range). So no Copernicus DEM layer, account or quota is needed — many
+   free Copernicus accounts are refused DEM access ("You are not authorized"). Each file
+   holds 512×512 blocks of 32-bit heights, deflate-compressed, at four detail levels;
+   the app fetches only the blocks a view needs and unpacks them with the browser's own
+   decompressor. Squares that are all sea have no file (404) and read as 0 m. */
+const COP30_BASE='https://opentopography.s3.sdsc.edu/raster/COP30/COP30_hh/';
+function cop30Name(latF,lonF){
+  return 'Copernicus_DSM_10_'+(latF>=0?'N':'S')+String(Math.abs(latF)).padStart(2,'0')+'_00_'+
+    (lonF>=0?'E':'W')+String(Math.abs(lonF)).padStart(3,'0')+'_00_DEM.tif';
 }
-/* Elevation for a lat/lon box as a W×H grid (EPSG:4326, same layout as the optical scan). */
+const cop30Heads={},cop30Tiles=new Map(),COP30_TILE_CACHE=96;
+async function cop30Range(url,a,b){
+  const res=await fetch(url,{headers:{Range:'bytes='+a+'-'+b}});
+  if(res.status===404)return null;
+  if(!(res.status===206||res.status===200))throw new Error('elevation server '+res.status);
+  const buf=await res.arrayBuffer();
+  // a server that ignores Range sends the whole file: cut out the part we asked for
+  return res.status===200?buf.slice(a,b+1):buf;
+}
+/* Read the file's directory: every detail level with its block positions and sizes. */
+function cop30Head(name){
+  if(cop30Heads[name])return cop30Heads[name];
+  cop30Heads[name]=(async function(){
+    const url=COP30_BASE+name;
+    let buf=await cop30Range(url,0,65535);
+    if(!buf)return {sea:true};
+    let dv=new DataView(buf);
+    if(dv.getUint16(0,true)!==0x4949||dv.getUint16(2,true)!==42)throw new Error('unexpected elevation file');
+    const need=async function(end){if(end>buf.byteLength){buf=await cop30Range(url,0,Math.max(end,buf.byteLength*2)-1);dv=new DataView(buf);}};
+    const TS={3:2,4:4,12:8,16:8};
+    const levels=[];let geo=null,off=dv.getUint32(4,true);
+    while(off&&levels.length<8){
+      await need(off+2);const n=dv.getUint16(off,true);await need(off+2+12*n+4);
+      const L={};
+      for(let i=0;i<n;i++){
+        const e=off+2+12*i,tag=dv.getUint16(e,true),typ=dv.getUint16(e+2,true),cnt=dv.getUint32(e+4,true),sz=(TS[typ]||1)*cnt;
+        const read=async function(){
+          let p=e+8;if(sz>4){p=dv.getUint32(e+8,true);await need(p+sz);}
+          const out=[];for(let k=0;k<cnt;k++){out.push(typ===3?dv.getUint16(p+2*k,true):typ===4?dv.getUint32(p+4*k,true):typ===12?dv.getFloat64(p+8*k,true):typ===16?Number(dv.getBigUint64(p+8*k,true)):dv.getUint8(p+k));}
+          return out;
+        };
+        if(tag===256)L.w=(await read())[0];else if(tag===257)L.h=(await read())[0];
+        else if(tag===259)L.comp=(await read())[0];else if(tag===317)L.pred=(await read())[0];
+        else if(tag===258)L.bits=(await read())[0];else if(tag===339)L.fmt=(await read())[0];
+        else if(tag===322)L.tw=(await read())[0];else if(tag===323)L.th=(await read())[0];
+        else if(tag===324)L.offs=await read();else if(tag===325)L.lens=await read();
+        else if(tag===33550)L.scale=await read();else if(tag===33922)L.tie=await read();
+      }
+      if(!geo&&L.tie&&L.scale)geo={lon0:L.tie[3],lat0:L.tie[4]};
+      if(L.bits!==32||L.fmt!==3||L.comp!==8||(L.pred||1)!==1||!L.tw||!L.offs||!L.lens)throw new Error('unsupported elevation encoding');
+      L.res=1/(L.w-1);    // heights are at points spaced 1/(w-1) degree across the 1° square
+      levels.push(L);
+      off=dv.getUint32(off+2+12*n,true);
+    }
+    if(!geo||!levels.length)throw new Error('elevation file without georeference');
+    return {url:url,geo:geo,levels:levels};
+  })();
+  cop30Heads[name].catch(function(){delete cop30Heads[name];});   // allow a retry later
+  return cop30Heads[name];
+}
+async function cop30Block(name,head,lv,ti){
+  const key=name+'|'+lv+'|'+ti;
+  if(cop30Tiles.has(key)){const v=cop30Tiles.get(key);cop30Tiles.delete(key);cop30Tiles.set(key,v);return v;}
+  const L=head.levels[lv],a=L.offs[ti],len=L.lens[ti];
+  const p=(async function(){
+    if(!len)return null;
+    const raw=await cop30Range(head.url,a,a+len-1);
+    const inflated=await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer();
+    return new Float32Array(inflated);
+  })();
+  cop30Tiles.set(key,p);p.catch(function(){cop30Tiles.delete(key);});
+  while(cop30Tiles.size>COP30_TILE_CACHE)cop30Tiles.delete(cop30Tiles.keys().next().value);
+  return p;
+}
+/* Heights for a W×H grid. Columns are evenly spaced in longitude; rows are evenly spaced in
+   latitude, or in web-Mercator y when mercator is true (map tiles). Bilinear sampling at the
+   coarsest detail level that is still at least as fine as the grid. */
+async function cop30Grid(bb,W,H,mercator){
+  if(typeof DecompressionStream==='undefined')throw new Error('this browser cannot unpack elevation data');
+  const lonAt=function(x){return bb.w+(x+0.5)/W*(bb.e-bb.w);};
+  const yN=Math.log(Math.tan(Math.PI/4+bb.n*Math.PI/360)),yS=Math.log(Math.tan(Math.PI/4+bb.s*Math.PI/360));
+  const latAt=mercator?function(y){const m=yN+(y+0.5)/H*(yS-yN);return (2*Math.atan(Math.exp(m))-Math.PI/2)*180/Math.PI;}
+                     :function(y){return bb.n-(y+0.5)/H*(bb.n-bb.s);};
+  const want=Math.min((bb.e-bb.w)/W,(bb.n-bb.s)/H);
+  // which 1° squares, and which blocks inside them
+  const sq=[];
+  for(let la=Math.floor(bb.s);la<=Math.floor(bb.n);la++)for(let lo=Math.floor(bb.w);lo<=Math.floor(bb.e);lo++)sq.push([la,lo]);
+  if(sq.length>16)throw new Error('area too large for terrain');
+  const files={};
+  await Promise.all(sq.map(async function(s){const nm=cop30Name(s[0],s[1]);files[s[0]+','+s[1]]={name:nm,head:await cop30Head(nm)};}));
+  const lvOf={},blocks={};
+  const jobs=[];
+  Object.keys(files).forEach(function(k){
+    const f=files[k];if(f.head.sea)return;
+    let lv=0;f.head.levels.forEach(function(L,i){if(L.res<=want*1.01)lv=i;});
+    lvOf[k]=lv;const L=f.head.levels[lv],g=f.head.geo;
+    const tilesAcross=Math.ceil(L.w/L.tw);
+    const c0=Math.max(0,Math.floor((Math.max(bb.w,g.lon0)-g.lon0)/L.res)-1),c1=Math.min(L.w-1,Math.ceil((Math.min(bb.e,g.lon0+1)-g.lon0)/L.res)+1);
+    const r0=Math.max(0,Math.floor((g.lat0-Math.min(bb.n,g.lat0))/L.res)-1),r1=Math.min(L.h-1,Math.ceil((g.lat0-Math.max(bb.s,g.lat0-1))/L.res)+1);
+    for(let ty=Math.floor(r0/L.th);ty<=Math.floor(r1/L.th);ty++)for(let tx=Math.floor(c0/L.tw);tx<=Math.floor(c1/L.tw);tx++){
+      const ti=ty*tilesAcross+tx;jobs.push(cop30Block(f.name,f.head,lv,ti).then(function(a){blocks[k+'|'+ti]=a;}));
+    }
+  });
+  if(jobs.length>48)throw new Error('area too large for terrain');
+  await Promise.all(jobs);
+  const E=new Float32Array(W*H);let valid=0;
+  for(let y=0;y<H;y++){
+    const lat=latAt(y);
+    for(let x=0;x<W;x++){
+      const lon=lonAt(x),k=Math.floor(lat)+','+Math.floor(lon),f=files[k];
+      let v=0;
+      if(f&&!f.head.sea){
+        const L=f.head.levels[lvOf[k]],g=f.head.geo,tilesAcross=Math.ceil(L.w/L.tw);
+        const fc=(lon-g.lon0)/L.res,fr=(g.lat0-lat)/L.res;
+        const c=Math.max(0,Math.min(L.w-2,Math.floor(fc))),r=Math.max(0,Math.min(L.h-2,Math.floor(fr))),u=fc-c,w=fr-r;
+        const at=function(cc,rr){const ti=Math.floor(rr/L.th)*tilesAcross+Math.floor(cc/L.tw),bl=blocks[k+'|'+ti];return bl?bl[(rr%L.th)*L.tw+(cc%L.tw)]:NaN;};
+        const a=at(c,r),b2=at(c+1,r),c2=at(c,r+1),d=at(c+1,r+1);
+        v=(a*(1-u)+b2*u)*(1-w)+(c2*(1-u)+d*u)*w;
+        if(!isFinite(v)||v<-1000)v=NaN;
+      }
+      E[y*W+x]=v;if(!isNaN(v))valid++;
+    }
+  }
+  E.valid=valid;
+  return E;
+}
+/* Elevation for a lat/lon box as a W×H grid (EPSG:4326, same layout as the optical scan).
+   First the free Copernicus DEM from OpenTopography (no account); a DEM layer in the user's
+   Copernicus configuration is only a backup if that store cannot be reached. */
 async function fetchElevation(bb,W,H){
+  const midLat0=(bb.n+bb.s)/2;
+  try{
+    const E=await cop30Grid(bb,W,H,false);
+    E.dx=haversine(midLat0,bb.w,midLat0,bb.e)/W;E.dy=haversine(bb.n,bb.w,bb.s,bb.w)/H;E.W=W;E.H=H;E.src='cop30';
+    return E;
+  }catch(e1){
+    let caps=null;if(satId){try{caps=await discoverLayers();}catch(e){}}
+    if(!caps||!caps.dem)throw e1;
+  }
   const caps=await discoverLayers();
-  if(!caps||!caps.dem)throw new Error('no-dem');
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+encodeURIComponent(satId)+'?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+
     '&LAYERS='+encodeURIComponent(caps.dem)+'&EVALSCRIPT='+encodeURIComponent(b64(DEM_SCRIPT))+
     '&SRS=EPSG:4326&BBOX='+bb.w+','+bb.s+','+bb.e+','+bb.n+'&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png';
@@ -3667,8 +3801,15 @@ function makeTerrainLayer(demName){
       const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+encodeURIComponent(satId)+'?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+
         '&LAYERS='+encodeURIComponent(demName)+'&EVALSCRIPT='+encodeURIComponent(b64(DEM_SCRIPT))+
         '&SRS=EPSG:3857&BBOX='+bbox+'&WIDTH=258&HEIGHT=258&FORMAT=image/png';
-      fetchPixels(url).then(function(bmp){
-        const E=decodeElevation(bmpPixels(bmp,258,258),258,258);fillGaps(E,258,258);
+      // tile edges (one pixel extra all round) in degrees, for the OpenTopography reader
+      const lonW=(minx-px)/R*180/Math.PI,lonE=(minx+span+px)/R*180/Math.PI;
+      const latOf=function(m){return (2*Math.atan(Math.exp(m/R))-Math.PI/2)*180/Math.PI;};
+      const bbT={w:lonW,e:lonE,n:latOf(maxy+px),s:latOf(maxy-span-px)};
+      cop30Grid(bbT,258,258,true).catch(function(e){
+        if(!demName)throw e;   // backup: the user's Copernicus DEM layer, if they have one
+        return fetchPixels(url).then(function(bmp){return decodeElevation(bmpPixels(bmp,258,258),258,258);});
+      }).then(function(E){
+        fillGaps(E,258,258);
         const lat=Math.atan(Math.sinh(Math.PI*(1-2*(coords.y+0.5)/n)));
         const g=px*Math.cos(lat);   // true metres per pixel at this latitude
         const hs=hillshade(E,258,258,g,g,1.6);
@@ -3688,20 +3829,23 @@ function makeTerrainLayer(demName){
     }
   });
   if(!map.getPane('terrainPane')){const pn=map.createPane('terrainPane');pn.style.zIndex=350;pn.style.pointerEvents='none';}
-  return new TL({pane:'terrainPane',minZoom:9,maxZoom:18,tileSize:256,updateWhenIdle:true,keepBuffer:1});
+  return new TL({pane:'terrainPane',minZoom:10,maxZoom:18,tileSize:256,updateWhenIdle:true,keepBuffer:1});
 }
 async function toggleTerrain(force){
+  /* Elevation now comes from the free Copernicus DEM (OpenTopography): no Copernicus ID or
+     DEM layer is needed. A DEM layer, if the account has one, is only used as a backup. */
   const msg=document.getElementById('satMsg');
   terrainOn=(typeof force==='boolean')?force:!terrainOn;
   try{localStorage.setItem('pf_terrain',terrainOn?'1':'0');}catch(e){}
   updateTerrainBtn();
   if(terrainLayer&&map){map.removeLayer(terrainLayer);terrainLayer=null;}
   if(!terrainOn||!map||typeof L==='undefined')return;
-  if(!satId){terrainOn=false;updateTerrainBtn();if(msg)msg.innerHTML=T('⚠ 地形阴影需要你的 Copernicus 实例 ID（见下方高级分析图层）。','⚠ Terrain shading needs your Copernicus instance ID (see Advanced analysis layers below).','⚠ Bayang rupa bumi memerlukan ID instance Copernicus anda (lihat Lapisan analisis lanjutan di bawah).');return;}
-  let caps=null;try{caps=await discoverLayers();}catch(e){}
-  if(!caps||!caps.dem){terrainOn=false;updateTerrainBtn();if(msg)msg.innerHTML=demMissingMsg();return;}
-  terrainLayer=makeTerrainLayer(caps.dem).addTo(map);
-  if(map.getZoom()<9)map.setZoom(11);
+  let caps=null;if(satId){try{caps=await discoverLayers();}catch(e){}}
+  terrainLayer=makeTerrainLayer(caps&&caps.dem?caps.dem:null).addTo(map);
+  let tileErr=false;
+  terrainLayer.on('tileerror',function(){if(tileErr)return;tileErr=true;
+    if(msg)msg.innerHTML=T('⚠ 部分地形图块未能加载——请检查网络信号。','⚠ Some terrain tiles did not load — check your signal.','⚠ Sebahagian jubin rupa bumi tidak dimuatkan — semak isyarat anda.');});
+  if(map.getZoom()<10)map.setZoom(11);
   if(msg)msg.innerHTML=T('⛰️ 地形阴影已开启：山脊与山谷即使在丛林下也清晰可见。长而直的山谷常沿断层发育——点「寻找线性构造」可自动标出。','⛰️ Terrain shading on: ridges and valleys show even under jungle. Long straight valleys often follow faults — tap Find lineaments to mark them.','⛰️ Bayang rupa bumi aktif: rabung dan lembah kelihatan walaupun di bawah hutan. Lembah panjang yang lurus selalunya mengikut sesar — ketik Cari lineamen untuk menandakannya.');
 }
 function updateTerrainBtn(){const b=document.getElementById('terrainBtn');if(b)b.classList.toggle('on',terrainOn);}
@@ -3711,10 +3855,8 @@ let lineLayer=null,lastLines=null;
 async function findLineamentsInView(){
   const msg=document.getElementById('lineMsg');
   if(!map)return;
-  if(!satId){msg.innerHTML=T('⚠ 需要你的 Copernicus 实例 ID。','⚠ Needs your Copernicus instance ID.','⚠ Memerlukan ID instance Copernicus anda.');return;}
   if(!navigator.onLine){msg.innerHTML=T('⚠ 需要网络信号。','⚠ Needs signal.','⚠ Memerlukan isyarat.');return;}
-  let caps=null;try{caps=await discoverLayers();}catch(e){}
-  if(!caps||!caps.dem){msg.innerHTML=demMissingMsg();return;}
+  if(map.getZoom()<10){msg.innerHTML=T('⚠ 请放大一些（缩放级别 10 以上）再寻找线性构造。','⚠ Zoom in a little (level 10 or closer) to look for lineaments.','⚠ Zum masuk sedikit (tahap 10 atau lebih dekat) untuk mencari lineamen.');return;}
   const b=map.getBounds(),bb={w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()};
   const sz=map.getSize(),W=512,H=Math.max(200,Math.min(1024,Math.round(512*sz.y/Math.max(1,sz.x))));
   msg.textContent=T('正在读取地形并寻找线性构造…','Reading the terrain and looking for lineaments…','Membaca rupa bumi dan mencari lineamen…');
@@ -4375,9 +4517,7 @@ async function testSatId(){
          '✓ Disambungkan. Analisis akan menggunakan lapisan anda <b>'+esc(caps.s2)+'</b>'+(caps.s1?', radar menggunakan <b>'+esc(caps.s1)+'</b>':' (tiada lapisan radar ditemui)')+'.')
       :T('⚠ 已连接，但你的配置中没有 Sentinel-2 L2A 图层。请在 Copernicus 配置中添加一个（任意名称，数据源选 Sentinel-2 L2A）。','⚠ Connected, but your configuration has no Sentinel-2 L2A layer. Add one in your Copernicus configuration (any name, data source Sentinel-2 L2A).','⚠ Disambungkan, tetapi konfigurasi anda tiada lapisan Sentinel-2 L2A. Tambah satu dalam konfigurasi Copernicus anda (apa-apa nama, sumber data Sentinel-2 L2A).'))
     :'';
-  const demNote=caps?(caps.dem
-      ?' '+T('地形使用 <b>'+esc(caps.dem)+'</b>。','Terrain uses <b>'+esc(caps.dem)+'</b>.','Rupa bumi menggunakan <b>'+esc(caps.dem)+'</b>.')
-      :'<br>'+T('ℹ 未找到 DEM 图层——地形阴影与线性构造需要它（见指南第三部分）。','ℹ No DEM layer found — terrain shading and lineaments need one (see Guide, Part C).','ℹ Tiada lapisan DEM ditemui — bayang rupa bumi dan lineamen memerlukannya (lihat Panduan, Bahagian C).')):'';
+  const demNote=caps?' '+T('地形使用免费的 Copernicus DEM（无需图层）。','Terrain uses the free Copernicus DEM (no layer needed).','Rupa bumi menggunakan Copernicus DEM percuma (tiada lapisan diperlukan).'):'';
   const foundAll=found?found+demNote:'';
   // WMS 1.1.1 uses EPSG:4326 lon,lat order in BBOX — simplest, least ambiguous.
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
