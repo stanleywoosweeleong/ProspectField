@@ -672,14 +672,6 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       </details>
       <div class="hint" id="satMsg" style="margin-top:10px"></div>
     </div>
-    <div class="sat-box" id="ovBox">
-      <div class="fieldhead" style="margin-top:0"><span data-zh="🗂️ 你的地图图层（地质、矿权、保护区）" data-en="🗂️ Your map layers (geology, licences, reserves)" data-ms="🗂️ Lapisan peta anda (geologi, lesen, rizab)">🗂️ 你的地图图层（地质、矿权、保护区）</span></div>
-      <p class="hint" style="margin-bottom:8px" data-zh="导入 KML、KMZ（谷歌地球、矿务及地球科学局下载）或 GeoJSON（QGIS）轮廓：地质图、你的矿权区块、森林保护区。之后每个地点和目标都会显示它位于哪个区域内，禁区会以红色警示。" data-en="Import outlines as KML, KMZ (Google Earth, JMG downloads) or GeoJSON (QGIS): geology maps, your licence blocks, forest reserves. Every site and target then shows what it falls inside, and no-go areas are flagged in red." data-ms="Import garis sempadan sebagai KML, KMZ (Google Earth, muat turun JMG) atau GeoJSON (QGIS): peta geologi, blok lesen anda, hutan simpan. Setiap tapak dan sasaran kemudian menunjukkan kawasan yang meliputinya, dan kawasan larangan ditanda merah.">导入 KML、KMZ（谷歌地球、矿务及地球科学局下载）或 GeoJSON（QGIS）轮廓：地质图、你的矿权区块、森林保护区。之后每个地点和目标都会显示它位于哪个区域内，禁区会以红色警示。</p>
-      <input type="file" id="ovFile" accept=".kml,.kmz,.geojson,.json" onchange="importOverlayFile(this)" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden" aria-label="导入图层" data-zh-al="导入图层" data-en-al="Import layer" data-ms-al="Import lapisan">
-      <button class="btn ghost sm" style="width:100%" onclick="document.getElementById('ovFile').click()"><span data-zh="📂 导入 KML / KMZ / GeoJSON" data-en="📂 Import KML / KMZ / GeoJSON" data-ms="📂 Import KML / KMZ / GeoJSON">📂 导入 KML / KMZ / GeoJSON</span></button>
-      <div class="hint" id="ovMsg" style="margin-top:6px"></div>
-      <div id="ovList"></div>
-    </div>
     <div class="sat-box" id="scanBox">
       <div class="fieldhead" style="margin-top:0"><span data-zh="🎯 在此范围寻找目标" data-en="🎯 Find targets in this view" data-ms="🎯 Cari sasaran dalam paparan ini">🎯 在此范围寻找目标</span></div>
       <p class="hint" style="margin-bottom:8px" data-html data-zh="分析你正在查看的卫星图层，用标记、方框和 GPS 坐标标出最强的斑块——让你出发前就知道该走向哪里。请先选择一个分析图层（铁比值、蚀变、黏土），再扫描。" data-en="Analyses the satellite layer you're viewing and marks the strongest patches with pins, boxes and GPS coordinates — so you know where to walk before you set off. Pick an analysis layer first (Iron ratio, Alteration, Clay), then scan." data-ms="Menganalisis lapisan satelit yang sedang anda lihat dan menandakan tompok paling kuat dengan pin, kotak dan koordinat GPS — supaya anda tahu ke mana hendak berjalan sebelum bertolak. Pilih lapisan analisis dahulu (Iron ratio, Alteration, Clay), kemudian imbas.">分析你正在查看的卫星图层，用标记、方框和 GPS 坐标标出最强的斑块——让你出发前就知道该走向哪里。请先选择一个分析图层（铁比值、蚀变、黏土），再扫描。</p>
@@ -700,6 +692,18 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <button class="btn ghost sm" style="width:100%" onclick="downloadRegion()" id="dlBtn"><span data-zh="⬇ 下载当前视图供离线使用" data-en="⬇ Download current view for offline" data-ms="⬇ Muat turun paparan semasa untuk luar talian">⬇ 下载当前视图供离线使用</span></button>
       <div class="dlbar" id="dlBar"><i id="dlFill"></i></div>
       <div class="hint" id="dlMsg" style="margin:8px 0 0"></div>
+    </div>
+    <div id="ovBox" style="margin-top:14px">
+      <div class="tile-head closed" id="ovHead" onclick="toggleSection('ovWrap','ovHead')" style="margin-top:0">
+        <span><span data-zh="🗂️ 你的地图图层（地质、矿权、保护区）" data-en="🗂️ Your map layers (geology, licences, reserves)" data-ms="🗂️ Lapisan peta anda (geologi, lesen, rizab)">🗂️ 你的地图图层（地质、矿权、保护区）</span> <b id="ovCount"></b></span><span class="caret">▾</span>
+      </div>
+      <div class="hidden" id="ovWrap" style="margin-top:10px">
+      <p class="hint" style="margin-bottom:8px" data-zh="导入 KML、KMZ（谷歌地球、矿务及地球科学局下载）或 GeoJSON（QGIS）轮廓：地质图、你的矿权区块、森林保护区。之后每个地点和目标都会显示它位于哪个区域内，禁区会以红色警示。" data-en="Import outlines as KML, KMZ (Google Earth, JMG downloads) or GeoJSON (QGIS): geology maps, your licence blocks, forest reserves. Every site and target then shows what it falls inside, and no-go areas are flagged in red." data-ms="Import garis sempadan sebagai KML, KMZ (Google Earth, muat turun JMG) atau GeoJSON (QGIS): peta geologi, blok lesen anda, hutan simpan. Setiap tapak dan sasaran kemudian menunjukkan kawasan yang meliputinya, dan kawasan larangan ditanda merah.">导入 KML、KMZ（谷歌地球、矿务及地球科学局下载）或 GeoJSON（QGIS）轮廓：地质图、你的矿权区块、森林保护区。之后每个地点和目标都会显示它位于哪个区域内，禁区会以红色警示。</p>
+      <input type="file" id="ovFile" accept=".kml,.kmz,.geojson,.json" onchange="importOverlayFile(this)" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden" aria-label="导入图层" data-zh-al="导入图层" data-en-al="Import layer" data-ms-al="Import lapisan">
+      <button class="btn ghost sm" style="width:100%" onclick="document.getElementById('ovFile').click()"><span data-zh="📂 导入 KML / KMZ / GeoJSON" data-en="📂 Import KML / KMZ / GeoJSON" data-ms="📂 Import KML / KMZ / GeoJSON">📂 导入 KML / KMZ / GeoJSON</span></button>
+      <div class="hint" id="ovMsg" style="margin-top:6px"></div>
+      <div id="ovList"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -3250,6 +3254,7 @@ async function loadOverlayData(){
   drawAllOverlays();refreshInsideTags();
 }
 function renderOverlayList(){
+  const oc=document.getElementById('ovCount');if(oc)oc.textContent=overlays.length?'('+overlays.length+')':'';
   const w=document.getElementById('ovList');if(!w)return;
   if(!overlays.length){w.innerHTML='';return;}
   w.innerHTML=overlays.map(function(o){
