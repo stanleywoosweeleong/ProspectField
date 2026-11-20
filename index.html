@@ -218,6 +218,7 @@ nav button.on .ic{transform:translateY(-1px)}
 .updbar{position:fixed;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:120;display:flex;align-items:center;gap:10px;
   background:var(--panel2);border:1px solid var(--ore);border-radius:14px;padding:10px 10px 10px 14px;box-shadow:var(--shadow);color:var(--ink);font-weight:600;font-size:15px}
 .updbar[hidden]{display:none}
+#terrainBtn.on{border-color:var(--ore);color:var(--ore);background:rgba(217,164,65,.14)}
 .updbar span{flex:1}
 .updbar #updGo{background:linear-gradient(180deg,var(--btn1),var(--btn2));color:var(--onbtn);font-weight:800;border-radius:10px;padding:9px 14px;font-size:15px}
 .updbar #updX{background:none;color:var(--ink3);font-size:18px;padding:6px 8px}
@@ -611,6 +612,7 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <button class="btn ghost sm" onclick="fitPins()"><span data-zh="⊹ 适配标记" data-en="⊹ Fit pins" data-ms="⊹ Muatkan pin">⊹ 适配标记</span></button>
       <button class="btn ghost sm" onclick="locateOnMap()"><span data-zh="📍 我的位置" data-en="📍 My position" data-ms="📍 Kedudukan saya">📍 我的位置</span></button>
       <button class="btn ghost sm" onclick="startProfilePick()"><span data-zh="📈 地形剖面" data-en="📈 Terrain profile" data-ms="📈 Profil rupa bumi">📈 地形剖面</span></button>
+      <button class="btn ghost sm" id="terrainBtn" onclick="toggleTerrain()"><span data-zh="⛰️ 地形阴影" data-en="⛰️ Terrain" data-ms="⛰️ Rupa bumi">⛰️ 地形阴影</span></button>
     </div>
     <div class="map-live" id="mapLive">
       <div class="ml-alt">
@@ -673,6 +675,11 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <div class="fieldhead" style="margin-top:0"><span data-zh="🎯 在此范围寻找目标" data-en="🎯 Find targets in this view" data-ms="🎯 Cari sasaran dalam paparan ini">🎯 在此范围寻找目标</span></div>
       <p class="hint" style="margin-bottom:8px" data-html data-zh="分析你正在查看的卫星图层，用标记、方框和 GPS 坐标标出最强的斑块——让你出发前就知道该走向哪里。请先选择一个分析图层（铁比值、蚀变、黏土），再扫描。" data-en="Analyses the satellite layer you're viewing and marks the strongest patches with pins, boxes and GPS coordinates — so you know where to walk before you set off. Pick an analysis layer first (Iron ratio, Alteration, Clay), then scan." data-ms="Menganalisis lapisan satelit yang sedang anda lihat dan menandakan tompok paling kuat dengan pin, kotak dan koordinat GPS — supaya anda tahu ke mana hendak berjalan sebelum bertolak. Pilih lapisan analisis dahulu (Iron ratio, Alteration, Clay), kemudian imbas.">分析你正在查看的卫星图层，用标记、方框和 GPS 坐标标出最强的斑块——让你出发前就知道该走向哪里。请先选择一个分析图层（铁比值、蚀变、黏土），再扫描。</p>
       <button class="btn ghost sm" style="width:100%" onclick="scanTargets()" id="scanBtn"><span data-zh="🔍 扫描此范围寻找目标" data-en="🔍 Scan this view for targets" data-ms="🔍 Imbas paparan ini untuk sasaran">🔍 扫描此范围寻找目标</span></button>
+      <div class="row" style="margin-top:8px">
+        <button class="btn ghost sm" style="flex:1" onclick="findLineamentsInView()"><span data-zh="📐 寻找线性构造（可能的断层）" data-en="📐 Find lineaments (possible faults)" data-ms="📐 Cari lineamen (kemungkinan sesar)">📐 寻找线性构造（可能的断层）</span></button>
+        <button class="btn ghost sm" onclick="clearLineaments()" aria-label="✕">✕</button>
+      </div>
+      <div class="hint" id="lineMsg" style="margin-top:6px"></div>
       <div class="dlbar" id="scanBar"><i id="scanFill"></i></div>
       <div class="hint" id="scanMsg" style="margin-top:8px"></div>
       <div id="scanResults"></div>
@@ -887,7 +894,7 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       5. Salin → dalam aplikasi ini pergi ke <b>Peta</b> → buka <b>🔬 Lapisan analisis lanjutan</b> → tampal ke dalam kotak<br>
       6. Ketik <b>🔎 Uji ID saya</b>. Jika ia menunjukkan imej, anda sudah bersambung."><b>第二部分 — 获取实例 ID</b><br>1. 前往 <b>shapps.dataspace.copernicus.eu/dashboard/#/configurations</b><br>2. 用第一部分创建的账户登录<br>3. 你会看到配置列表。可使用现成的 <b>"Simple WMS Instance"</b>，或点击 <b>New configuration</b>，命名（例如 ProspectField），并基于 <b>Simple WMS template</b> 创建<br>4. 进入该配置。<b>实例 ID</b> 就是显示的那串长代码（形如 c32c21b1-84ac-…）。它可能出现在类似 .../wms/<b>那串代码</b> 的网址中——你只需要 /wms/ 之后的代码，而不是整个网址<br>5. 复制它 → 在本应用中进入<b>地图</b>页 → 展开 <b>🔬 高级分析图层</b> → 粘贴到输入框<br>6. 点击 <b>🔎 测试我的 ID</b>。若显示出影像，即表示连接成功。</p>
 
-      <div class="callout" style="margin:10px 0" data-html data-zh="<b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。" data-en="<b>✅ You can now skip this.</b> The app sends the analysis scripts below with every request itself, using a Sentinel-2 L2A layer your configuration already has — just paste the instance ID from Part B and tap Test my ID. Only if the test says no Sentinel-2 L2A layer was found do you need to add one (any name); radar needs one Sentinel-1 layer." data-ms="<b>✅ Kini anda boleh langkau bahagian ini.</b> Aplikasi menghantar sendiri skrip analisis di bawah bersama setiap permintaan, menggunakan lapisan Sentinel-2 L2A yang sudah ada dalam konfigurasi anda — cuma tampal ID instance dari Bahagian B dan ketik Uji ID saya. Hanya jika ujian menyatakan tiada lapisan Sentinel-2 L2A ditemui, anda perlu menambah satu (apa-apa nama); radar memerlukan satu lapisan Sentinel-1."><b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。</div>
+      <div class="callout" style="margin:10px 0" data-html data-zh="<b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。若要使用<b>地形阴影与线性构造</b>，请再添加一个数据源为 <b>DEM</b>（Copernicus 30）的图层，名称填 <b>DEM</b>。" data-en="<b>✅ You can now skip this.</b> The app sends the analysis scripts below with every request itself, using a Sentinel-2 L2A layer your configuration already has — just paste the instance ID from Part B and tap Test my ID. Only if the test says no Sentinel-2 L2A layer was found do you need to add one (any name); radar needs one Sentinel-1 layer. For <b>terrain shading and lineaments</b>, add one layer with data source <b>DEM</b> (Copernicus 30) and name it <b>DEM</b>." data-ms="<b>✅ Kini anda boleh langkau bahagian ini.</b> Aplikasi menghantar sendiri skrip analisis di bawah bersama setiap permintaan, menggunakan lapisan Sentinel-2 L2A yang sudah ada dalam konfigurasi anda — cuma tampal ID instance dari Bahagian B dan ketik Uji ID saya. Hanya jika ujian menyatakan tiada lapisan Sentinel-2 L2A ditemui, anda perlu menambah satu (apa-apa nama); radar memerlukan satu lapisan Sentinel-1. Untuk <b>bayang rupa bumi dan lineamen</b>, tambah satu lapisan dengan sumber data <b>DEM</b> (Copernicus 30) dan namakan <b>DEM</b>."><b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。若要使用<b>地形阴影与线性构造</b>，请再添加一个数据源为 <b>DEM</b>（Copernicus 30）的图层，名称填 <b>DEM</b>。</div>
       <p data-html data-zh="<b>第三部分 — 添加图层</b><br>在你的配置中，为下列每一项点击 <b>＋ New layer</b>。名称须<b>完全一致</b>（大小写与连字符都重要——应用按这些名称查找），选好数据源后保存。<br><br>• <b>SENTINEL-1</b> — 数据源：Sentinel-1 GRD。若提示&quot;请选择预定义产品或输入处理脚本&quot;，随便选一个预定义产品即可（例如 VV 或 VV+VH decibel gamma0）。这就是你的雷达图层。<br>• <b>IRON-RATIO</b> — 数据源：Sentinel-2 L2A，Data Processing → Custom script → 粘贴铁比值脚本<br>• <b>FERROUS-IRON</b> — 数据源：Sentinel-2 L2A → Custom script → 粘贴亚铁脚本<br>• <b>ALTERATION</b> — 数据源：Sentinel-2 L2A → Custom script → 粘贴蚀变脚本<br><br>三个自定义脚本在下一节，请分别复制到对应图层。" data-en="<b>PART C — Add the layers</b><br>
       Inside your configuration, click <b>＋ New layer</b> for each one below. Name them <b>exactly</b> as shown (capitals and hyphens matter — the app looks for these names), pick the data source, then Save.<br><br>
       • <b>SENTINEL-1</b> — data source: Sentinel-1 GRD. If it warns &quot;please select predefined product or enter your processing script&quot;, just pick any predefined product (e.g. VV or VV+VH decibel gamma0). This is your radar layer.<br>
@@ -2359,6 +2366,7 @@ function cleanShortlistItem(x){
   if(['strong','moderate','weak'].indexOf(x.level)>-1)it.level=x.level;
   ['signal','wM','hM','deskScore','snapT'].forEach(function(k){const v=numOrNull(x[k]);if(v!=null)it[k]=v;});
   if(typeof x.layer==='string'&&/^[a-z]{1,20}$/.test(x.layer))it.layer=x.layer;
+  if(Array.isArray(x.ctx)){const ok=['agree-iron','agree-clay','agree-ferrous','lineament','flat'];it.ctx=x.ctx.filter(function(c){return ok.indexOf(c)>-1;});it.ctxScore=numOrNull(x.ctxScore);it.lineM=numOrNull(x.lineM);}
   if(typeof x.target==='string')it.target=str(x.target,20);
   if(x.note)it.note=str(x.note,2000);
   if(Array.isArray(x.deskFlags))it.deskFlags=x.deskFlags.slice(0,10).map(function(g){return str(g,60);});
@@ -2515,7 +2523,7 @@ async function addToShortlist(o,quiet){
   const have=slNear(o.lat,o.lon,30);
   if(have){
     const before=JSON.stringify(have,function(k,v){return k==='_mk'?undefined:v;});
-    ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','deskScore','deskTicks','deskFlags','target'].forEach(function(k){if(o[k]!=null)have[k]=o[k];});
+    ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','ctx','ctxScore','lineM','deskScore','deskTicks','deskFlags','target'].forEach(function(k){if(o[k]!=null)have[k]=o[k];});
     if(o.name&&/^CAND-/.test(have.name))have.name=o.name;
     if(!saveShortlist()){
       const old=JSON.parse(before);Object.keys(have).forEach(function(k){if(k!=='_mk')delete have[k];});Object.assign(have,old);
@@ -2528,7 +2536,7 @@ async function addToShortlist(o,quiet){
   const it={id:'sl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     name:(o.name&&String(o.name).trim())||slNextName(),lat:o.lat,lon:o.lon,src:o.src||'manual',
     status:'tocheck',t:Date.now()};
-  ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','deskScore','deskTicks','deskFlags','target','note'].forEach(function(k){if(o[k]!=null)it[k]=o[k];});
+  ['layer','level','signal','wM','hM','snapKey','snapBounds','snapBox','snapT','ctx','ctxScore','lineM','deskScore','deskTicks','deskFlags','target','note'].forEach(function(k){if(o[k]!=null)it[k]=o[k];});
   shortlist.unshift(it);
   if(!saveShortlist()){shortlist.shift();slRefresh();return null;}   // saveShortlist already warned
   renderShortlist();drawShortlist();rebuildNavOptions();
@@ -2569,12 +2577,13 @@ function renderShortlist(){
     if(it.wM)extra.push(T('约 ','approx ')+it.wM+' × '+it.hM+' m');
     if(it.deskScore!=null)extra.push(T('远程评分 ','desk score ')+'<b>'+it.deskScore+'%</b>');
     if(it.deskFlags&&it.deskFlags.length)extra.push('🚩 '+it.deskFlags.map(function(f){return esc(tagLabel(f));}).join(', '));
+    const ctxRow=ctxHtml(it);
     const id="'"+it.id+"'";
     return '<div class="samp sl-item '+it.status+'"><div class="top"><div>'+
       '<span class="id">'+esc(it.name)+'</span><span class="sl-stat">'+slStatusLabel(it.status)+'</span>'+
       '<div class="co mono">📍 '+it.lat.toFixed(5)+', '+it.lon.toFixed(5)+'</div>'+
       '<div class="co">'+srcLabel(it)+(r?' · '+distLabel(it.lat,it.lon):'')+'</div>'+
-      (extra.length?'<div class="co">'+extra.join(' · ')+'</div>':'')+
+      (extra.length?'<div class="co">'+extra.join(' · ')+'</div>':'')+ctxRow+
       (it.note?'<div class="note">'+esc(it.note)+'</div>':'')+
       '</div></div><div class="acts">'+
       '<select aria-label="'+T('状态','Status')+'" onchange="setSlStatus('+id+',this.value)">'+opts+'</select>'+
@@ -2595,7 +2604,7 @@ function renderShortlist(){
 function slRank(it){
   const LV={strong:3,moderate:2,weak:1};
   let best=0;
-  if(it.level)best=Math.max(best,LV[it.level]*100+(it.signal||0));
+  if(it.level)best=Math.max(best,LV[it.level]*100+(it.signal||0)+(it.ctxScore||0)*15);
   if(it.deskScore!=null)best=Math.max(best,(it.deskScore>=60?3:it.deskScore>=30?2:1)*100+it.deskScore);
   return best;
 }
@@ -3042,9 +3051,9 @@ async function exportGeoPackage(){
     // Layer 2: candidate sites (shortlist) — places to check, not samples.
     addFeatureTable(db,'candidate_sites','ProspectField candidate sites','Shortlisted places to check (satellite scans, desk checks, imported points)',
       [['name','TEXT NOT NULL'],['status','TEXT'],['source','TEXT'],['scan_layer','TEXT'],['strength','TEXT'],['signal_pct','INTEGER'],
-       ['desk_score_pct','INTEGER'],['red_flags','TEXT'],['approx_width_m','INTEGER'],['approx_height_m','INTEGER'],['added_at','DATETIME'],['notes','TEXT']],
+       ['desk_score_pct','INTEGER'],['red_flags','TEXT'],['context','TEXT'],['approx_width_m','INTEGER'],['approx_height_m','INTEGER'],['added_at','DATETIME'],['notes','TEXT']],
       shortlist.map(function(it){return {lat:it.lat,lon:it.lon,vals:[String(it.name),it.status,it.src||null,it.layer||null,it.level||null,
-        it.signal!=null?Math.round(it.signal):null,it.deskScore!=null?Math.round(it.deskScore):null,(it.deskFlags||[]).join('; ')||null,
+        it.signal!=null?Math.round(it.signal):null,it.deskScore!=null?Math.round(it.deskScore):null,(it.deskFlags||[]).join('; ')||null,(it.ctx||[]).join('; ')||null,
         it.wM!=null?Math.round(it.wM):null,it.hM!=null?Math.round(it.hM):null,it.t?new Date(it.t).toISOString():null,it.note||null]};}));
 
     const bytes=db.export();
@@ -3080,6 +3089,7 @@ function initMap(){
   map.on('click',onMapClickForProfile);   // used only while picking a profile target
   refreshMarkers();if(!siteLoc)fitPins();drawSiteMarker();drawShortlist();updateNet();
   restoreSatUI();
+  if(terrainOn)toggleTerrain(true);
 }
 
 /* ============ SATELLITE PROSPECTING LAYERS (Sentinel-2 via Copernicus WMS) ============ */
@@ -3162,8 +3172,16 @@ async function scanTargets(){
           const bmp=await fetchPixels(base+'&LAYERS='+encodeURIComponent(caps.s2)+'&EVALSCRIPT='+encodeURIComponent(b64(scanScript(scanKind,withSCL))));
           fill.style.width='60%';msg.textContent=T('正在分析像素…','Analysing pixels…');
           const px=bmpPixels(bmp,W,H);
-          targets=findClustersData(px,W,H,b);
-          scan.data=scanPicture(px,W,H);scan.method=withSCL?'measured':'measured-noscl';
+          targets=findClustersData(px,W,H,b,scanKind);
+          scan.data=scanPicture(px,W,H,scanKind);scan.method=withSCL?'measured':'measured-noscl';
+          // terrain context (slope, lineaments) when the account has a DEM layer
+          let E=null;
+          if(caps.dem&&targets.length){
+            msg.textContent=T('正在读取地形以判断背景…','Reading the terrain for context…','Membaca rupa bumi untuk konteks…');
+            try{E=await fetchElevation(scan.bounds,W,H);}catch(e){E=null;}
+          }
+          addContext(targets,px,W,H,scanKind,E);
+          if(targets.lines&&targets.lines.length){lastLines={bb:scan.bounds,W:W,H:H,lines:targets.lines};drawLineaments(lastLines);}
           break;
         }catch(e){lastErr=e;}
       }
@@ -3194,6 +3212,304 @@ async function scanTargets(){
   }
 }
 
+/* ============ TERRAIN (Copernicus DEM) ============
+   In jungle the satellite cannot see rock, but the shape of the ground still shows:
+   faults and shear zones erode into long straight valleys, intrusions make rounded
+   highs. Elevation comes from a DEM layer in the user's Copernicus configuration; our
+   script packs height into the image at 0.1 m: v=(DEM+1000)*10, R=v>>16, G=(v>>8)&255,
+   B=v&255. All zero = no data. */
+const DEM_SCRIPT='//VERSION=3\n'+
+  'function setup(){return{input:["DEM","dataMask"],output:{bands:3,sampleType:"UINT8"}};}\n'+
+  'function evaluatePixel(s){if(!s.dataMask)return[0,0,0];var v=Math.max(1,Math.min(16777215,Math.round((s.DEM+1000)*10)));'+
+  'return[Math.floor(v/65536),Math.floor(v/256)%256,v%256];}';
+function decodeElevation(px,W,H){
+  const E=new Float32Array(W*H);let valid=0;
+  for(let i=0,p=0;p<W*H;i+=4,p++){
+    const v=px[i]*65536+px[i+1]*256+px[i+2];
+    if(!v){E[p]=NaN;continue;}
+    E[p]=v/10-1000;valid++;
+  }
+  E.valid=valid;return E;
+}
+function demMissingMsg(){
+  return T('⚠ 地形功能需要你的 Copernicus 配置中有一个 DEM 图层：在配置中点击「＋ New layer」，数据源选 <b>DEM</b>（Copernicus 30），名称填 <b>DEM</b>，保存后点击「测试我的 ID」。',
+    '⚠ Terrain needs a DEM layer in your Copernicus configuration: click <b>＋ New layer</b>, choose data source <b>DEM</b> (Copernicus 30), name it <b>DEM</b>, save, then tap Test my ID.',
+    '⚠ Rupa bumi memerlukan lapisan DEM dalam konfigurasi Copernicus anda: klik <b>＋ New layer</b>, pilih sumber data <b>DEM</b> (Copernicus 30), namakan <b>DEM</b>, simpan, kemudian ketik Uji ID saya.');
+}
+/* Elevation for a lat/lon box as a W×H grid (EPSG:4326, same layout as the optical scan). */
+async function fetchElevation(bb,W,H){
+  const caps=await discoverLayers();
+  if(!caps||!caps.dem)throw new Error('no-dem');
+  const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+encodeURIComponent(satId)+'?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+
+    '&LAYERS='+encodeURIComponent(caps.dem)+'&EVALSCRIPT='+encodeURIComponent(b64(DEM_SCRIPT))+
+    '&SRS=EPSG:4326&BBOX='+bb.w+','+bb.s+','+bb.e+','+bb.n+'&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png';
+  const E=decodeElevation(bmpPixels(await fetchPixels(url),W,H),W,H);
+  const midLat=(bb.n+bb.s)/2;
+  E.dx=haversine(midLat,bb.w,midLat,bb.e)/W;   // metres per pixel, east-west
+  E.dy=haversine(bb.n,bb.w,bb.s,bb.w)/H;       // metres per pixel, north-south
+  E.W=W;E.H=H;
+  return E;
+}
+function fillGaps(E,W,H){
+  // replace no-data with the mean of valid neighbours (a few passes), so slopes stay finite
+  for(let pass=0;pass<4;pass++){
+    let left=0;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=y*W+x;if(!isNaN(E[p]))continue;
+      let s=0,n=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j;if(xx<0||yy<0||xx>=W||yy>=H)continue;const v=E[yy*W+xx];if(!isNaN(v)){s+=v;n++;}}
+      if(n)E[p]=s/n;else left++;}
+    if(!left)break;
+  }
+}
+function smooth3(E,W,H){
+  const o=new Float32Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){let s=0,n=0;
+    for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=Math.min(W-1,Math.max(0,x+i)),yy=Math.min(H-1,Math.max(0,y+j));s+=E[yy*W+xx];n++;}
+    o[y*W+x]=s/n;}
+  return o;
+}
+function slopeGrid(E,W,H,dx,dy){
+  const S=new Float32Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const xl=Math.max(0,x-1),xr=Math.min(W-1,x+1),yu=Math.max(0,y-1),yd=Math.min(H-1,y+1);
+    const gx=(E[y*W+xr]-E[y*W+xl])/((xr-xl)*dx),gy=(E[yd*W+x]-E[yu*W+x])/((yd-yu)*dy);
+    S[y*W+x]=Math.atan(Math.sqrt(gx*gx+gy*gy))*180/Math.PI;
+  }
+  return S;
+}
+/* Multi-directional hillshade (four sun directions averaged) so ridges in any orientation
+   show, not only those facing the usual north-west light. Returns 0 (dark) .. 1 (lit). */
+function hillshade(E,W,H,dx,dy,z){
+  const out=new Float32Array(W*H),alt=45*Math.PI/180,AZ=[225,270,315,360].map(function(a){return a*Math.PI/180;});
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const xl=Math.max(0,x-1),xr=Math.min(W-1,x+1),yu=Math.max(0,y-1),yd=Math.min(H-1,y+1);
+    const gx=z*(E[y*W+xr]-E[y*W+xl])/((xr-xl)*dx),gy=z*(E[yd*W+x]-E[yu*W+x])/((yd-yu)*dy);
+    const slope=Math.atan(Math.sqrt(gx*gx+gy*gy)),aspect=Math.atan2(gy,-gx);
+    let s=0;for(let k=0;k<AZ.length;k++){const az=Math.PI/2-AZ[k];s+=Math.max(0,Math.cos(Math.PI/2-alt)*Math.cos(slope)+Math.sin(Math.PI/2-alt)*Math.sin(slope)*Math.cos(az-aspect));}
+    out[y*W+x]=s/AZ.length;
+  }
+  return out;
+}
+/* Lineaments: long, straight valleys. Valleys are where the surface curves upward
+   (positive Laplacian); faults and shear zones erode into straight valley lines. A Hough
+   transform finds the straight runs; only runs over ~1 km with most of their length on a
+   valley are kept. Returns segments in pixel coordinates with length and bearing. */
+function findLineaments(E0,W,H,dx,dy,dbg){
+  if(!E0||E0.valid<W*H*0.5)return [];
+  const E=new Float32Array(E0);fillGaps(E,W,H);
+  let S=smooth3(smooth3(E,W,H),W,H);
+  const Lp=new Float32Array(W*H);const vals=[];
+  // skip a margin: smoothing with clamped edges bends the surface at the border and would
+  // draw fake lines exactly along the image edges
+  const MG=4;
+  for(let y=MG;y<H-MG;y++)for(let x=MG;x<W-MG;x++){
+    const p=y*W+x;
+    const v=(S[p-1]+S[p+1]-2*S[p])/(dx*dx)+(S[p-W]+S[p+W]-2*S[p])/(dy*dy);
+    Lp[p]=v;if(v>0)vals.push(v);
+  }
+  if(vals.length<50)return [];
+  vals.sort(function(a,b){return a-b;});
+  const thr=vals[Math.floor(vals.length*0.80)];
+  if(!(thr>1e-6))return [];   // flat ground: no valleys to speak of
+  const M=new Uint8Array(W*H);let nm=0;
+  for(let p=0;p<W*H;p++)if(Lp[p]>=thr){M[p]=1;nm++;}
+  const dens=nm/(W*H);
+  if(dbg){dbg.M=M;dbg.thr=thr;}
+  const NT=90,D=Math.ceil(Math.sqrt(W*W+H*H)),RS=1.5,NR=Math.ceil(2*D/RS)+1;
+  const cs=new Float32Array(NT),sn=new Float32Array(NT);
+  for(let k=0;k<NT;k++){const t=k*Math.PI/NT;cs[k]=Math.cos(t);sn[k]=Math.sin(t);}
+  const acc=new Int32Array(NT*NR);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!M[y*W+x])continue;
+    for(let k=0;k<NT;k++){const r=x*cs[k]+y*sn[k];acc[k*NR+Math.round((r+D)/RS)]++;}}
+  const px=Math.sqrt(dx*dy);
+  const diagM=Math.sqrt(W*W*dx*dx+H*H*dy*dy);
+  const minLenPx=Math.max(1000,0.15*diagM)/px;
+  const minVotes=Math.max(10,Math.floor(minLenPx*0.35));
+  // local peaks only: a strong line lights up many neighbouring cells, which must not
+  // crowd out weaker but real lines
+  const cand=[];
+  for(let k=0;k<NT;k++)for(let rb=0;rb<NR;rb++){
+    const v=acc[k*NR+rb];if(v<minVotes)continue;
+    let peak=true;
+    for(let dk=-2;dk<=2&&peak;dk++)for(let dr=-4;dr<=4;dr++){
+      if(!dk&&!dr)continue;let kk=k+dk,rr=rb+dr;
+      if(kk<0){kk+=NT;rr=NR-1-rr;}else if(kk>=NT){kk-=NT;rr=NR-1-rr;}
+      if(rr<0||rr>=NR)continue;
+      const w=acc[kk*NR+rr];if(w>v||(w===v&&(kk*NR+rr)<(k*NR+rb))){peak=false;break;}
+    }
+    if(peak)cand.push(k*NR+rb);
+  }
+  cand.sort(function(a,b){return acc[b]-acc[a];});
+  // spurs and side ridges interrupt a fault valley; bridge gaps up to ~400 m
+  const gap=Math.max(3,Math.min(30,Math.round(400/px)));
+  const lines=[];
+  for(let ci=0;ci<cand.length&&ci<400&&lines.length<12;ci++){
+    const k=Math.floor(cand[ci]/NR),rb=cand[ci]%NR;
+    // refine: the Hough grid is coarse (2°, 1.5 px); over a long line that drifts several
+    // pixels off the valley, so fine-tune angle and offset to the best-supported line
+    const band=function(th,rr){const c=Math.cos(th),sN=Math.sin(th),vx=-sN,vy=c,ox=rr*c,oy=rr*sN;let h=0;
+      for(let t=-D;t<=D;t+=2){const x=ox+t*vx,y=oy+t*vy;for(let o=-1;o<=1;o++){const xx=Math.round(x+o*c),yy=Math.round(y+o*sN);if(xx>=0&&yy>=0&&xx<W&&yy<H&&M[yy*W+xx]){h++;break;}}}return h;};
+    let th=k*Math.PI/NT,r=rb*RS-D,bh=-1,bth=th,br=r;
+    for(let da=-2;da<=2.001;da+=0.25)for(let dr=-3;dr<=3.001;dr+=0.5){const tt=th+da*Math.PI/180,h=band(tt,r+dr);if(h>bh){bh=h;bth=tt;br=r+dr;}}
+    th=bth;r=br;
+    const cth=Math.cos(th),sth=Math.sin(th);
+    const ux=-sth,uy=cth,x0=r*cth,y0=r*sth;
+    let best=null,run=null,miss=0;
+    for(let t=-D;t<=D;t++){
+      const x=x0+t*ux,y=y0+t*uy,xi=Math.round(x),yi=Math.round(y);
+      const inside=xi>=0&&yi>=0&&xi<W&&yi<H;
+      let hit=false;
+      if(inside){for(let o=-1;o<=1&&!hit;o++){const xx=Math.round(x+o*cth),yy=Math.round(y+o*sth);if(xx>=0&&yy>=0&&xx<W&&yy<H&&M[yy*W+xx])hit=true;}}
+      if(hit){if(!run)run={t0:t,t1:t,h:0};run.t1=t;run.h++;miss=0;}
+      else if(run){miss++;if(miss>gap||!inside){if(!best||run.t1-run.t0>best.t1-best.t0)best=run;run=null;miss=0;}}
+    }
+    if(run&&(!best||run.t1-run.t0>best.t1-best.t0))best=run;
+    if(dbg){dbg.tr=dbg.tr||[];dbg.tr.push({deg:Math.round(th*180/Math.PI),votes:acc[cand[ci]],len:best?best.t1-best.t0:0,h:best?best.h:0,min:Math.round(minLenPx)});}
+    if(!best)continue;
+    const lenPx=best.t1-best.t0;
+    if(lenPx<minLenPx||best.h/(lenPx+1)<0.6)continue;   // most of the line must sit on a valley
+    const ax=x0+best.t0*ux,ay=y0+best.t0*uy,bx=x0+best.t1*ux,by=y0+best.t1*uy;
+    // same line found twice (slightly different angle/offset)? compare by angle and by how
+    // far this segment's middle sits from an accepted line
+    const mx=(ax+bx)/2,my=(ay+by)/2;
+    if(lines.some(function(l){let dk=Math.abs(l.k-k);dk=Math.min(dk,NT-dk);const d=distToSegPx(mx,my,l);return dk<=4&&Math.sqrt(d.dx*d.dx+d.dy*d.dy)<=12;}))continue;
+    // erase this valley from the mask so its pixels cannot vote for a near-copy later
+    for(let t=best.t0;t<=best.t1;t++)for(let o=-2;o<=2;o++){const xx=Math.round(x0+t*ux+o*cth),yy=Math.round(y0+t*uy+o*sth);if(xx>=0&&yy>=0&&xx<W&&yy<H)M[yy*W+xx]=0;}
+    const lenM=Math.sqrt(Math.pow((bx-ax)*dx,2)+Math.pow((by-ay)*dy,2));
+    let az=Math.atan2((bx-ax)*dx,-(by-ay)*dy)*180/Math.PI;az=((az%180)+180)%180;   // bearing 0..180
+    // significance: hits on this line versus what a random line through the same valley
+    // density would collect in its 3-pixel band (binomial z-score)
+    const n=lenPx+1,p0=1-Math.pow(1-dens,3),zs=(best.h-n*p0)/Math.sqrt(n*p0*(1-p0));
+    const ex=(best.h/n-p0)/(1-p0);   // excess over chance: 0 = random, 1 = valley all the way
+    lines.push({k:k,r:r,x0:ax,y0:ay,x1:bx,y1:by,lenM:lenM,az:az,support:best.h/n,z:zs,ex:ex});
+  }
+  // Two tiers by how much more of the line follows a valley than chance would (ex: 0 =
+  // random, 1 = valley all the way; independent of image resolution). In tests real fault
+  // valleys scored 0.98–1.00 and chance alignments between hills mostly 0.46–0.58 (rarely
+  // up to 0.81). Clear lines count as structure; possible ones are only drawn faintly.
+  const kept=lines.filter(function(l){return l.ex>=LIN_EX_POSSIBLE;});
+  kept.forEach(function(l){l.clear=l.ex>=LIN_EX_CLEAR;});
+  kept.sort(function(a,b){return (b.clear-a.clear)||(b.lenM-a.lenM);});
+  // all clear lines, but at most the five best possible ones so the map stays readable
+  const clear=kept.filter(function(l){return l.clear;}),poss=kept.filter(function(l){return !l.clear;}).sort(function(a,b){return b.ex-a.ex;}).slice(0,5);
+  return clear.concat(poss);
+}
+const LIN_EX_CLEAR=0.85,LIN_EX_POSSIBLE=0.45;
+/* Main directions, length-weighted, in 10° bins (a fault set shows up as a peak). */
+function lineamentTrends(all){
+  const clear=all.filter(function(l){return l.clear;}),lines=clear.length?clear:all;
+  const bins=new Array(18).fill(0);lines.forEach(function(l){bins[Math.floor(l.az/10)%18]+=l.lenM;});
+  const tot=bins.reduce(function(a,b){return a+b;},0);if(!tot)return [];
+  return bins.map(function(v,i){return {az:i*10+5,share:v/tot};}).filter(function(b){return b.share>=0.2;}).sort(function(a,b){return b.share-a.share;}).slice(0,2);
+}
+function bearingWord(az){
+  const N=[[0,T('南北','N–S','U–S')],[45,T('东北—西南','NE–SW','TL–BD')],[90,T('东西','E–W','T–B')],[135,T('西北—东南','NW–SE','BL–TG')],[180,T('南北','N–S','U–S')]];
+  let best=N[0];N.forEach(function(n){if(Math.abs(n[0]-az)<Math.abs(best[0]-az))best=n;});return best[1];
+}
+/* Pixel segment → map coordinates for a lat/lon box */
+function segToLatLng(l,bb,W,H){
+  const f=function(x,y){return [bb.n-(y/H)*(bb.n-bb.s),bb.w+(x/W)*(bb.e-bb.w)];};
+  return [f(l.x0,l.y0),f(l.x1,l.y1)];
+}
+function distToSegPx(px,py,l){
+  const vx=l.x1-l.x0,vy=l.y1-l.y0,wx=px-l.x0,wy=py-l.y0;const c=Math.max(0,Math.min(1,(vx*wx+vy*wy)/(vx*vx+vy*vy||1)));
+  const dx=l.x0+c*vx-px,dy=l.y0+c*vy-py;return {dx:dx,dy:dy};
+}
+
+/* ---- terrain shading layer (tiles drawn in the browser from DEM tiles) ---- */
+let terrainLayer=null,terrainOn=false;
+try{terrainOn=localStorage.getItem('pf_terrain')==='1';}catch(e){}
+function makeTerrainLayer(demName){
+  const TL=L.GridLayer.extend({
+    createTile:function(coords,done){
+      const tile=document.createElement('canvas');tile.width=tile.height=256;
+      const z=coords.z,n=Math.pow(2,z),R=6378137,span=2*Math.PI*R/n;
+      const minx=-Math.PI*R+coords.x*span,maxy=Math.PI*R-coords.y*span,px=span/256;
+      // one extra pixel round the edge so the shading has neighbours and tiles join cleanly
+      const bbox=[minx-px,maxy-span-px,minx+span+px,maxy+px].join(',');
+      const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+encodeURIComponent(satId)+'?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+
+        '&LAYERS='+encodeURIComponent(demName)+'&EVALSCRIPT='+encodeURIComponent(b64(DEM_SCRIPT))+
+        '&SRS=EPSG:3857&BBOX='+bbox+'&WIDTH=258&HEIGHT=258&FORMAT=image/png';
+      fetchPixels(url).then(function(bmp){
+        const E=decodeElevation(bmpPixels(bmp,258,258),258,258);fillGaps(E,258,258);
+        const lat=Math.atan(Math.sinh(Math.PI*(1-2*(coords.y+0.5)/n)));
+        const g=px*Math.cos(lat);   // true metres per pixel at this latitude
+        const hs=hillshade(E,258,258,g,g,1.6);
+        const ctx=tile.getContext('2d'),img=ctx.createImageData(256,256),o=img.data;
+        for(let y=0;y<256;y++)for(let x=0;x<256;x++){
+          const s=hs[(y+1)*258+(x+1)],i=(y*256+x)*4;
+          // relative to flat ground (s≈0.707 for a 45° sun): slopes turned from the light
+          // darken, slopes facing it lighten; contrast stretched so gentle 5–10° slopes show.
+          // Flat ground stays clear, so it works over any base map.
+          const d=s-0.707;
+          if(d<0){o[i]=18;o[i+1]=12;o[i+2]=6;o[i+3]=Math.round(Math.min(1,-d*3.2)*215);}
+          else{o[i]=o[i+1]=o[i+2]=255;o[i+3]=Math.round(Math.min(1,d*3.2)*110);}
+        }
+        ctx.putImageData(img,0,0);done(null,tile);
+      }).catch(function(e){done(e,tile);});
+      return tile;
+    }
+  });
+  if(!map.getPane('terrainPane')){const pn=map.createPane('terrainPane');pn.style.zIndex=350;pn.style.pointerEvents='none';}
+  return new TL({pane:'terrainPane',minZoom:9,maxZoom:18,tileSize:256,updateWhenIdle:true,keepBuffer:1});
+}
+async function toggleTerrain(force){
+  const msg=document.getElementById('satMsg');
+  terrainOn=(typeof force==='boolean')?force:!terrainOn;
+  try{localStorage.setItem('pf_terrain',terrainOn?'1':'0');}catch(e){}
+  updateTerrainBtn();
+  if(terrainLayer&&map){map.removeLayer(terrainLayer);terrainLayer=null;}
+  if(!terrainOn||!map||typeof L==='undefined')return;
+  if(!satId){terrainOn=false;updateTerrainBtn();if(msg)msg.innerHTML=T('⚠ 地形阴影需要你的 Copernicus 实例 ID（见下方高级分析图层）。','⚠ Terrain shading needs your Copernicus instance ID (see Advanced analysis layers below).','⚠ Bayang rupa bumi memerlukan ID instance Copernicus anda (lihat Lapisan analisis lanjutan di bawah).');return;}
+  let caps=null;try{caps=await discoverLayers();}catch(e){}
+  if(!caps||!caps.dem){terrainOn=false;updateTerrainBtn();if(msg)msg.innerHTML=demMissingMsg();return;}
+  terrainLayer=makeTerrainLayer(caps.dem).addTo(map);
+  if(map.getZoom()<9)map.setZoom(11);
+  if(msg)msg.innerHTML=T('⛰️ 地形阴影已开启：山脊与山谷即使在丛林下也清晰可见。长而直的山谷常沿断层发育——点「寻找线性构造」可自动标出。','⛰️ Terrain shading on: ridges and valleys show even under jungle. Long straight valleys often follow faults — tap Find lineaments to mark them.','⛰️ Bayang rupa bumi aktif: rabung dan lembah kelihatan walaupun di bawah hutan. Lembah panjang yang lurus selalunya mengikut sesar — ketik Cari lineamen untuk menandakannya.');
+}
+function updateTerrainBtn(){const b=document.getElementById('terrainBtn');if(b)b.classList.toggle('on',terrainOn);}
+
+/* ---- lineaments for the current view ---- */
+let lineLayer=null,lastLines=null;
+async function findLineamentsInView(){
+  const msg=document.getElementById('lineMsg');
+  if(!map)return;
+  if(!satId){msg.innerHTML=T('⚠ 需要你的 Copernicus 实例 ID。','⚠ Needs your Copernicus instance ID.','⚠ Memerlukan ID instance Copernicus anda.');return;}
+  if(!navigator.onLine){msg.innerHTML=T('⚠ 需要网络信号。','⚠ Needs signal.','⚠ Memerlukan isyarat.');return;}
+  let caps=null;try{caps=await discoverLayers();}catch(e){}
+  if(!caps||!caps.dem){msg.innerHTML=demMissingMsg();return;}
+  const b=map.getBounds(),bb={w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()};
+  const sz=map.getSize(),W=512,H=Math.max(200,Math.min(1024,Math.round(512*sz.y/Math.max(1,sz.x))));
+  msg.textContent=T('正在读取地形并寻找线性构造…','Reading the terrain and looking for lineaments…','Membaca rupa bumi dan mencari lineamen…');
+  try{
+    const E=await fetchElevation(bb,W,H);
+    const lines=findLineaments(E,W,H,E.dx,E.dy);
+    lastLines={bb:bb,W:W,H:H,lines:lines};
+    drawLineaments(lastLines);
+    if(!lines.length){msg.innerHTML=T('此范围内没有找到明显的长直山谷。可缩小一些以覆盖更大区域。','No clear long straight valleys in this view. Zoom out a little to cover more ground.','Tiada lembah panjang yang lurus dengan jelas dalam paparan ini. Zum keluar sedikit untuk meliputi kawasan lebih luas.');return;}
+    const tr=lineamentTrends(lines);
+    const nc=lines.filter(function(l){return l.clear;}).length,np=lines.length-nc;
+    msg.innerHTML=T('明显的线性构造 <b>'+nc+'</b> 条（粗紫色虚线）'+(np?'，可能的 '+np+' 条（细线）':'')+'。',
+                    '<b>'+nc+'</b> clear lineament'+(nc===1?'':'s')+' (bold purple dashes)'+(np?', '+np+' possible (faint)':'')+'.',
+                    '<b>'+nc+'</b> lineamen jelas (garisan putus-putus ungu tebal)'+(np?', '+np+' kemungkinan (samar)':'')+'.')+
+      (tr.length?'<br>'+T('主要走向：','Main direction: ','Arah utama: ')+tr.map(function(t){return '<b>'+bearingWord(t.az)+'</b> (~'+Math.round(t.az)+'°, '+Math.round(t.share*100)+'%)';}).join(' · '):'')+
+      '<br>'+T('与这些走向一致的矿化迹象更值得关注；交汇处尤其如此。这些是地形线索，不是确认的断层——请实地核查。','Mineral signs lined up with these directions deserve more attention, especially where lines cross. These are terrain clues, not confirmed faults — check on the ground.','Tanda mineral yang sejajar dengan arah ini wajar diberi perhatian lebih, terutamanya di persilangan garisan. Ini petunjuk rupa bumi, bukan sesar yang disahkan — semak di lapangan.');
+  }catch(e){
+    msg.innerHTML=T('⚠ 无法读取地形：','⚠ Couldn\'t read the terrain: ','⚠ Tidak dapat membaca rupa bumi: ')+esc(e&&e.message?e.message:e);
+  }
+}
+function drawLineaments(res){
+  if(!map||typeof L==='undefined')return;
+  if(lineLayer){map.removeLayer(lineLayer);lineLayer=null;}
+  if(!res||!res.lines.length)return;
+  lineLayer=L.layerGroup().addTo(map);
+  res.lines.forEach(function(l){
+    L.polyline(segToLatLng(l,res.bb,res.W,res.H),l.clear?{color:'#9b5cff',weight:4,opacity:.9,dashArray:'10,6'}:{color:'#9b5cff',weight:2,opacity:.5,dashArray:'4,6'})
+      .bindPopup((l.clear?T('明显的线性构造','Clear lineament','Lineamen jelas'):T('可能的线性构造','Possible lineament','Kemungkinan lineamen'))+'<br>'+fmtDist(l.lenM)+' · '+Math.round(l.az)+'° ('+bearingWord(l.az)+')').addTo(lineLayer);
+  });
+}
+function clearLineaments(){if(lineLayer&&map){map.removeLayer(lineLayer);}lineLayer=null;lastLines=null;const m=document.getElementById('lineMsg');if(m)m.textContent='';}
+
+
 /* ============ MEASURED SCANNING (app-supplied Copernicus scripts) ============
    Instead of asking for layers the user had to create by hand and then guessing from
    their colours, the app sends its own processing script with each request (Copernicus
@@ -3220,37 +3536,42 @@ async function discoverLayers(force){
   for(let i=0;i<layers.length;i++){
     for(let j=0;j<layers[i].children.length;j++){const c=layers[i].children[j];if(c.tagName==='Name'&&c.textContent.trim())names.push(c.textContent.trim());}
   }
-  const NOT_S2=/SENTINEL-?1|(^|[^A-Z])S1([^A-Z0-9]|$)|RADAR|GRD|DEM|LANDSAT|L1C|S3|S5|MODIS|SLSTR|OLCI/i;
+  const NOT_S2=/SENTINEL-?1|(^|[^A-Z])S1([^A-Z0-9]|$)|RADAR|GRD|DEM|ELEV|HEIGHT|TERRAIN|TOPO|LANDSAT|L1C|S3|S5|MODIS|SLSTR|OLCI/i;
   const S1=/SENTINEL-?1|(^|[^A-Z])S1([^A-Z0-9]|$)|GRD|RADAR|VV|VH/i;
   const OURS=['IRON-RATIO','FERROUS-IRON','ALTERATION'];          // created from the Guide: all Sentinel-2 L2A
   const pref=function(n){if(/L2A/i.test(n))return 0;if(OURS.indexOf(n.toUpperCase())>-1)return 1;if(/TRUE|NATURAL|COLOR|COLOUR/i.test(n))return 2;return 3;};
   const s2c=names.filter(function(n){return !NOT_S2.test(n);}).sort(function(a,b){return pref(a)-pref(b);});
   const s2=s2c[0]||null;
-  const c={id:satId,s2:s2,s2L2A:!!(s2&&pref(s2)<=1),s1:names.filter(function(n){return S1.test(n);})[0]||null,names:names.length,t:Date.now()};
+  const DEMRX=/(^|[^A-Z])DEM([^A-Z]|$)|ELEV|HEIGHT|TERRAIN|TOPO|COP-?30|GLO-?30/i;
+  const c={id:satId,s2:s2,s2L2A:!!(s2&&pref(s2)<=1),s1:names.filter(function(n){return S1.test(n);})[0]||null,dem:names.filter(function(n){return DEMRX.test(n);})[0]||null,names:names.length,t:Date.now()};
   satCaps=c;try{localStorage.setItem(CAPS_KEY,JSON.stringify(c));}catch(e){}
   return c;
 }
-/* Normalised mineral signal 0..1 per layer (same ratios as the Guide's display scripts). */
-const SCAN_FORMULA={
-  ironratio:'clamp((s.B04/(s.B02+1e-6)-1.05)/0.85)',
-  iron:'clamp((s.B04/(s.B02+1e-6)-1.05)/0.85)',
-  ferrous:'clamp((s.B11/(s.B08+1e-6)-0.85)/0.75)',
-  clay:'clamp((s.B11/(s.B12+1e-6)-1.02)/0.35)',
-  // iron AND clay together is the alteration signature: geometric mean is high only when both are
-  alteration:'Math.sqrt(clamp((s.B04/(s.B02+1e-6)-1.05)/0.85)*clamp((s.B11/(s.B12+1e-6)-1.02)/0.35))'
-};
-const SCAN_KINDS=Object.keys(SCAN_FORMULA);
+/* One scan request measures all three signals; the chosen layer decides which one finds
+   targets, and the others become context ("clay too"). Ground pixels: R = 1 + 254×iron,
+   G = 255×clay, B = 255×ferrous (R ≥ 1 marks ground). Masked pixels: R = 0 and G holds a
+   class code — 64 cloud/shadow, 128 water, 192 vegetation; all zero = no data. */
+const SCAN_KINDS=['ironratio','iron','ferrous','clay','alteration'];
 function scanScript(kind,withSCL){
   return '//VERSION=3\n'+
   'function setup(){return{input:["B02","B03","B04","B08","B11","B12"'+(withSCL?',"SCL"':'')+',"dataMask"],output:{bands:3,sampleType:"UINT8"}};}\n'+
   'function clamp(x){return Math.max(0,Math.min(1,x));}\n'+
   'function evaluatePixel(s){\n'+
   ' if(!s.dataMask)return[0,0,0];\n'+
-  (withSCL?' if(s.SCL==3||s.SCL==8||s.SCL==9||s.SCL==10||s.SCL==11)return[0,0,64];\n if(s.SCL==6)return[0,0,128];\n'
-          :' if(s.B02>0.25&&s.B03>0.25&&s.B04>0.25&&s.B11>0.2)return[0,0,64];\n')+
-  ' if((s.B08-s.B04)/(s.B08+s.B04+1e-6)>0.35)return[0,0,192];\n'+
-  ' if(s.B11<0.03)return[0,0,128];\n'+
-  ' return[Math.round(255*'+SCAN_FORMULA[kind]+'),255,0];\n}';
+  (withSCL?' if(s.SCL==3||s.SCL==8||s.SCL==9||s.SCL==10||s.SCL==11)return[0,64,0];\n if(s.SCL==6)return[0,128,0];\n'
+          :' if(s.B02>0.25&&s.B03>0.25&&s.B04>0.25&&s.B11>0.2)return[0,64,0];\n')+
+  ' if((s.B08-s.B04)/(s.B08+s.B04+1e-6)>0.35)return[0,192,0];\n'+
+  ' if(s.B11<0.03)return[0,128,0];\n'+
+  ' var iron=clamp((s.B04/(s.B02+1e-6)-1.05)/0.85);\n'+
+  ' var clay=clamp((s.B11/(s.B12+1e-6)-1.02)/0.35);\n'+
+  ' var fer=clamp((s.B11/(s.B08+1e-6)-0.85)/0.75);\n'+
+  ' return[1+Math.round(254*iron),Math.round(255*clay),Math.round(255*fer)];\n}';
+}
+function kindScore(kind,iron,clay,fer){
+  if(kind==='clay')return clay;
+  if(kind==='ferrous')return fer;
+  if(kind==='alteration')return Math.sqrt(iron*clay);   // high only when iron AND clay are both there
+  return iron;                                           // ironratio / iron
 }
 /* Display scripts for the map layers: the Guide's masked colour scripts for the three
    mineral layers, the built-in ones for the rest. */
@@ -3259,17 +3580,17 @@ function displayScript(kind){
   if(ta){const el=document.getElementById(ta);if(el&&el.value.trim())return el.value;}
   return EVALSCRIPTS[kind]||null;
 }
-/* Measured thresholds on the 0..1 signal (see SCAN_FORMULA): a pixel counts from 0.35;
+/* Measured thresholds on the 0..1 signal (see scanScript): a pixel counts from 0.35;
    a patch is Strong from a mean of 0.60, Moderate from 0.45. Check these against known
    mineralised ground and adjust if needed. */
 const SCAN_HOT=0.35,SCAN_STRONG=0.60,SCAN_MODERATE=0.45;
-function findClustersData(data,W,H,bounds){
+function findClustersData(data,W,H,bounds,kind){
   const score=new Float32Array(W*H),hot=new Uint8Array(W*H);
   const st={ground:0,cloud:0,water:0,veg:0,none:0};
   for(let i=0,p=0;i<data.length;i+=4,p++){
     const r=data[i],g=data[i+1],b=data[i+2];
-    if(g>127){st.ground++;const v=r/255;score[p]=v;hot[p]=v>=SCAN_HOT?1:0;continue;}
-    if(b>=40&&b<96)st.cloud++;else if(b>=96&&b<160)st.water++;else if(b>=160)st.veg++;else st.none++;
+    if(r>=1){st.ground++;const v=kindScore(kind,(r-1)/254,g/255,b/255);score[p]=v;hot[p]=v>=SCAN_HOT?1:0;continue;}
+    if(g>=40&&g<96)st.cloud++;else if(g>=96&&g<160)st.water++;else if(g>=160)st.veg++;else st.none++;
   }
   const tot=W*H;const pct={};Object.keys(st).forEach(function(k){pct[k]=Math.round(100*st[k]/tot);});
   const targets=st.ground<60?[]:clusterize(score,hot,W,H,bounds,function(m){return m>=SCAN_STRONG?'strong':(m>=SCAN_MODERATE?'moderate':'weak');});
@@ -3278,16 +3599,64 @@ function findClustersData(data,W,H,bounds){
 }
 /* A picture of the measured scan for the shortlist snapshot: masked classes in muted
    colours, exposed ground shaded from tan (no signal) to bright red-orange (strong). */
-function scanPicture(data,W,H){
+function scanPicture(data,W,H,kind){
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const ctx=cv.getContext('2d');const img=ctx.createImageData(W,H);const o=img.data;
   for(let i=0;i<data.length;i+=4){
     const r=data[i],g=data[i+1],b=data[i+2];let c;
-    if(g>127){const v=r/255;c=[Math.round(150+105*v),Math.round(130-70*v+60*Math.max(0,v-0.6)),Math.round(100-90*v)];}
-    else if(b>=40&&b<96)c=[205,205,210];else if(b>=96&&b<160)c=[25,45,80];else if(b>=160)c=[28,48,32];else c=[0,0,0];
+    if(r>=1){const v=kindScore(kind,(r-1)/254,g/255,b/255);c=[Math.round(150+105*v),Math.round(130-70*v+60*Math.max(0,v-0.6)),Math.round(100-90*v)];}
+    else if(g>=40&&g<96)c=[205,205,210];else if(g>=96&&g<160)c=[25,45,80];else if(g>=160)c=[28,48,32];else c=[0,0,0];
     o[i]=c[0];o[i+1]=c[1];o[i+2]=c[2];o[i+3]=255;
   }
   ctx.putImageData(img,0,0);return cv.toDataURL('image/png');
+}
+/* Context for each target from the same scan (and terrain, when a DEM layer exists):
+   other signals agreeing, a lineament close by, or flat ground — iron alone on flat ground
+   is the classic laterite / farmland false alarm in the tropics. */
+const CTX_AGREE=0.35,CTX_LINE_M=300,CTX_FLAT_DEG=2.5;
+function addContext(targets,px,W,H,kind,E){
+  let S=null,lines=[];
+  if(E&&E.valid>W*H*0.5){const Ef=new Float32Array(E);fillGaps(Ef,W,H);S=slopeGrid(Ef,W,H,E.dx,E.dy);lines=findLineaments(E,W,H,E.dx,E.dy);}
+  const ironKind=(kind==='ironratio'||kind==='iron');
+  targets.forEach(function(t){
+    let n=0,ir=0,cl=0,fe=0,sl=0,ns=0;
+    for(let y=t.miny;y<=t.maxy;y++)for(let x=t.minx;x<=t.maxx;x++){
+      const p=y*W+x,i=p*4;
+      if(px[i]>=1){n++;ir+=(px[i]-1)/254;cl+=px[i+1]/255;fe+=px[i+2]/255;}
+      if(S){sl+=S[p];ns++;}
+    }
+    const m={iron:n?ir/n:0,clay:n?cl/n:0,ferrous:n?fe/n:0};
+    const ctx=[];let sc=0;
+    ['iron','clay','ferrous'].forEach(function(k){
+      const own=(k==='iron'&&ironKind)||(k===kind)||(kind==='alteration'&&(k==='iron'||k==='clay'));
+      if(!own&&m[k]>=CTX_AGREE){ctx.push('agree-'+k);sc++;}
+    });
+    const clearLines=lines.filter(function(l){return l.clear;});
+    if(clearLines.length){
+      const cx=(t.minx+t.maxx)/2,cy=(t.miny+t.maxy)/2;let best=Infinity;
+      clearLines.forEach(function(l){const d=distToSegPx(cx,cy,l);best=Math.min(best,Math.sqrt(Math.pow(d.dx*E.dx,2)+Math.pow(d.dy*E.dy,2)));});
+      if(best<=CTX_LINE_M){ctx.push('lineament');sc++;t.lineM=Math.round(best);}
+    }
+    if(S&&ns){t.slope=Math.round(sl/ns*10)/10;
+      if(ironKind&&t.slope<CTX_FLAT_DEG&&!ctx.some(function(c){return c.indexOf('agree')===0;})){ctx.push('flat');sc--;}}
+    t.ctx=ctx;t.ctxScore=sc;t.means=m;
+  });
+  const LV={strong:3,moderate:2,weak:1};
+  targets.sort(function(a,b){return (LV[b.level]-LV[a.level])||((b.ctxScore||0)-(a.ctxScore||0))||(b.signal-a.signal)||(b.n-a.n);});
+  targets.lines=lines;
+  return targets;
+}
+function ctxLabel(c,t){
+  if(c==='agree-iron')return '✓ '+T('铁也偏高','iron too','besi juga');
+  if(c==='agree-clay')return '✓ '+T('黏土也偏高','clay too','lempung juga');
+  if(c==='agree-ferrous')return '✓ '+T('亚铁也偏高','ferrous too','ferus juga');
+  if(c==='lineament')return '📐 '+T('靠近线性构造','near a lineament','berhampiran lineamen')+(t&&t.lineM!=null?' ('+t.lineM+' m)':'');
+  if(c==='flat')return '⚠ '+T('平坦的红色地面——常为红土、农地或冲积层','flat red ground — often laterite, farmland or alluvium','tanah merah yang rata — selalunya laterit, tanah ladang atau aluvium');
+  return '';
+}
+function ctxHtml(t){
+  if(!t||!t.ctx||!t.ctx.length)return '';
+  return '<div class="co">'+t.ctx.map(function(c){return '<span class="tg" style="display:inline-block;margin:3px 4px 0 0'+(c==='flat'?';color:var(--warn);border-color:var(--warn)':'')+'">'+ctxLabel(c,t)+'</span>';}).join('')+'</div>';
 }
 async function fetchPixels(url){
   const res=await fetch(url);
@@ -3449,7 +3818,7 @@ function renderTargetList(targets){
     html+='<div class="samp" style="margin-top:8px"><div class="top"><div>'+
       '<span class="id">'+T('目标 ','Target ')+(i+1)+'</span><span class="lvl '+t.level+'">'+levelLabel(t.level)+'</span>'+
       '<div class="co mono">📍 '+t.lat.toFixed(5)+', '+t.lon.toFixed(5)+'</div>'+
-      '<div class="co">'+T('约 ','approx ')+t.wM+' × '+t.hM+T(' 米 · 信号 ',' m · signal ')+t.signal+'%'+(dl?' · '+dl:'')+'</div>'+
+      '<div class="co">'+T('约 ','approx ')+t.wM+' × '+t.hM+T(' 米 · 信号 ',' m · signal ')+t.signal+'%'+(dl?' · '+dl:'')+'</div>'+ctxHtml(t)+
       '</div></div>'+
       '<div class="acts"><button onclick="targetToShortlist('+i+')">📌 '+T('加入候选清单','Shortlist')+'</button>'+
       '<button onclick="targetNavigate('+i+')">🧭 '+T('导航','Navigate')+'</button>'+
@@ -3464,7 +3833,8 @@ async function targetToShortlist(i,quiet){
   const t=lastTargets[i];if(!t)return null;
   const sc=t.scan,kind=sc?sc.kind:currentSatKind;
   const o={name:T('目标 ','Target ')+(i+1)+' · '+satName(kind),lat:t.lat,lon:t.lon,src:'scan',layer:kind,
-    level:t.level,signal:t.signal,wM:t.wM,hM:t.hM,snapBox:{west:t.west,east:t.east,north:t.north,south:t.south}};
+    level:t.level,signal:t.signal,wM:t.wM,hM:t.hM,snapBox:{west:t.west,east:t.east,north:t.north,south:t.south},
+    ctx:t.ctx&&t.ctx.length?t.ctx.slice():null,ctxScore:t.ctx?t.ctxScore:null,lineM:t.lineM!=null?t.lineM:null};
   if(sc&&sc.data){
     const key='scan_'+sc.t;
     if(!sc.saved){try{await idbPut(key,sc.data);sc.saved=true;}catch(e){}}
@@ -3767,6 +4137,10 @@ async function testSatId(){
          '✓ Disambungkan. Analisis akan menggunakan lapisan anda <b>'+esc(caps.s2)+'</b>'+(caps.s1?', radar menggunakan <b>'+esc(caps.s1)+'</b>':' (tiada lapisan radar ditemui)')+'.')
       :T('⚠ 已连接，但你的配置中没有 Sentinel-2 L2A 图层。请在 Copernicus 配置中添加一个（任意名称，数据源选 Sentinel-2 L2A）。','⚠ Connected, but your configuration has no Sentinel-2 L2A layer. Add one in your Copernicus configuration (any name, data source Sentinel-2 L2A).','⚠ Disambungkan, tetapi konfigurasi anda tiada lapisan Sentinel-2 L2A. Tambah satu dalam konfigurasi Copernicus anda (apa-apa nama, sumber data Sentinel-2 L2A).'))
     :'';
+  const demNote=caps?(caps.dem
+      ?' '+T('地形使用 <b>'+esc(caps.dem)+'</b>。','Terrain uses <b>'+esc(caps.dem)+'</b>.','Rupa bumi menggunakan <b>'+esc(caps.dem)+'</b>.')
+      :'<br>'+T('ℹ 未找到 DEM 图层——地形阴影与线性构造需要它（见指南第三部分）。','ℹ No DEM layer found — terrain shading and lineaments need one (see Guide, Part C).','ℹ Tiada lapisan DEM ditemui — bayang rupa bumi dan lineamen memerlukannya (lihat Panduan, Bahagian C).')):'';
+  const foundAll=found?found+demNote:'';
   // WMS 1.1.1 uses EPSG:4326 lon,lat order in BBOX — simplest, least ambiguous.
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
     '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+(caps&&caps.s2?'&LAYERS='+encodeURIComponent(caps.s2)+'&EVALSCRIPT='+encodeURIComponent(b64(EVALSCRIPTS.truecolor)):'&LAYERS=NATURAL-COLOR')+
@@ -3778,13 +4152,13 @@ async function testSatId(){
     if(res.ok&&ct.indexOf('image')===0){
       // Show the actual returned tile so you can SEE it (image or an error painted as image)
       const blob=await res.blob();const u=URL.createObjectURL(blob);
-      msg.innerHTML=(found?found+'<br>':'')+T('服务器返回了图像——如下（若整片单色即为云或空白；若显示文字则是服务器提示）：','Server returned an image, shown below (if it is mostly one colour that is cloud or blank; if it shows text that is a server note):')+'<br><img src="'+u+'" style="width:100%;max-width:280px;border-radius:8px;margin-top:8px;border:1px solid #3a2e21">';
+      msg.innerHTML=(foundAll?foundAll+'<br>':'')+T('服务器返回了图像——如下（若整片单色即为云或空白；若显示文字则是服务器提示）：','Server returned an image, shown below (if it is mostly one colour that is cloud or blank; if it shows text that is a server note):')+'<br><img src="'+u+'" style="width:100%;max-width:280px;border-radius:8px;margin-top:8px;border:1px solid #3a2e21">';
     }else if(res.ok){
       const txt=await res.text();
-      msg.innerHTML=(found?found+'<br>':'')+T('⚠ 服务器返回的是文本而非图像：','⚠ Server sent text, not an image: ')+txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300);
+      msg.innerHTML=(foundAll?foundAll+'<br>':'')+T('⚠ 服务器返回的是文本而非图像：','⚠ Server sent text, not an image: ')+txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300);
     }else{
       const txt=await res.text();
-      msg.innerHTML=(found?found+'<br>':'')+T('⚠ 错误 ','⚠ Error ')+res.status+': '+(txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300)||T('（无详细信息）','(no detail)'));
+      msg.innerHTML=(foundAll?foundAll+'<br>':'')+T('⚠ 错误 ','⚠ Error ')+res.status+': '+(txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300)||T('（无详细信息）','(no detail)'));
     }
   }catch(e){
     msg.innerHTML=T('⚠ 无法连接 Copernicus：','⚠ Couldn\'t reach Copernicus: ')+(e&&e.message?e.message:e);
