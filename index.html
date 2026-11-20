@@ -432,6 +432,7 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
     <div class="row" style="margin-top:10px">
       <button class="btn ghost sm" style="flex:1" onclick="exportShortlist('kml')"><span data-zh="⬇ KML（谷歌地球）" data-en="⬇ KML (Google Earth)">⬇ KML（谷歌地球）</span></button>
       <button class="btn ghost sm" style="flex:1" onclick="exportShortlist('gpx')"><span data-zh="⬇ GPX" data-en="⬇ GPX">⬇ GPX</span></button>
+      <button class="btn ghost sm" style="flex:1" onclick="exportGeoPackage()"><span data-zh="⬇ GeoPackage" data-en="⬇ GeoPackage">⬇ GeoPackage</span></button>
     </div>
   </div>
   <div class="card">
@@ -484,7 +485,16 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
     </div>
     <button class="btn ghost sm" style="width:100%" onclick="captureGPS()"><span data-zh="📍 定位（GPS）" data-en="📍 Locate me (GPS)">📍 定位（GPS）</span></button>
     <label for="sId"><span data-zh="样品编号" data-en="Sample ID">样品编号</span></label>
-    <input id="sId" aria-label="样品编号" data-zh-al="样品编号" data-en-al="Sample ID" placeholder="自动生成 — 例如 SMP-001" data-zh-ph="自动生成 — 例如 SMP-001" data-en-ph="auto — e.g. SMP-001">
+    <input id="sId" aria-label="样品编号" data-zh-al="样品编号" data-en-al="Sample ID" autocomplete="off" spellcheck="false" placeholder="自动生成 — 例如 SMP-001" data-zh-ph="自动生成 — 例如 SMP-001" data-en-ph="auto — e.g. SMP-001">
+    <details id="idCfgBox" style="margin-top:6px;background:transparent;border:1px dashed var(--line);padding:8px 12px">
+      <summary style="color:var(--ink2);font-size:13px"><span data-zh="🔢 编号设置" data-en="🔢 ID numbering">🔢 编号设置</span> <span class="mono" id="idCfgNow" style="color:var(--ink3);font-weight:400"></span></summary>
+      <p class="hint" style="margin:8px 0" data-zh="设成与你的样品票据本一致，例如前缀 KB- 、下一个编号 1001。编号自动递增，不会重复使用；输入 0001 可保留前导零。" data-en="Match your sample ticket book, e.g. prefix KB- and next number 1001. Numbers go up automatically and are never reused; type 0001 to keep leading zeros.">设成与你的样品票据本一致，例如前缀 KB- 、下一个编号 1001。编号自动递增，不会重复使用；输入 0001 可保留前导零。</p>
+      <div class="row">
+        <div style="flex:1"><label for="idPrefix" style="margin-top:0"><span data-zh="前缀" data-en="Prefix">前缀</span></label><input id="idPrefix" autocomplete="off" spellcheck="false" maxlength="20" aria-label="前缀" data-zh-al="前缀" data-en-al="Prefix"></div>
+        <div style="flex:1"><label for="idNext" style="margin-top:0"><span data-zh="下一个编号" data-en="Next number">下一个编号</span></label><input id="idNext" inputmode="numeric" autocomplete="off" maxlength="9" aria-label="下一个编号" data-zh-al="下一个编号" data-en-al="Next number"></div>
+      </div>
+      <button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="saveIdCfg()"><span data-zh="保存编号设置" data-en="Save numbering">保存编号设置</span></button>
+    </details>
     <select id="sMat" aria-label="样品类型" data-zh-al="样品类型" data-en-al="Sample material type" style="display:none"><option>Stream sediment</option><option>Soil</option><option>Rock / outcrop</option><option>Panned concentrate</option><option>Float / loose rock</option><option>Weathered laterite</option></select>
     <select id="sDepth" aria-label="样品深度" data-zh-al="样品深度" data-en-al="Sample depth" style="display:none"><option>Surface</option><option>0–20 cm</option><option>20–50 cm</option><option>&gt;50 cm</option></select>
 
@@ -721,6 +731,8 @@ details p{font-size:14px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       <button class="btn ghost sm" style="width:100%" onclick="exportCSV()">⬇ CSV</button>
       <button class="btn ghost sm" style="width:100%" onclick="exportData()">⬇ JSON</button>
     </div>
+    <button class="btn ghost sm" style="width:100%;margin-bottom:6px" onclick="exportGeoPackage()"><span data-zh="🗺️ GeoPackage（QGIS / ArcGIS）" data-en="🗺️ GeoPackage (QGIS / ArcGIS)">🗺️ GeoPackage（QGIS / ArcGIS）</span></button>
+    <p class="hint" style="margin:0 0 10px;font-size:12.5px" data-zh="一个 .gpkg 文件，含两个图层：样品与候选地点（WGS84）。可直接拖入 QGIS 或 ArcGIS Pro。首次导出需要联网。" data-en="One .gpkg file with two layers — samples and candidate sites (WGS84). Drag it straight into QGIS or ArcGIS Pro. Needs internet the first time you export.">一个 .gpkg 文件，含两个图层：样品与候选地点（WGS84）。可直接拖入 QGIS 或 ArcGIS Pro。首次导出需要联网。</p>
     <div class="row">
       <button class="btn ghost sm" style="width:100%" onclick="backup()"><span data-zh="💾 备份（含照片）" data-en="💾 Backup (w/ photos)">💾 备份（含照片）</span></button>
       <button class="btn ghost sm" style="width:100%" onclick="document.getElementById('restoreFile').click()"><span data-zh="📥 导入备份" data-en="📥 Import backup">📥 导入备份</span></button>
@@ -1134,7 +1146,7 @@ function setLang(l){
   renderTargets();renderIndicators();renderMaterialDepth();renderSampleTags();
   satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();redrawSatMsg();
   updateCloudUI();updateTrailUI();updateReturnDisplay();if(map)updateNet();
-  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();renderShortlist();drawShortlist();
+  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();renderShortlist();drawShortlist();refreshIdField(false);
   redrawMapExtras();   // altimeter + terrain profile carry baked-in labels — redraw them
   toast(l==='zh'?'已切换为中文':'Switched to English');
 }
@@ -1825,9 +1837,57 @@ function renderSampleTags(){
   const tc=document.getElementById('tagCount');if(tc)tc.textContent=sampleTags.size;
 }
 
+/* ============ sample IDs ============
+   Prefix + number, matching a sample ticket book. The next number only moves forward and
+   skips any ID already in the library (trash included), so IDs are never reused. */
+const IDCFG_KEY='pf_id_cfg';
+let idCfg={prefix:'SMP-',next:1,pad:3};
+try{const c=JSON.parse(localStorage.getItem(IDCFG_KEY)||'null');if(c&&typeof c.prefix==='string'&&c.next>=1)idCfg={prefix:c.prefix,next:Math.floor(c.next),pad:Math.min(9,Math.max(1,c.pad|0||3))};}catch(e){}
+function fmtId(n){return idCfg.prefix+String(n).padStart(idCfg.pad,'0');}
+function idTaken(id,exceptT){const k=id.trim().toLowerCase();return samples.some(function(s){return s.t!==exceptT&&String(s.id).trim().toLowerCase()===k;});}
+function nextFreeId(){let n=idCfg.next;while(idTaken(fmtId(n)))n++;return {id:fmtId(n),n:n};}
+function refreshIdField(force){
+  const el=document.getElementById('sId');if(!el)return;
+  const nx=nextFreeId();
+  // only replace an ID the app suggested — never something the user typed
+  if(force||!el.value.trim()||el.dataset.auto===el.value){el.value=nx.id;el.dataset.auto=nx.id;}
+  const now=document.getElementById('idCfgNow');if(now)now.textContent='· '+T('下一个 ','next ')+nx.id;
+  const pf=document.getElementById('idPrefix'),nf=document.getElementById('idNext');
+  if(pf&&document.activeElement!==pf)pf.value=idCfg.prefix;
+  if(nf&&document.activeElement!==nf)nf.value=String(idCfg.next).padStart(idCfg.pad,'0');
+}
+function saveIdCfg(){
+  const pf=document.getElementById('idPrefix').value.replace(/\s+$/,'');
+  const raw=document.getElementById('idNext').value.trim();
+  if(!/^\d{1,9}$/.test(raw)||+raw<1)return toast(T('下一个编号须为正整数','Next number must be a whole number of 1 or more'),true);
+  const old=idCfg;
+  idCfg={prefix:pf,next:+raw,pad:Math.max(1,raw.length)};
+  try{localStorage.setItem(IDCFG_KEY,JSON.stringify(idCfg));}catch(e){idCfg=old;return toast(T('存储已满 — 编号设置未保存','Storage full — numbering not saved'),true);}
+  refreshIdField(true);
+  const nx=nextFreeId();
+  toast(nx.n!==idCfg.next?T('已保存 — '+fmtId(idCfg.next)+' 已被使用，下一个为 '+nx.id,'Saved — '+fmtId(idCfg.next)+' is already used, next is '+nx.id):T('已保存 — 下一个编号 '+nx.id,'Saved — next ID '+nx.id));
+}
+/* After a successful save, move the counter past the ID just used if it is in our sequence
+   (also when the user typed one from the ticket book by hand). */
+function advanceIdCounter(id){
+  const p=idCfg.prefix;
+  if(id.slice(0,p.length).toLowerCase()!==p.toLowerCase())return;
+  const rest=id.slice(p.length);
+  if(!/^\d{1,9}$/.test(rest))return;
+  const n=+rest;
+  if(n>=idCfg.next){idCfg.next=n+1;try{localStorage.setItem(IDCFG_KEY,JSON.stringify(idCfg));}catch(e){}}
+}
+
 /* ============ save ============ */
 async function saveSample(keepSpot){
-  const id=document.getElementById('sId').value.trim()||('SMP-'+String(samples.length+1).padStart(3,'0'));
+  const id=document.getElementById('sId').value.trim()||nextFreeId().id;
+  if(idTaken(id)){
+    await askConfirm(T('编号已被使用','ID already used'),
+      T('「'+id+'」已用于另一个样品（可能在回收站中）。每个样品需要唯一编号，请修改后再保存。','"'+id+'" is already used by another sample (possibly in the trash). Each sample needs its own ID — change it, then save.'),
+      T('好','OK'),false);
+    document.getElementById('sId').focus();
+    return;
+  }
   const t=Date.now();
   const photoKeys=[];let photoFail=false;
   for(let i=0;i<pendingPhotos.length;i++){
@@ -1863,8 +1923,9 @@ async function saveSample(keepSpot){
     return;
   }
 
-  // always clear the per-sample fields
-  document.getElementById('sId').value='';document.getElementById('sNote').value='';
+  advanceIdCounter(id);
+  // always clear the per-sample fields; the ID box gets the next free number
+  document.getElementById('sNote').value='';refreshIdField(true);
   pendingPhotos=[];renderThumbs();
 
   if(keepSpot){
@@ -2565,6 +2626,95 @@ function saveDeskScoreToShortlist(){
   if(!siteLoc)return toast(T('请先在上方设定勘察位置','Set a prospect location above first'),true);
   addToShortlist({lat:siteLoc.lat,lon:siteLoc.lon,src:siteLoc.src==='manual'?'manual':'gps',
     deskScore:deskScore,deskTicks:[].slice.call(picked),deskFlags:[].slice.call(deskFlags),target:document.getElementById('target').value});
+}
+
+/* ============ GEOPACKAGE EXPORT ============
+   A GeoPackage is an SQLite file with a few standard metadata tables (OGC 12-128r18).
+   sql.js (SQLite compiled to WebAssembly) builds it in the browser; it is fetched from
+   cdnjs on first use and the service worker keeps it for offline exports after that. */
+const SQLJS_BASE='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/';
+let sqlJsPromise=null;
+function loadSqlJs(){
+  if(sqlJsPromise)return sqlJsPromise;
+  sqlJsPromise=new Promise(function(res,rej){
+    if(window.initSqlJs)return res();
+    const sc=document.createElement('script');sc.src=SQLJS_BASE+'sql-wasm.js';sc.crossOrigin='anonymous';
+    sc.onload=function(){res();};sc.onerror=function(){rej(new Error('load'));};
+    document.head.appendChild(sc);
+  }).then(function(){return window.initSqlJs({locateFile:function(f){return SQLJS_BASE+f;}});});
+  sqlJsPromise.catch(function(){sqlJsPromise=null;});   // allow a retry once back online
+  return sqlJsPromise;
+}
+const WGS84_WKT='GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]';
+/* GeoPackage binary point: 'GP', version 0, flags (little-endian, no envelope), srs_id,
+   then a standard little-endian WKB Point (x = longitude, y = latitude). */
+function gpkgPoint(lon,lat){
+  const buf=new ArrayBuffer(8+21),v=new DataView(buf);
+  v.setUint8(0,0x47);v.setUint8(1,0x50);v.setUint8(2,0);v.setUint8(3,0x01);v.setInt32(4,4326,true);
+  v.setUint8(8,1);v.setUint32(9,1,true);v.setFloat64(13,lon,true);v.setFloat64(21,lat,true);
+  return new Uint8Array(buf);
+}
+function addFeatureTable(db,name,ident,desc,cols,rows){
+  db.run('CREATE TABLE "'+name+'" (fid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom POINT, '+
+    cols.map(function(c){return '"'+c[0]+'" '+c[1];}).join(', ')+')');
+  const st=db.prepare('INSERT INTO "'+name+'" (geom, '+cols.map(function(c){return '"'+c[0]+'"';}).join(', ')+') VALUES (?, '+cols.map(function(){return '?';}).join(', ')+')');
+  let minx=Infinity,miny=Infinity,maxx=-Infinity,maxy=-Infinity;
+  rows.forEach(function(r){
+    const g=(r.lon!=null&&r.lat!=null)?gpkgPoint(r.lon,r.lat):null;
+    if(g){minx=Math.min(minx,r.lon);maxx=Math.max(maxx,r.lon);miny=Math.min(miny,r.lat);maxy=Math.max(maxy,r.lat);}
+    st.run([g].concat(r.vals.map(function(x){return x===undefined?null:x;})));
+  });
+  st.free();
+  const has=isFinite(minx);
+  db.run('INSERT INTO gpkg_contents (table_name,data_type,identifier,description,last_change,min_x,min_y,max_x,max_y,srs_id) VALUES (?,?,?,?,?,?,?,?,?,4326)',
+    [name,'features',ident,desc,new Date().toISOString(),has?minx:null,has?miny:null,has?maxx:null,has?maxy:null]);
+  db.run("INSERT INTO gpkg_geometry_columns (table_name,column_name,geometry_type_name,srs_id,z,m) VALUES (?,'geom','POINT',4326,0,0)",[name]);
+}
+async function exportGeoPackage(){
+  const act=activeSamples();
+  if(!act.length&&!shortlist.length)return toast(T('没有可导出的内容','Nothing to export'),true);
+  toast(T('正在生成 GeoPackage…','Building GeoPackage…'));
+  let SQL;
+  try{SQL=await loadSqlJs();}
+  catch(e){return toast(navigator.onLine?T('无法加载 GeoPackage 组件 — 请稍后重试','Could not load the GeoPackage component — try again shortly'):T('首次导出 GeoPackage 需要联网','The first GeoPackage export needs internet'),true);}
+  let db;
+  try{
+    db=new SQL.Database();
+    db.run('PRAGMA application_id = 1196444487');   // 'GPKG'
+    db.run('PRAGMA user_version = 10300');           // GeoPackage 1.3
+    db.run('CREATE TABLE gpkg_spatial_ref_sys (srs_name TEXT NOT NULL, srs_id INTEGER NOT NULL PRIMARY KEY, organization TEXT NOT NULL, organization_coordsys_id INTEGER NOT NULL, definition TEXT NOT NULL, description TEXT)');
+    db.run("INSERT INTO gpkg_spatial_ref_sys VALUES ('Undefined cartesian SRS',-1,'NONE',-1,'undefined','undefined cartesian coordinate reference system')");
+    db.run("INSERT INTO gpkg_spatial_ref_sys VALUES ('Undefined geographic SRS',0,'NONE',0,'undefined','undefined geographic coordinate reference system')");
+    db.run("INSERT INTO gpkg_spatial_ref_sys VALUES ('WGS 84 geodetic',4326,'EPSG',4326,?,'longitude/latitude coordinates in decimal degrees on the WGS 84 spheroid')",[WGS84_WKT]);
+    db.run("CREATE TABLE gpkg_contents (table_name TEXT NOT NULL PRIMARY KEY, data_type TEXT NOT NULL, identifier TEXT UNIQUE, description TEXT DEFAULT '', last_change DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), min_x DOUBLE, min_y DOUBLE, max_x DOUBLE, max_y DOUBLE, srs_id INTEGER, CONSTRAINT fk_gc_r_srs_id FOREIGN KEY (srs_id) REFERENCES gpkg_spatial_ref_sys(srs_id))");
+    db.run('CREATE TABLE gpkg_geometry_columns (table_name TEXT NOT NULL, column_name TEXT NOT NULL, geometry_type_name TEXT NOT NULL, srs_id INTEGER NOT NULL, z TINYINT NOT NULL, m TINYINT NOT NULL, CONSTRAINT pk_geom_cols PRIMARY KEY (table_name, column_name), CONSTRAINT uk_gc_table_name UNIQUE (table_name), CONSTRAINT fk_gc_tn FOREIGN KEY (table_name) REFERENCES gpkg_contents(table_name), CONSTRAINT fk_gc_srs FOREIGN KEY (srs_id) REFERENCES gpkg_spatial_ref_sys (srs_id))');
+
+    // Layer 1: samples (collected material). Samples without a fix are kept, with no geometry.
+    addFeatureTable(db,'samples','ProspectField samples','Field samples logged in ProspectField',
+      [['sample_id','TEXT NOT NULL'],['collected_at','DATETIME'],['latitude','REAL'],['longitude','REAL'],['gps_accuracy_m','REAL'],
+       ['location_source','TEXT'],['material','TEXT'],['depth','TEXT'],['target','TEXT'],['tags','TEXT'],['score_pct','INTEGER'],
+       ['high_interest','BOOLEAN'],['notes','TEXT'],['photo_count','INTEGER']],
+      act.map(function(s){return {lat:s.lat,lon:s.lon,vals:[String(s.id),new Date(s.t).toISOString(),s.lat,s.lon,
+        s.acc!=null?Math.round(s.acc*10)/10:null,s.locSrc||(s.lat==null?null:'gps'),s.mat||null,s.depth||null,s.target||null,
+        (s.tags||[]).join('; ')||null,s.score!=null?Math.round(s.score):null,s.flag?1:0,s.note||null,(s.photoKeys||[]).length]};}));
+
+    // Layer 2: candidate sites (shortlist) — places to check, not samples.
+    addFeatureTable(db,'candidate_sites','ProspectField candidate sites','Shortlisted places to check (satellite scans, desk checks, imported points)',
+      [['name','TEXT NOT NULL'],['status','TEXT'],['source','TEXT'],['scan_layer','TEXT'],['strength','TEXT'],['signal_pct','INTEGER'],
+       ['desk_score_pct','INTEGER'],['red_flags','TEXT'],['approx_width_m','INTEGER'],['approx_height_m','INTEGER'],['added_at','DATETIME'],['notes','TEXT']],
+      shortlist.map(function(it){return {lat:it.lat,lon:it.lon,vals:[String(it.name),it.status,it.src||null,it.layer||null,it.level||null,
+        it.signal!=null?Math.round(it.signal):null,it.deskScore!=null?Math.round(it.deskScore):null,(it.deskFlags||[]).join('; ')||null,
+        it.wM!=null?Math.round(it.wM):null,it.hM!=null?Math.round(it.hM):null,it.t?new Date(it.t).toISOString():null,it.note||null]};}));
+
+    const bytes=db.export();
+    const d=new Date(),ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+    const blob=new Blob([bytes],{type:'application/geopackage+sqlite3'});
+    const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='prospectfield_'+ymd+'.gpkg';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+    toast(T('已导出 GeoPackage：'+act.length+' 个样品、'+shortlist.length+' 个候选地点','GeoPackage exported: '+act.length+' sample'+(act.length===1?'':'s')+', '+shortlist.length+' candidate site'+(shortlist.length===1?'':'s')));
+  }catch(e){
+    toast(T('GeoPackage 生成失败','GeoPackage export failed')+': '+(e&&e.message?e.message:e),true);
+  }finally{if(db)db.close();}
 }
 
 /* ============ MAP ============ */
@@ -4060,7 +4210,7 @@ function nav(v,btn){
     if(estMode==='field'&&picked.size){picked.forEach(function(x){sampleTags.add(x);});}
     // carry a typed-in prospect point over (a stale GPS fix is not reused: you may have moved)
     if(!lastFix&&siteLoc&&siteLoc.src==='manual'){lastFix=siteLoc;showFixOnSample();}
-    renderSampleTags();renderMaterialDepth();updateSameSpotUI();
+    renderSampleTags();renderMaterialDepth();updateSameSpotUI();refreshIdField(false);
   }
   if(v==='log')renderLog();
   if(v==='survey')renderShortlist();
@@ -4078,7 +4228,7 @@ let tTimer;function toast(msg,warn){const t=document.getElementById('toast');t.t
 
 /* ============ init ============ */
 idbOpen().then(function(){renderLog();}).catch(function(){toast(T('照片数据库不可用','Photo database unavailable'),true);});
-applyLang();renderSite();renderShortlist();if(siteLoc)setGpsBar(siteLoc);renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
+applyLang();refreshIdField(true);renderSite();renderShortlist();if(siteLoc)setGpsBar(siteLoc);renderIndicators();renderTargets();renderMaterialDepth();renderSampleTags();renderSatTiles();renderModeTiles();updateCloudUI();updateSatAdvLabel();rebuildNavOptions();initBattery();
 
 /* ---- PWA service worker ----
    A blob-URL worker cannot control the page, so offline support needs a real file

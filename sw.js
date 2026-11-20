@@ -5,10 +5,11 @@
    - Everything else: network-first, falling back to cache.
    Bump SW_VERSION when the app changes so users get the new build.
 */
-const SW_VERSION = 'pf-v19';
+const SW_VERSION = 'pf-v20';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const TILE_CACHE  = 'pf-tiles';          // shared with the in-app region downloader
 const ELEV_CACHE  = 'pf-elev';           // terrain elevation profiles (persist across versions)
+const LIB_CACHE   = 'pf-libs';           // on-demand libraries (sql.js for GeoPackage), kept across versions
 const RUNTIME     = SW_VERSION + '-runtime';
 
 /* Files the app needs to start with no network at all. */
@@ -44,7 +45,7 @@ self.addEventListener('activate', function (e) {
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) {
         // keep the tile + elevation caches (expensive to rebuild), drop old app versions
-        if (k === TILE_CACHE || k === ELEV_CACHE) return null;
+        if (k === TILE_CACHE || k === ELEV_CACHE || k === LIB_CACHE) return null;
         if (k.indexOf(SW_VERSION) === 0) return null;
         return caches.delete(k);
       }));
@@ -73,6 +74,23 @@ self.addEventListener('fetch', function (e) {
             return res;
           }).catch(function () {
             return hit || Response.error();
+          });
+        });
+      })
+    );
+    return;
+  }
+
+  /* 1a. On-demand libraries (sql.js for GeoPackage export) — cache-first, so exporting works
+         offline after the first time. URLs are pinned to an exact version, so they never go stale. */
+  if (url.hostname === 'cdnjs.cloudflare.com' && url.pathname.indexOf('/ajax/libs/sql.js/') === 0) {
+    e.respondWith(
+      caches.open(LIB_CACHE).then(function (c) {
+        return c.match(req).then(function (hit) {
+          if (hit) return hit;
+          return fetch(req).then(function (res) {
+            if (res && res.ok) c.put(req, res.clone());
+            return res;
           });
         });
       })
