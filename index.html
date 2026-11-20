@@ -158,6 +158,18 @@ button{cursor:pointer;font-family:inherit;border:none}
 .sl-pin{width:26px;height:26px;border-radius:50%;background:#7c5cff;border:2px solid #fff;color:#fff;font-size:13px;line-height:22px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.55)}
 .sl-pin.visited{background:#2f9e6a}.sl-pin.sampled{background:#1e7fa8}.sl-pin.rejected{background:#666;opacity:.75}
 .sl-item.rejected{opacity:.55}
+.trip{background:var(--bg2);border:1px solid var(--ore2);border-radius:12px;padding:12px 13px;margin-bottom:12px}
+.trip h3{margin:0 0 6px;font-size:16px;color:var(--ore)}
+.trip label.tsite{display:flex;align-items:center;gap:10px;margin:0;padding:8px 2px;border-bottom:1px solid var(--line);font-size:15px;font-weight:600;color:var(--ink)}
+.trip label.tsite input{width:22px;height:22px;flex:none;accent-color:var(--copper)}
+.trip label.tsite small{display:block;font-weight:400;color:var(--ink3);font-size:13.5px}
+.trip ol{margin:8px 0 0;padding-left:22px}
+.trip ol li{margin:4px 0;font-size:15px}
+.trip ol li small{color:var(--ink3)}
+.trip .tot{margin-top:8px;font-weight:700;color:var(--ink)}
+.trip .row{flex-wrap:wrap}
+.trip a.btn{display:block;text-align:center;text-decoration:none}
+.trip-num{background:var(--btn1);color:var(--onbtn);border:2px solid #fff;border-radius:50%;width:24px;height:24px;font:800 13px/20px system-ui,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.45)}
 .sl-item .acts{gap:6px}
 .sl-item .acts button{padding:6px 9px;font-size:13.5px}
 .sl-item .acts select{padding:5px 8px;font-size:16px}   /* 16px+: iOS zooms the page on smaller inputs */
@@ -482,6 +494,8 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
     <h2><span data-zh="📌 候选清单" data-en="📌 Shortlist — candidate sites" data-ms="📌 Senarai pendek — tapak calon">📌 候选清单</span></h2>
     <p class="hint" data-html data-zh="值得细看的地点：来自卫星扫描、手动输入或导入的文件。为每个地点标记「待查看 → 已到访 → 已取样／已排除」。把几个高分地点安排在同一趟行程里，可以大幅节省路费。" data-en="Places worth a closer look — from satellite scans, coordinates you type, or files you import. Move each one from &quot;to check&quot; to visited, sampled or rejected. Grouping several strong sites into one trip is the biggest saving on travel." data-ms="Tempat yang berbaloi diteliti — daripada imbasan satelit, koordinat yang anda taip, atau fail yang anda import. Alihkan setiap satu daripada &quot;untuk disemak&quot; kepada dilawati, disampel atau ditolak. Menggabungkan beberapa tapak yang kuat dalam satu perjalanan ialah penjimatan terbesar untuk kos perjalanan.">值得细看的地点：来自卫星扫描、手动输入或导入的文件。为每个地点标记「待查看 → 已到访 → 已取样／已排除」。把几个高分地点安排在同一趟行程里，可以大幅节省路费。</p>
     <div class="hint" id="slSummary" style="margin-bottom:6px"></div>
+    <button class="btn sm" id="tripBtn" style="width:100%;margin:2px 0 10px" onclick="openTripPlan()"><span data-zh="🚗 规划行程" data-en="🚗 Plan trip" data-ms="🚗 Rancang perjalanan">🚗 规划行程</span></button>
+    <div id="tripBox" class="trip" hidden></div>
     <div id="slList"></div>
     <details style="margin-top:10px"><summary><span data-zh="➕ 批量添加或导入地点" data-en="➕ Add several points or import a file" data-ms="➕ Tambah beberapa titik atau import fail">➕ 批量添加或导入地点</span></summary>
       <p class="hint" style="margin:8px 0" data-zh="每行一个地点：名称（可选）, 纬度, 经度。可直接粘贴旧矿点记录、论坛或谷歌地图中的坐标。" data-en="One place per line: name (optional), latitude, longitude. Paste coordinates from old mine records, forums or Google Maps." data-ms="Satu tempat bagi setiap baris: nama (pilihan), latitud, longitud. Tampal koordinat daripada rekod lombong lama, forum atau Google Maps.">每行一个地点：名称（可选）, 纬度, 经度。可直接粘贴旧矿点记录、论坛或谷歌地图中的坐标。</p>
@@ -873,6 +887,7 @@ details p{font-size:15px;color:var(--ink2);margin:8px 0 0;line-height:1.55}
       5. Salin → dalam aplikasi ini pergi ke <b>Peta</b> → buka <b>🔬 Lapisan analisis lanjutan</b> → tampal ke dalam kotak<br>
       6. Ketik <b>🔎 Uji ID saya</b>. Jika ia menunjukkan imej, anda sudah bersambung."><b>第二部分 — 获取实例 ID</b><br>1. 前往 <b>shapps.dataspace.copernicus.eu/dashboard/#/configurations</b><br>2. 用第一部分创建的账户登录<br>3. 你会看到配置列表。可使用现成的 <b>"Simple WMS Instance"</b>，或点击 <b>New configuration</b>，命名（例如 ProspectField），并基于 <b>Simple WMS template</b> 创建<br>4. 进入该配置。<b>实例 ID</b> 就是显示的那串长代码（形如 c32c21b1-84ac-…）。它可能出现在类似 .../wms/<b>那串代码</b> 的网址中——你只需要 /wms/ 之后的代码，而不是整个网址<br>5. 复制它 → 在本应用中进入<b>地图</b>页 → 展开 <b>🔬 高级分析图层</b> → 粘贴到输入框<br>6. 点击 <b>🔎 测试我的 ID</b>。若显示出影像，即表示连接成功。</p>
 
+      <div class="callout" style="margin:10px 0" data-html data-zh="<b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。" data-en="<b>✅ You can now skip this.</b> The app sends the analysis scripts below with every request itself, using a Sentinel-2 L2A layer your configuration already has — just paste the instance ID from Part B and tap Test my ID. Only if the test says no Sentinel-2 L2A layer was found do you need to add one (any name); radar needs one Sentinel-1 layer." data-ms="<b>✅ Kini anda boleh langkau bahagian ini.</b> Aplikasi menghantar sendiri skrip analisis di bawah bersama setiap permintaan, menggunakan lapisan Sentinel-2 L2A yang sudah ada dalam konfigurasi anda — cuma tampal ID instance dari Bahagian B dan ketik Uji ID saya. Hanya jika ujian menyatakan tiada lapisan Sentinel-2 L2A ditemui, anda perlu menambah satu (apa-apa nama); radar memerlukan satu lapisan Sentinel-1."><b>✅ 现在可以跳过。</b>应用会随每次请求自动发送下面这些分析脚本，并使用你配置中已有的 Sentinel-2 L2A 图层——只需在第二部分粘贴实例 ID 并点击「测试我的 ID」。只有当测试提示找不到 Sentinel-2 L2A 图层时，才需要添加一个（任意名称）；雷达则需要一个 Sentinel-1 图层。</div>
       <p data-html data-zh="<b>第三部分 — 添加图层</b><br>在你的配置中，为下列每一项点击 <b>＋ New layer</b>。名称须<b>完全一致</b>（大小写与连字符都重要——应用按这些名称查找），选好数据源后保存。<br><br>• <b>SENTINEL-1</b> — 数据源：Sentinel-1 GRD。若提示&quot;请选择预定义产品或输入处理脚本&quot;，随便选一个预定义产品即可（例如 VV 或 VV+VH decibel gamma0）。这就是你的雷达图层。<br>• <b>IRON-RATIO</b> — 数据源：Sentinel-2 L2A，Data Processing → Custom script → 粘贴铁比值脚本<br>• <b>FERROUS-IRON</b> — 数据源：Sentinel-2 L2A → Custom script → 粘贴亚铁脚本<br>• <b>ALTERATION</b> — 数据源：Sentinel-2 L2A → Custom script → 粘贴蚀变脚本<br><br>三个自定义脚本在下一节，请分别复制到对应图层。" data-en="<b>PART C — Add the layers</b><br>
       Inside your configuration, click <b>＋ New layer</b> for each one below. Name them <b>exactly</b> as shown (capitals and hyphens matter — the app looks for these names), pick the data source, then Save.<br><br>
       • <b>SENTINEL-1</b> — data source: Sentinel-1 GRD. If it warns &quot;please select predefined product or enter your processing script&quot;, just pick any predefined product (e.g. VV or VV+VH decibel gamma0). This is your radar layer.<br>
@@ -1309,7 +1324,7 @@ function setLang(l){
   renderTargets();renderIndicators();renderMaterialDepth();renderSampleTags();
   satTilesBuilt=false;renderSatTiles();renderModeTiles();renderLog();rebuildNavOptions();updateSatAdvLabel();redrawSatMsg();
   updateCloudUI();updateTrailUI();updateReturnDisplay();if(map)updateNet();
-  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();renderShortlist();drawShortlist();refreshIdField(false);
+  renderSite();if(lastFix)showFixOnSample();drawSiteMarker();renderShortlist();drawShortlist();renderTrip();refreshIdField(false);
   redrawMapExtras();   // altimeter + terrain profile carry baked-in labels — redraw them
   toast(T('已切换为中文','Switched to English','Bahasa ditukar ke Bahasa Melayu'));
   return true;
@@ -2585,7 +2600,7 @@ function slRank(it){
   return best;
 }
 function setSlSort(v){slSort=v;try{localStorage.setItem('pf_sl_sort',v);}catch(e){}renderShortlist();}
-function slRefresh(){renderShortlist();drawShortlist();rebuildNavOptions();}
+function slRefresh(){renderShortlist();drawShortlist();rebuildNavOptions();renderTrip();}
 function setSlStatus(id,v){const it=slGet(id);if(!it)return;const old=it.status;it.status=v;if(!saveShortlist())it.status=old;slRefresh();}
 function slRename(id){
   const it=slGet(id);if(!it)return;
@@ -2823,6 +2838,137 @@ function saveDeskScoreToShortlist(){
     deskScore:deskScore,deskTicks:[].slice.call(picked),deskFlags:[].slice.call(deskFlags),target:document.getElementById('target').value});
 }
 
+/* ============ TRIP PLANNING ============
+   Turn the "to check" sites into one drive: pick sites, put them in a short order
+   (nearest-next, then 2-opt to remove crossings), open the route in Google Maps, show
+   it on the map, and save offline maps around every stop. Distances are straight-line;
+   the road distance is longer. */
+let tripSel=null,tripRound=true,tripLayer=null,tripLast=null;
+const TRIP_MAX_STOPS=9;   // Google Maps takes up to 9 stops between start and destination per link
+function tripStart(){
+  const r=refPoint();
+  if(!r)return null;
+  return {lat:r.lat,lon:r.lon,live:r.you,name:r.you?T('你的位置','Your location','Lokasi anda'):T('勘察位置','Prospect location','Lokasi prospek')};
+}
+function orderStops(start,pts,round){
+  const D=function(a,b){return haversine(a.lat,a.lon,b.lat,b.lon);};
+  let rest=pts.slice(),route=[],cur=start||rest.shift();
+  if(!start&&cur)route.push(cur);
+  while(rest.length){let bi=0,bd=Infinity;rest.forEach(function(p,i){const d=D(cur,p);if(d<bd){bd=d;bi=i;}});cur=rest.splice(bi,1)[0];route.push(cur);}
+  const fixedFirst=!start;   // without a start point the first stop stays first
+  const cost=function(r){let c=0,prev=start||r[0];r.forEach(function(p,i){if(i||start)c+=D(prev,p);prev=p;});if(round&&start)c+=D(prev,start);return c;};
+  let improved=true,guard=0;
+  while(improved&&guard++<200){
+    improved=false;
+    for(let i=fixedFirst?1:0;i<route.length-1;i++)for(let j=i+1;j<route.length;j++){
+      const cand=route.slice(0,i).concat(route.slice(i,j+1).reverse(),route.slice(j+1));
+      if(cost(cand)+0.5<cost(route)){route=cand;improved=true;}
+    }
+  }
+  return {route:route,km:cost(route)/1000};
+}
+function openTripPlan(){
+  const box=document.getElementById('tripBox');
+  if(!box.hidden){box.hidden=true;return;}
+  const todo=shortlist.filter(function(x){return x.status==='tocheck';});
+  if(!todo.length)return toast(T('没有「待查看」的地点可规划','No "to check" sites to plan','Tiada tapak "untuk disemak" untuk dirancang'),true);
+  // pre-select the strongest, up to what one Google Maps link can hold
+  const ranked=todo.slice().sort(function(a,b){return slRank(b)-slRank(a);});
+  tripSel=new Set(ranked.slice(0,TRIP_MAX_STOPS).map(function(x){return x.id;}));
+  box.hidden=false;renderTrip();
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function tripToggle(id,on){if(on)tripSel.add(id);else tripSel.delete(id);renderTrip();}
+function renderTrip(){
+  const box=document.getElementById('tripBox');if(!box||box.hidden)return;
+  const todo=shortlist.filter(function(x){return x.status==='tocheck';}).sort(function(a,b){return slRank(b)-slRank(a);});
+  const start=tripStart();
+  const chosen=todo.filter(function(x){return tripSel.has(x.id);});
+  const plan=chosen.length?orderStops(start,chosen,tripRound):null;
+  tripLast=plan?{start:start,route:plan.route,round:tripRound&&!!start}:null;
+  let h='<h3>🚗 '+T('行程规划','Trip plan','Rancangan perjalanan')+'</h3>';
+  h+='<div class="hint" style="margin:0 0 6px">'+(start
+      ?T('起点：','Start: ','Mula: ')+'<b>'+esc(start.name)+'</b>'
+      :T('没有起点——请在上方设定勘察位置，或在地图页点「我的位置」。现在从第一个地点开始。','No start point — set a prospect location above, or tap My position on the Map tab. Starting from the first site for now.','Tiada titik mula — tetapkan lokasi prospek di atas, atau ketik Kedudukan saya di tab Peta. Buat masa ini bermula dari tapak pertama.'))+'</div>';
+  h+='<div>'+todo.map(function(it){
+    const extra=[];if(it.level)extra.push(levelLabel(it.level)+(it.signal!=null?' '+it.signal+'%':''));if(it.deskScore!=null)extra.push(T('远程 ','desk ','meja ')+it.deskScore+'%');
+    return '<label class="tsite"><input type="checkbox" '+(tripSel.has(it.id)?'checked ':'')+'onchange="tripToggle(\''+it.id+'\',this.checked)">'+
+      '<span>'+esc(it.name)+(extra.length?'<small>'+extra.join(' · ')+'</small>':'')+'</span></label>';}).join('')+'</div>';
+  h+='<label class="tsite" style="border:0"><input type="checkbox" '+(tripRound?'checked ':'')+(start?'':'disabled ')+'onchange="tripRound=this.checked;renderTrip()">'+
+     '<span>'+T('最后返回起点','Return to the start at the end','Kembali ke titik mula pada akhirnya')+'</span></label>';
+  if(chosen.length>TRIP_MAX_STOPS)h+='<div class="hint" style="margin:4px 0">'+T('超过 '+TRIP_MAX_STOPS+' 个地点：谷歌地图路线将分成几段打开。','More than '+TRIP_MAX_STOPS+' sites: the Google Maps route opens in several parts.','Lebih daripada '+TRIP_MAX_STOPS+' tapak: laluan Google Maps akan dibuka dalam beberapa bahagian.')+'</div>';
+  if(plan){
+    let prev=start,legs='';
+    plan.route.forEach(function(p,i){const d=prev?haversine(prev.lat,prev.lon,p.lat,p.lon):0;legs+='<li>'+esc(p.name)+(prev?' <small>· '+fmtDist(d)+'</small>':'')+'</li>';prev=p;});
+    if(tripLast.round)legs+='<li>'+esc(start.name)+' <small>· '+fmtDist(haversine(prev.lat,prev.lon,start.lat,start.lon))+'</small></li>';
+    h+='<ol>'+legs+'</ol>';
+    h+='<div class="tot">'+T('直线总距离 ','Total straight-line distance ','Jumlah jarak garis lurus ')+fmtDist(plan.km*1000)+'</div>';
+    h+='<div class="hint" style="margin:2px 0 8px">'+T('实际道路距离通常是直线的 1.3–2 倍。','Road distance is usually 1.3–2× the straight line.','Jarak jalan raya biasanya 1.3–2 kali garis lurus.')+'</div>';
+    h+=tripLinks().map(function(u,i,all){return '<a class="btn sm" style="margin-top:6px" href="'+esc(u)+'" target="_blank" rel="noopener">🗺️ '+
+      (all.length>1?T('在谷歌地图打开（第 '+(i+1)+'/'+all.length+' 段）','Open in Google Maps (part '+(i+1)+' of '+all.length+')','Buka dalam Google Maps (bahagian '+(i+1)+' daripada '+all.length+')'):T('在谷歌地图打开路线','Open route in Google Maps','Buka laluan dalam Google Maps'))+'</a>';}).join('');
+    h+='<div class="hint" style="margin:4px 0 0;font-size:13.5px">'+T('手机上请用谷歌地图应用打开——手机浏览器只显示前 3 个途经点。','On a phone, open it in the Google Maps app — phone browsers show only the first 3 stops.','Pada telefon, buka dalam aplikasi Google Maps — pelayar telefon hanya memaparkan 3 hentian pertama.')+'</div>';
+    h+='<div class="row" style="margin-top:8px">'+
+       '<button class="btn ghost sm" style="flex:1" onclick="showTripOnMap()">📍 '+T('在地图上显示','Show on map','Tunjuk pada peta')+'</button>'+
+       '<button class="btn ghost sm" style="flex:1" onclick="downloadTripMaps()">⬇ '+T('下载离线地图','Offline maps','Peta luar talian')+'</button></div>'+
+       '<div class="dlbar" id="tripBar"><i id="tripFill"></i></div><div class="hint" id="tripMsg" style="margin:6px 0 0"></div>';
+  }else h+='<div class="hint" style="margin-top:8px">'+T('至少勾选一个地点。','Tick at least one site.','Tandakan sekurang-kurangnya satu tapak.')+'</div>';
+  box.innerHTML=h;
+}
+/* Google Maps directions links: origin → up to 9 waypoints → destination, chained. With a
+   live GPS start the origin is left out so Google uses the phone's own position. */
+function tripLinks(){
+  if(!tripLast)return [];
+  const ll=function(p){return p.lat.toFixed(6)+','+p.lon.toFixed(6);};
+  const stops=tripLast.route.slice();if(tripLast.round)stops.push(tripLast.start);
+  const links=[];let origin=tripLast.start,i=0;
+  while(i<stops.length){
+    const chunk=stops.slice(i,i+TRIP_MAX_STOPS+1);i+=chunk.length;
+    const dest=chunk.pop();
+    let u='https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+ll(dest);
+    if(origin&&!(links.length===0&&origin.live))u+='&origin='+ll(origin);
+    if(chunk.length)u+='&waypoints='+chunk.map(ll).join('%7C');
+    links.push(u);origin=dest;
+  }
+  return links;
+}
+function showTripOnMap(){
+  if(!tripLast)return;
+  const t=tripLast;
+  nav('map',document.querySelector('nav button[data-v=map]'));
+  setTimeout(function(){
+    if(!map||typeof L==='undefined')return;
+    if(tripLayer){map.removeLayer(tripLayer);}
+    tripLayer=L.layerGroup().addTo(map);
+    const line=(t.start?[t.start]:[]).concat(t.route).concat(t.round?[t.start]:[]).map(function(p){return [p.lat,p.lon];});
+    L.polyline(line,{color:'#c07b4a',weight:3,opacity:.9,dashArray:'8,7'}).addTo(tripLayer);
+    t.route.forEach(function(p,i){
+      L.marker([p.lat,p.lon],{zIndexOffset:900,interactive:false,icon:L.divIcon({className:'',html:'<div class="trip-num">'+(i+1)+'</div>',iconSize:[24,24],iconAnchor:[12,30]})}).addTo(tripLayer);
+    });
+    map.fitBounds(L.latLngBounds(line).pad(0.15));
+  },150);
+}
+async function downloadTripMaps(){
+  if(!tripLast)return;
+  if(!navigator.onLine)return toast(T('请先联网再下载图块','Go online first to download tiles'),true);
+  if(!('caches' in window))return toast(T('此浏览器无法离线保存地图','This browser cannot store maps offline'),true);
+  const urls=tileUrlsAround(tripLast.route,1000);
+  const mb=Math.round(urls.length*0.015);   // ~15 KB per tile on average
+  const go=await askConfirm(T('下载离线地图？','Download offline maps?','Muat turun peta luar talian?'),
+    T('每个地点周围 1 公里的地图和卫星照片：约 '+urls.length+' 个图块（约 '+mb+' MB）。请在 WiFi 下进行。',
+      'Map and satellite photo within 1 km of each stop: about '+urls.length+' tiles (~'+mb+' MB). Best done on wifi.',
+      'Peta dan foto satelit dalam lingkungan 1 km bagi setiap hentian: kira-kira '+urls.length+' jubin (~'+mb+' MB). Sebaiknya melalui WiFi.'),
+    T('下载','Download','Muat turun'),false);
+  if(!go)return;
+  const bar=document.getElementById('tripBar'),fill=document.getElementById('tripFill'),msg=document.getElementById('tripMsg');
+  bar.classList.add('on');msg.textContent=T('正在下载…','Downloading…','Memuat turun…');
+  const ok=await cacheTileUrls(urls,function(d,n){fill.style.width=(d/n*100)+'%';msg.textContent=d+' / '+n;});
+  setTimeout(function(){bar.classList.remove('on');},1500);
+  msg.textContent=T('已保存 '+ok+' / '+urls.length+' 个图块。','Saved '+ok+' / '+urls.length+' tiles.','Disimpan '+ok+' / '+urls.length+' jubin.');
+  if(ok===urls.length)toast(T('行程地图已可离线使用','Trip maps ready offline','Peta perjalanan sedia untuk luar talian'));
+  else if(ok>0)toast(T('只保存了部分图块（'+ok+'/'+urls.length+'）— 请在信号好时重试','Only part saved ('+ok+'/'+urls.length+') — retry with better signal','Hanya sebahagian disimpan ('+ok+'/'+urls.length+') — cuba lagi dengan isyarat lebih baik'),true);
+  else toast(T('下载失败 — 没有任何图块被保存','Download failed — nothing was saved','Muat turun gagal — tiada apa-apa disimpan'),true);
+}
+
 /* ============ GEOPACKAGE EXPORT ============
    A GeoPackage is an SQLite file with a few standard metadata tables (OGC 12-128r18).
    sql.js (SQLite compiled to WebAssembly) builds it in the browser; it is fetched from
@@ -2984,12 +3130,12 @@ const EVALSCRIPTS={
    Fetches the active analysis layer as a single image over the current map bounds,
    finds clusters of strong signal, and converts pixel positions back to GPS. */
 let scanLayerGroup=null,lastTargets=[],lastScan=null;
-function scanTargets(){
+async function scanTargets(){
   const msg=document.getElementById('scanMsg'),btn=document.getElementById('scanBtn');
   const res=document.getElementById('scanResults');res.innerHTML='';
   if(!map){msg.textContent=T('请先打开地图。','Open the map first.');return;}
   if(!satId){msg.innerHTML=T('⚠ 目标扫描使用高级分析图层，需要你的 Copernicus 实例 ID（见上方）。','⚠ Target scanning uses the analysis layers, which need your Copernicus instance ID (see above).');return;}
-  if(!currentSatKind||['off','esri','esrired','ndvi','truecolor'].indexOf(currentSatKind)>-1){
+  if(!currentSatKind||SCAN_KINDS.indexOf(currentSatKind)<0){
     msg.innerHTML=T('⚠ 请先选择一个分析图层——<b>铁比值</b>、<b>蚀变</b>、<b>黏土</b>或<b>亚铁</b>。这些图层才带有值得扫描的矿物信号。','⚠ Pick an analysis layer first — <b>Iron ratio</b>, <b>Alteration</b>, <b>Clay</b> or <b>Ferrous iron</b>. Those carry a mineral signal worth scanning.');return;
   }
   if(!navigator.onLine){msg.innerHTML=T('⚠ 扫描需要网络信号。','⚠ Scanning needs signal.');return;}
@@ -2997,33 +3143,44 @@ function scanTargets(){
   const b=map.getBounds();
   // match the screen's shape so pixels are roughly square on the ground
   const sz=map.getSize();const W=384,H=Math.max(160,Math.min(768,Math.round(384*sz.y/Math.max(1,sz.x))));
-  const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
   const today=new Date().toISOString().slice(0,10);
-  const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
-    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS='+(LAYERMAP[scanKind]||'IRON-RATIO')+
+  const base='https://sh.dataspace.copernicus.eu/ogc/wms/'+encodeURIComponent(satId)+'?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+
     '&SRS=EPSG:4326&BBOX='+b.getWest()+','+b.getSouth()+','+b.getEast()+','+b.getNorth()+
     '&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/png&MAXCC='+maxCC()+'&PRIORITY='+CC_PRIORITY+'&TIME=2023-01-01/'+today;
   const bar=document.getElementById('scanBar'),fill=document.getElementById('scanFill');
   bar.classList.add('on');fill.style.width='25%';btn.style.opacity=.5;
   msg.textContent=T('正在获取此范围的影像…','Fetching imagery for this view…');
-  let scan=null;
-  fetch(url).then(function(r){
-    if(!r.ok)throw new Error('server returned '+r.status);
-    return r.blob();
-  }).then(function(blob){
-    fill.style.width='60%';msg.textContent=T('正在分析像素…','Analysing pixels…');
-    // keep the image so shortlisted targets can show what the satellite saw, offline
-    const scanT=Date.now();
-    scan={t:scanT,kind:scanKind,bounds:{w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()},data:null,saved:false};
-    const sc=scan,fr=new FileReader();fr.onload=function(){sc.data=fr.result;};fr.readAsDataURL(blob);
-    return createImageBitmap(blob);
-  }).then(function(bmp){
-    const cv=document.createElement('canvas');cv.width=W;cv.height=H;
-    const ctx=cv.getContext('2d',{willReadFrequently:true});
-    ctx.drawImage(bmp,0,0,W,H);
-    const data=ctx.getImageData(0,0,W,H).data;
+  const scanT=Date.now();
+  const scan={t:scanT,kind:scanKind,bounds:{w:b.getWest(),s:b.getSouth(),e:b.getEast(),n:b.getNorth()},data:null,saved:false,method:null};
+  try{
+    let targets=null,lastErr=null;
+    // 1) measured: the app's own script on any Sentinel-2 L2A layer (with, then without SCL)
+    let caps=null;try{caps=await discoverLayers();}catch(e){lastErr=e;}
+    if(caps&&caps.s2){
+      for(const withSCL of [true,false]){
+        try{
+          const bmp=await fetchPixels(base+'&LAYERS='+encodeURIComponent(caps.s2)+'&EVALSCRIPT='+encodeURIComponent(b64(scanScript(scanKind,withSCL))));
+          fill.style.width='60%';msg.textContent=T('正在分析像素…','Analysing pixels…');
+          const px=bmpPixels(bmp,W,H);
+          targets=findClustersData(px,W,H,b);
+          scan.data=scanPicture(px,W,H);scan.method=withSCL?'measured':'measured-noscl';
+          break;
+        }catch(e){lastErr=e;}
+      }
+    }
+    // 2) fallback: the older named layers, scored by colour
+    if(!targets){
+      const LAYERMAP={iron:'GEOLOGY',clay:'SWIR',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
+      try{
+        const bmp=await fetchPixels(base+'&LAYERS='+(LAYERMAP[scanKind]||'IRON-RATIO'));
+        fill.style.width='60%';
+        const px=bmpPixels(bmp,W,H);
+        targets=findClusters(px,W,H,b,scanKind);
+        const cv=document.createElement('canvas');cv.width=W;cv.height=H;cv.getContext('2d').drawImage(bmp,0,0,W,H);
+        scan.data=cv.toDataURL('image/png');scan.method='colour';
+      }catch(e){throw lastErr&&!caps?lastErr:e;}
+    }
     fill.style.width='85%';
-    const targets=findClusters(data,W,H,b,scanKind);
     // each target carries its own scan (layer + image), whatever is selected later
     targets.forEach(function(t){t.scan=scan;});
     fill.style.width='100%';
@@ -3031,13 +3188,120 @@ function scanTargets(){
     drawTargets(targets);
     renderTargetList(targets);
     btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1200);
-  }).catch(function(e){
+  }catch(e){
     btn.style.opacity=1;bar.classList.remove('on');
     msg.innerHTML=T('⚠ 无法扫描：','⚠ Couldn\'t scan: ')+esc(e&&e.message?e.message:e)+T('。如果提示 CORS 或 tainted，说明浏览器无法读取该影像——请平移／缩放后重试，或凭肉眼标记目标。','. If this says CORS or tainted, the imagery can\'t be read by the browser — pan/zoom and try again, or mark targets by eye.','. Jika mesej ini menyebut CORS atau tainted, pelayar tidak dapat membaca imej tersebut — gerakkan/zum peta dan cuba lagi, atau tandakan sasaran secara visual.');
-  });
+  }
 }
 
-/* Score each pixel for "mineral interest", then group hot pixels into clusters.
+/* ============ MEASURED SCANNING (app-supplied Copernicus scripts) ============
+   Instead of asking for layers the user had to create by hand and then guessing from
+   their colours, the app sends its own processing script with each request (Copernicus
+   EVALSCRIPT parameter) on any Sentinel-2 L2A layer the account already has. The scan
+   script returns, per pixel: R = the mineral ratio scaled 0..255, G = 255 on exposed
+   ground, and B = a class code for what was masked (cloud, water, vegetation). Cloud and
+   cloud shadow come from Copernicus's own per-pixel scene classification (SCL). */
+const CAPS_KEY='pf_sat_caps',CAPS_TTL=7*86400000;
+let satCaps=null;   // {id, s2, s2L2A, s1, t}
+function capsFromStore(){
+  try{const c=JSON.parse(localStorage.getItem(CAPS_KEY)||'null');if(c&&c.id===satId&&Date.now()-c.t<CAPS_TTL)return c;}catch(e){}
+  return null;
+}
+/* Ask the account which layers it has and pick one on Sentinel-2 L2A (for optical
+   scripts) and one on Sentinel-1 (for radar). Cached for a week per instance ID. */
+async function discoverLayers(force){
+  if(!satId)return null;
+  if(!force){const c=(satCaps&&satCaps.id===satId)?satCaps:capsFromStore();if(c){satCaps=c;return c;}}
+  const res=await fetch('https://sh.dataspace.copernicus.eu/ogc/wms/'+encodeURIComponent(satId)+'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.1.1');
+  if(!res.ok)throw new Error('capabilities '+res.status);
+  const xml=new DOMParser().parseFromString(await res.text(),'text/xml');
+  const names=[];
+  const layers=xml.getElementsByTagName('Layer');
+  for(let i=0;i<layers.length;i++){
+    for(let j=0;j<layers[i].children.length;j++){const c=layers[i].children[j];if(c.tagName==='Name'&&c.textContent.trim())names.push(c.textContent.trim());}
+  }
+  const NOT_S2=/SENTINEL-?1|(^|[^A-Z])S1([^A-Z0-9]|$)|RADAR|GRD|DEM|LANDSAT|L1C|S3|S5|MODIS|SLSTR|OLCI/i;
+  const S1=/SENTINEL-?1|(^|[^A-Z])S1([^A-Z0-9]|$)|GRD|RADAR|VV|VH/i;
+  const OURS=['IRON-RATIO','FERROUS-IRON','ALTERATION'];          // created from the Guide: all Sentinel-2 L2A
+  const pref=function(n){if(/L2A/i.test(n))return 0;if(OURS.indexOf(n.toUpperCase())>-1)return 1;if(/TRUE|NATURAL|COLOR|COLOUR/i.test(n))return 2;return 3;};
+  const s2c=names.filter(function(n){return !NOT_S2.test(n);}).sort(function(a,b){return pref(a)-pref(b);});
+  const s2=s2c[0]||null;
+  const c={id:satId,s2:s2,s2L2A:!!(s2&&pref(s2)<=1),s1:names.filter(function(n){return S1.test(n);})[0]||null,names:names.length,t:Date.now()};
+  satCaps=c;try{localStorage.setItem(CAPS_KEY,JSON.stringify(c));}catch(e){}
+  return c;
+}
+/* Normalised mineral signal 0..1 per layer (same ratios as the Guide's display scripts). */
+const SCAN_FORMULA={
+  ironratio:'clamp((s.B04/(s.B02+1e-6)-1.05)/0.85)',
+  iron:'clamp((s.B04/(s.B02+1e-6)-1.05)/0.85)',
+  ferrous:'clamp((s.B11/(s.B08+1e-6)-0.85)/0.75)',
+  clay:'clamp((s.B11/(s.B12+1e-6)-1.02)/0.35)',
+  // iron AND clay together is the alteration signature: geometric mean is high only when both are
+  alteration:'Math.sqrt(clamp((s.B04/(s.B02+1e-6)-1.05)/0.85)*clamp((s.B11/(s.B12+1e-6)-1.02)/0.35))'
+};
+const SCAN_KINDS=Object.keys(SCAN_FORMULA);
+function scanScript(kind,withSCL){
+  return '//VERSION=3\n'+
+  'function setup(){return{input:["B02","B03","B04","B08","B11","B12"'+(withSCL?',"SCL"':'')+',"dataMask"],output:{bands:3,sampleType:"UINT8"}};}\n'+
+  'function clamp(x){return Math.max(0,Math.min(1,x));}\n'+
+  'function evaluatePixel(s){\n'+
+  ' if(!s.dataMask)return[0,0,0];\n'+
+  (withSCL?' if(s.SCL==3||s.SCL==8||s.SCL==9||s.SCL==10||s.SCL==11)return[0,0,64];\n if(s.SCL==6)return[0,0,128];\n'
+          :' if(s.B02>0.25&&s.B03>0.25&&s.B04>0.25&&s.B11>0.2)return[0,0,64];\n')+
+  ' if((s.B08-s.B04)/(s.B08+s.B04+1e-6)>0.35)return[0,0,192];\n'+
+  ' if(s.B11<0.03)return[0,0,128];\n'+
+  ' return[Math.round(255*'+SCAN_FORMULA[kind]+'),255,0];\n}';
+}
+/* Display scripts for the map layers: the Guide's masked colour scripts for the three
+   mineral layers, the built-in ones for the rest. */
+function displayScript(kind){
+  const ta={ironratio:'scriptIron',ferrous:'scriptFerrous',alteration:'scriptAlter'}[kind];
+  if(ta){const el=document.getElementById(ta);if(el&&el.value.trim())return el.value;}
+  return EVALSCRIPTS[kind]||null;
+}
+/* Measured thresholds on the 0..1 signal (see SCAN_FORMULA): a pixel counts from 0.35;
+   a patch is Strong from a mean of 0.60, Moderate from 0.45. Check these against known
+   mineralised ground and adjust if needed. */
+const SCAN_HOT=0.35,SCAN_STRONG=0.60,SCAN_MODERATE=0.45;
+function findClustersData(data,W,H,bounds){
+  const score=new Float32Array(W*H),hot=new Uint8Array(W*H);
+  const st={ground:0,cloud:0,water:0,veg:0,none:0};
+  for(let i=0,p=0;i<data.length;i+=4,p++){
+    const r=data[i],g=data[i+1],b=data[i+2];
+    if(g>127){st.ground++;const v=r/255;score[p]=v;hot[p]=v>=SCAN_HOT?1:0;continue;}
+    if(b>=40&&b<96)st.cloud++;else if(b>=96&&b<160)st.water++;else if(b>=160)st.veg++;else st.none++;
+  }
+  const tot=W*H;const pct={};Object.keys(st).forEach(function(k){pct[k]=Math.round(100*st[k]/tot);});
+  const targets=st.ground<60?[]:clusterize(score,hot,W,H,bounds,function(m){return m>=SCAN_STRONG?'strong':(m>=SCAN_MODERATE?'moderate':'weak');});
+  targets.stats=pct;
+  return targets;
+}
+/* A picture of the measured scan for the shortlist snapshot: masked classes in muted
+   colours, exposed ground shaded from tan (no signal) to bright red-orange (strong). */
+function scanPicture(data,W,H){
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');const img=ctx.createImageData(W,H);const o=img.data;
+  for(let i=0;i<data.length;i+=4){
+    const r=data[i],g=data[i+1],b=data[i+2];let c;
+    if(g>127){const v=r/255;c=[Math.round(150+105*v),Math.round(130-70*v+60*Math.max(0,v-0.6)),Math.round(100-90*v)];}
+    else if(b>=40&&b<96)c=[205,205,210];else if(b>=96&&b<160)c=[25,45,80];else if(b>=160)c=[28,48,32];else c=[0,0,0];
+    o[i]=c[0];o[i+1]=c[1];o[i+2]=c[2];o[i+3]=255;
+  }
+  ctx.putImageData(img,0,0);return cv.toDataURL('image/png');
+}
+async function fetchPixels(url){
+  const res=await fetch(url);
+  const ct=res.headers.get('content-type')||'';
+  if(!res.ok||ct.indexOf('image')!==0){let t='';try{t=(await res.text()).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,160);}catch(e){}throw new Error((res.ok?'not an image':'server returned '+res.status)+(t?': '+t:''));}
+  return createImageBitmap(await res.blob());
+}
+function bmpPixels(bmp,W,H){
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0,W,H);
+  return ctx.getImageData(0,0,W,H).data;
+}
+
+/* Score each pixel for "mineral interest\", then group hot pixels into clusters.
    Scoring is layer-specific: a generic brightness score just finds towns and bare
    ground in every layer, which makes every scan return the same places. */
 function findClusters(data,W,H,bounds,kind){
@@ -3082,6 +3346,11 @@ function findClusters(data,W,H,bounds,kind){
   const thr=Math.max(0.28,median*0.72);
   const hot=new Uint8Array(W*H);
   for(let p=0;p<score.length;p++)hot[p]=score[p]>=thr?1:0;
+  return clusterize(score,hot,W,H,bounds,function(mean){return mean>=0.55?'strong':(mean>=0.40?'moderate':'weak');});
+}
+/* Group hot pixels into patches, convert them to coordinates and rank them.
+   levelOf(mean) maps a patch's mean score to strong / moderate / weak. */
+function clusterize(score,hot,W,H,bounds,levelOf){
   // flood-fill into clusters
   const seen=new Uint8Array(W*H),clusters=[];
   const stack=[];
@@ -3116,7 +3385,7 @@ function findClusters(data,W,H,bounds,kind){
     c.hM=Math.round(haversine(c.north,c.lon,c.south,c.lon));
     c.strength=c.mean*Math.log(1+c.n); // size-weighted strength
     // fixed thresholds, so a dull scene does not dress up weak patches as targets
-    c.level=c.mean>=0.55?'strong':(c.mean>=0.40?'moderate':'weak');
+    c.level=levelOf(c.mean);
     c.signal=Math.min(100,Math.round(c.mean*100));
   });
   // Rank the way the list reads: Strong before Moderate before Weak, then by signal %,
@@ -3145,9 +3414,26 @@ function drawTargets(targets){
   });
 }
 
+/* What the measured scan saw in this view, so an empty result has a reason */
+function scanCoverNote(st,found){
+  if(!st)return '';
+  const parts=T('裸露地面 '+st.ground+'% · 植被 '+st.veg+'% · 云 '+st.cloud+'% · 水体 '+st.water+'%',
+               'exposed ground '+st.ground+'% · vegetation '+st.veg+'% · cloud '+st.cloud+'% · water '+st.water+'%',
+               'tanah terdedah '+st.ground+'% · tumbuhan '+st.veg+'% · awan '+st.cloud+'% · air '+st.water+'%');
+  let why='';
+  if(found){/* results speak for themselves */}
+  else if(st.cloud>=40)why=T('大部分被云遮挡——可点击<b>影像质量</b>允许多云影像，或稍后再试。','Much of this view is cloud — tap <b>Image quality</b> to allow cloudier scenes, or try later.','Sebahagian besar paparan ini berawan — ketik <b>Kualiti imej</b> untuk membenarkan imej lebih berawan, atau cuba kemudian.');
+  else if(st.ground<5)why=T('几乎没有裸露地面（密林或水体），卫星看不到岩石。试试 🌿 植被空隙图层，找出有出露的地方。','Almost no exposed ground here (dense forest or water), so the satellite cannot see rock. Try the 🌿 Veg gaps layer to find where ground is exposed.','Hampir tiada tanah terdedah di sini (hutan tebal atau air), jadi satelit tidak dapat melihat batuan. Cuba lapisan 🌿 Celah tumbuhan untuk mencari kawasan tanah terdedah.');
+  return '<div class="hint" style="margin-top:6px">🛰️ '+parts+(why?'<br>'+why:'')+'</div>';
+}
 function renderTargetList(targets){
   const msg=document.getElementById('scanMsg'),res=document.getElementById('scanResults');
+  const cover=scanCoverNote(targets.stats,targets.some(function(t){return t.level!=='weak';}));
   if(!targets.length){
+    if(targets.stats){
+      msg.innerHTML=T('此范围内没有达到阈值的斑块。','No patch in this view reaches the signal threshold.','Tiada tompok dalam paparan ini yang mencapai ambang isyarat.')+cover;
+      return;
+    }
     msg.innerHTML=T('此范围内未发现明显斑块。通常意味着有云、密林，或确实没有突出目标——可尝试平移、稍微缩小，或换一个图层。','No strong patches found in this view. That usually means cloud, dense jungle, or genuinely nothing standing out — try panning, zooming out a little, or a different layer.');
     return;
   }
@@ -3155,6 +3441,7 @@ function renderTargetList(targets){
   msg.innerHTML=good
     ?T('发现 <b>'+targets.length+'</b> 处斑块（其中 <b>'+good+'</b> 处为中或强），按信号由强到弱排列。方框已绘制在地图上。','Found <b>'+targets.length+'</b> patch'+(targets.length===1?'':'es')+' (<b>'+good+'</b> moderate or strong), strongest first. Boxes are drawn on the map.',"Ditemui <b>"+targets.length+"</b> tompok"+(targets.length===1?'':"")+" (<b>"+good+"</b> sederhana atau kuat), yang paling kuat dahulu. Kotak dilukis pada peta.")
     :T('此范围内<b>没有明显突出的地方</b>——下面只是弱斑块，单凭它们不值得专程前往。可换一个图层或区域再试。','<b>Nothing in this view stands out strongly</b> — the patches below are weak and probably not worth a trip on their own. Try another layer or area.');
+  if(cover)msg.innerHTML+=cover;
   let html='';
   if(good)html+='<button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="shortlistAllTargets()">📌 '+T('把中、强目标全部加入候选清单','Add all moderate & strong to shortlist')+'</button>';
   targets.forEach(function(t,i){
@@ -3205,6 +3492,7 @@ function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 /* Never let an empty field wipe a saved ID — onchange fires on clearing too, and
    re-obtaining the ID means a 20-minute round trip through the Copernicus site. */
 function saveSatId(){
+  satCaps=null;try{localStorage.removeItem(CAPS_KEY);}catch(e){}
   const el=document.getElementById('satId');
   const v=(el.value||'').trim();
   if(!v){
@@ -3375,7 +3663,7 @@ function redrawSatMsg(){
   if(d==null)return;
   const m=document.getElementById('satMsg');if(m)m.innerHTML=d;
 }
-function setSatLayer(kind,chip){
+async function setSatLayer(kind,chip){
   clearAllSatChips();chip.classList.add('on');
   currentSatKind=kind;
   // Update the collapsed header BEFORE any early return — the user has made a choice
@@ -3423,16 +3711,30 @@ function setSatLayer(kind,chip){
     // Map each chip to a REAL layer name that exists in the Copernicus config
     // (these are the standard template layers; the instance's own visualization is used).
     const LAYERMAP={truecolor:'TRUE-COLOR-S2L2A',iron:'GEOLOGY',clay:'SWIR',ndvi:'NDVI',radar:'SENTINEL-1',ironratio:'IRON-RATIO',ferrous:'FERROUS-IRON',alteration:'ALTERATION'};
-    const layerName=LAYERMAP[kind]||'TRUE-COLOR-S2L2A';
-    satLayer=L.tileLayer.wms(base,{
-      layers:layerName,
+    /* Prefer the app's own script on a layer the account already has, so no hand-made
+       layers are needed. Falls back to the named layers if that does not load. */
+    let caps=null;try{caps=await discoverLayers();}catch(e){}
+    if(currentSatKind!==kind)return;   // user picked another layer while we were asking
+    const host=caps?(isRadar?caps.s1:caps.s2):null,script=displayScript(kind);
+    const useScript=!!(host&&script);
+    const opts={
+      layers:useScript?host:(LAYERMAP[kind]||'TRUE-COLOR-S2L2A'),
       format:'image/png',transparent:true,version:'1.1.1',tileSize:512,className:'pf-seamless-512',
       maxcc:isRadar?100:maxCC(),priority:isRadar?'mostRecent':CC_PRIORITY,opacity:1.0,minZoom:11,
       time:'2023-01-01/'+today,
       attribution:''
-    });
-    let errShown=false;
+    };
+    if(useScript)opts.evalscript=b64(script);
+    satLayer=L.tileLayer.wms(base,opts);
+    let errShown=false,triedFallback=!useScript;
     satLayer.on('tileerror',function(){
+      if(!triedFallback){
+        // the account did not accept our script: switch this layer to the named one
+        triedFallback=true;
+        const named=LAYERMAP[kind]||'TRUE-COLOR-S2L2A';
+        delete satLayer.wmsParams.evalscript;satLayer.setParams({layers:named});
+        return;
+      }
       if(errShown)return;errShown=true;
       if(isRadar)msg.innerHTML=T('⚠ 雷达图块未能加载。若地图上出现 "meters per pixel exceeds limit" 提示，请再放大一些。否则请检查网络信号。','⚠ Radar tiles didn\'t load. If you see a "meters per pixel exceeds limit" note on the map, zoom in more. Otherwise check signal.');
       else msg.innerHTML=T('⚠ 光学图块未能加载。在<b>仅晴空影像</b>模式下，此处可能没有无云的过境影像——可点击<b>影像质量</b>改为允许多云，改用 📡 雷达，或稍作平移。','⚠ Optical tiles didn\'t load. In <b>Clear scenes only</b> mode there may be no cloud-free pass for this exact spot — tap <b>Image quality</b> to allow cloudier scenes, try 📡 Radar, or pan slightly.');
@@ -3456,9 +3758,18 @@ async function testSatId(){
   const c=map?map.getCenter():{lat:3.14,lng:101.7};
   const d=0.05; // ~5km box
   const today=new Date().toISOString().slice(0,10);
+  // Ask the account which layers it has; the analysis runs on its Sentinel-2 L2A layer.
+  let caps=null,capsErr='';
+  try{caps=await discoverLayers(true);}catch(e){capsErr=e&&e.message?e.message:String(e);}
+  const found=caps?(caps.s2
+      ?T('✓ 已连接。分析将使用你账户中的图层 <b>'+esc(caps.s2)+'</b>'+(caps.s1?'，雷达使用 <b>'+esc(caps.s1)+'</b>':'（未找到雷达图层）')+'。',
+         '✓ Connected. Analysis will use your layer <b>'+esc(caps.s2)+'</b>'+(caps.s1?', radar uses <b>'+esc(caps.s1)+'</b>':' (no radar layer found)')+'.',
+         '✓ Disambungkan. Analisis akan menggunakan lapisan anda <b>'+esc(caps.s2)+'</b>'+(caps.s1?', radar menggunakan <b>'+esc(caps.s1)+'</b>':' (tiada lapisan radar ditemui)')+'.')
+      :T('⚠ 已连接，但你的配置中没有 Sentinel-2 L2A 图层。请在 Copernicus 配置中添加一个（任意名称，数据源选 Sentinel-2 L2A）。','⚠ Connected, but your configuration has no Sentinel-2 L2A layer. Add one in your Copernicus configuration (any name, data source Sentinel-2 L2A).','⚠ Disambungkan, tetapi konfigurasi anda tiada lapisan Sentinel-2 L2A. Tambah satu dalam konfigurasi Copernicus anda (apa-apa nama, sumber data Sentinel-2 L2A).'))
+    :'';
   // WMS 1.1.1 uses EPSG:4326 lon,lat order in BBOX — simplest, least ambiguous.
   const url='https://sh.dataspace.copernicus.eu/ogc/wms/'+satId+
-    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=NATURAL-COLOR'+
+    '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'+(caps&&caps.s2?'&LAYERS='+encodeURIComponent(caps.s2)+'&EVALSCRIPT='+encodeURIComponent(b64(EVALSCRIPTS.truecolor)):'&LAYERS=NATURAL-COLOR')+
     '&SRS=EPSG:4326&BBOX='+(c.lng-d)+','+(c.lat-d)+','+(c.lng+d)+','+(c.lat+d)+
     '&WIDTH=512&HEIGHT=512&FORMAT=image/png&MAXCC='+maxCC()+'&PRIORITY='+CC_PRIORITY+'&TIME=2023-01-01/'+today;
   try{
@@ -3467,13 +3778,13 @@ async function testSatId(){
     if(res.ok&&ct.indexOf('image')===0){
       // Show the actual returned tile so you can SEE it (image or an error painted as image)
       const blob=await res.blob();const u=URL.createObjectURL(blob);
-      msg.innerHTML=T('服务器返回了图像——如下（若整片单色即为云或空白；若显示文字则是服务器提示）：','Server returned an image, shown below (if it is mostly one colour that is cloud or blank; if it shows text that is a server note):')+'<br><img src="'+u+'" style="width:100%;max-width:280px;border-radius:8px;margin-top:8px;border:1px solid #3a2e21">';
+      msg.innerHTML=(found?found+'<br>':'')+T('服务器返回了图像——如下（若整片单色即为云或空白；若显示文字则是服务器提示）：','Server returned an image, shown below (if it is mostly one colour that is cloud or blank; if it shows text that is a server note):')+'<br><img src="'+u+'" style="width:100%;max-width:280px;border-radius:8px;margin-top:8px;border:1px solid #3a2e21">';
     }else if(res.ok){
       const txt=await res.text();
-      msg.innerHTML=T('⚠ 服务器返回的是文本而非图像：','⚠ Server sent text, not an image: ')+txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300);
+      msg.innerHTML=(found?found+'<br>':'')+T('⚠ 服务器返回的是文本而非图像：','⚠ Server sent text, not an image: ')+txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300);
     }else{
       const txt=await res.text();
-      msg.innerHTML=T('⚠ 错误 ','⚠ Error ')+res.status+': '+(txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300)||T('（无详细信息）','(no detail)'));
+      msg.innerHTML=(found?found+'<br>':'')+T('⚠ 错误 ','⚠ Error ')+res.status+': '+(txt.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,300)||T('（无详细信息）','(no detail)'));
     }
   }catch(e){
     msg.innerHTML=T('⚠ 无法连接 Copernicus：','⚠ Couldn\'t reach Copernicus: ')+(e&&e.message?e.message:e);
@@ -3694,6 +4005,39 @@ function updateNet(){
 }
 window.addEventListener('online',updateNet);window.addEventListener('offline',updateNet);
 
+/* Save a list of tile URLs into the offline tile cache; returns how many were saved. */
+async function cacheTileUrls(urls,onProgress){
+  const cache=await caches.open('pf-tiles');let ok=0;
+  for(let i=0;i<urls.length;i++){
+    try{
+      /* CORS first: OSM and Esri both allow it, and a readable response is stored at its real
+         size. An opaque (no-cors) response is padded to several MB each in Chrome's quota,
+         which filled storage after ~100 tiles. Fall back to no-cors only if CORS is refused. */
+      let res;
+      try{res=await fetch(urls[i],{mode:'cors'});if(!res.ok)throw new Error('HTTP '+res.status);}
+      catch(e1){res=await fetch(urls[i],{mode:'no-cors'});}
+      await cache.put(urls[i],res);ok++;
+    }catch(e){}
+    if(onProgress)onProgress(i+1,urls.length);
+  }
+  return ok;
+}
+/* Map + satellite-photo tiles within radiusM of each point, zoom 13–17 (deduplicated). */
+function tileUrlsAround(points,radiusM){
+  const subs=['a','b','c'],set=new Set(),out=[];
+  points.forEach(function(pt){
+    const dLat=radiusM/111320,dLon=radiusM/(111320*Math.max(0.2,Math.cos(pt.lat*Math.PI/180)));
+    for(let z=13;z<=17;z++){
+      const a=deg2tile(pt.lat+dLat,pt.lon-dLon,z),b=deg2tile(pt.lat-dLat,pt.lon+dLon,z);
+      for(let x=a.x;x<=b.x;x++)for(let y=a.y;y<=b.y;y++){
+        const k=z+'/'+x+'/'+y;if(set.has(k))continue;set.add(k);
+        out.push(TILE.replace('{s}',subs[(x+y)%3]).replace('{z}',z).replace('{x}',x).replace('{y}',y));
+        out.push(ESRI_IMAGERY.replace('{z}',z).replace('{x}',x).replace('{y}',y));
+      }
+    }
+  });
+  return out;
+}
 async function downloadRegion(){
   if(!map)return;
   if(!navigator.onLine)return toast(T('请先联网再下载图块','Go online first to download tiles'),true);
@@ -3719,19 +4063,7 @@ async function downloadRegion(){
   const bar=document.getElementById('dlBar'),fill=document.getElementById('dlFill'),msg=document.getElementById('dlMsg'),btn=document.getElementById('dlBtn');
   bar.classList.add('on');btn.style.opacity=.5;let done=0,ok=0;
   msg.textContent=T('正在下载 '+urls.length+' 个图块…','Downloading '+urls.length+' tiles…',"Memuat turun "+urls.length+" jubin…");
-  const cache=await caches.open('pf-tiles');
-  for(let i=0;i<urls.length;i++){
-    try{
-      /* CORS first: OSM and Esri both allow it, and a readable response is stored at its real
-         size. An opaque (no-cors) response is padded to several MB each in Chrome's quota,
-         which filled storage after ~100 tiles. Fall back to no-cors only if CORS is refused. */
-      let res;
-      try{res=await fetch(urls[i],{mode:'cors'});if(!res.ok)throw new Error('HTTP '+res.status);}
-      catch(e1){res=await fetch(urls[i],{mode:'no-cors'});}
-      await cache.put(urls[i],res);ok++;
-    }catch(e){}
-    done++;fill.style.width=(done/urls.length*100)+'%';
-  }
+  ok=await cacheTileUrls(urls,function(d,n){done=d;fill.style.width=(d/n*100)+'%';});
   msg.textContent=T('已缓存 '+ok+' / '+urls.length+' 个图块供离线使用'+(withSat?'（含卫星照片）':'')+'。','Cached '+ok+' / '+urls.length+' tiles for offline use'+(withSat?' (map + satellite photo)':'')+'.',"Disimpan dalam cache "+ok+' / '+urls.length+" jubin untuk kegunaan luar talian"+(withSat?" (peta + foto satelit)":'')+'.');
   btn.style.opacity=1;setTimeout(function(){bar.classList.remove('on');},1500);
   if(ok===urls.length)toast(T('区域已缓存 — 现在可离线使用','Region cached — works offline now'));
