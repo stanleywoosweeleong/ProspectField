@@ -1,141 +1,195 @@
-/* ProspectField service worker
-   Strategy:
-   - App shell (this page, icons, Leaflet): cache-first, so the app opens with no signal.
-   - Map tiles: cache-first with background fill, so pre-downloaded regions work offline.
-   - Everything else: network-first, falling back to cache.
-   Bump SW_VERSION when the app changes so users get the new build.
-*/
-const SW_VERSION = 'pf-v22';
-const SHELL_CACHE = SW_VERSION + '-shell';
-const TILE_CACHE  = 'pf-tiles';          // shared with the in-app region downloader
-const ELEV_CACHE  = 'pf-elev';           // terrain elevation profiles (persist across versions)
-const LIB_CACHE   = 'pf-libs';           // on-demand libraries (sql.js for GeoPackage), kept across versions
-const RUNTIME     = SW_VERSION + '-runtime';
+/* ProspectField service worker — self-updating, no version number to bump.
 
-/* Files the app needs to start with no network at all. */
-const SHELL = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png',
-  './icon-512-maskable.png',
-  './apple-touch-icon.png',
-  './favicon-32.png',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+   - The app opens instantly from the cache (important on weak rural signal).
+   - On every launch, and whenever the app returns to the foreground, the page
+     sends "check": every app file is re-fetched past the HTTP cache, the cache is
+     refreshed, and if index.html came back different every open window is sent
+     "updated" so it can offer a one-tap Refresh.
+   - Map tiles, terrain heights and the GeoPackage library live in their own
+     caches that survive updates (expensive or slow to rebuild).
+
+   After a change: just push. There is nothing to bump. */
+"use strict";
+
+var CACHE_PREFIX = "pf-";           /* every ProspectField cache starts with this — see activate */
+var CACHE      = "pf-shell";        /* fixed name; never changes between deploys */
+var TILE_CACHE = "pf-tiles";        /* map tiles (shared with the in-app region downloader) */
+var ELEV_CACHE = "pf-elev";         /* terrain elevation profiles */
+var LIB_CACHE  = "pf-libs";         /* on-demand libraries (sql.js for GeoPackage) */
+var KEEP = [CACHE, TILE_CACHE, ELEV_CACHE, LIB_CACHE];
+var INDEX = "./index.html";
+
+/* Same-origin files: re-checked on every "check". */
+var SHELL = [
+  INDEX,
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-512-maskable.png",
+  "./apple-touch-icon.png",
+  "./favicon-32.png"
+];
+/* Pinned third-party files the app needs offline. The URLs carry an exact version, so
+   they never change: fetched once at install (if missing), not re-checked. */
+var CDN = [
+  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ];
 
-self.addEventListener('install', function (e) {
+function sameBytes(a, b){
+  if (a.byteLength !== b.byteLength) return false;
+  var x = new Uint8Array(a), y = new Uint8Array(b);
+  for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
+}
+
+/* Fetch one file past the HTTP cache and store it. Resolves true only when a copy was
+   already cached and the new one differs. Errors and non-200 responses leave the cache
+   alone, so a 404/503 from the host can never replace the offline app. */
+function refresh(url){
+  return fetch(url, { cache: "no-cache" }).then(function(res){
+    if (!res || !res.ok) return false;
+    return caches.open(CACHE).then(function(c){
+      return c.match(url).then(function(old){
+        return Promise.all([
+          old ? old.arrayBuffer() : null,
+          res.clone().arrayBuffer()
+        ]).then(function(b){
+          var changed = !!b[0] && !sameBytes(b[0], b[1]);
+          return c.put(url, res).then(function(){ return changed; });
+        });
+      });
+    });
+  }).catch(function(){ return false; });
+}
+
+function refreshShell(){
+  return Promise.all(SHELL.map(refresh)).then(function(changed){
+    return changed[SHELL.indexOf(INDEX)];
+  });
+}
+
+function fetchCdnOnce(){
+  return caches.open(CACHE).then(function(c){
+    return Promise.all(CDN.map(function(u){
+      return c.match(u).then(function(hit){
+        if (hit) return null;
+        return fetch(u, { mode: "cors" }).then(function(res){
+          if (res && res.ok) return c.put(u, res);
+        }).catch(function(){ /* offline first install: the page still works without the map */ });
+      });
+    }));
+  });
+}
+
+/* install: precache, then take over at once. Safe because the cache name is stable —
+   a new worker never strands an open page on a deleted cache. */
+self.addEventListener("install", function(e){
+  e.waitUntil(Promise.all([refreshShell(), fetchCdnOnce()]).then(function(){ return self.skipWaiting(); }));
+});
+
+/* activate: delete only THIS app's other caches (the old versioned "pf-v22-shell" etc.).
+   Cache Storage is shared by the whole origin — on <user>.github.io that is every
+   project page — so never touch a cache without our prefix. */
+self.addEventListener("activate", function(e){
   e.waitUntil(
-    caches.open(SHELL_CACHE).then(function (c) {
-      // addAll fails the whole install if one item 404s, so add individually
-      return Promise.all(SHELL.map(function (url) {
-        return c.add(new Request(url, { cache: 'reload' })).catch(function () { /* skip */ });
+    caches.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){
+        return (k.indexOf(CACHE_PREFIX) === 0 && KEEP.indexOf(k) < 0) ? caches.delete(k) : null;
       }));
-    })
-    // deliberately NOT calling skipWaiting() here: the page asks the user first,
-    // then posts 'skipWaiting'. Swapping mid-session could reload the app while
-    // someone is logging a sample.
+    }).then(function(){ return self.clients.claim(); })
   );
 });
 
-self.addEventListener('activate', function (e) {
-  e.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(keys.map(function (k) {
-        // keep the tile + elevation caches (expensive to rebuild), drop old app versions
-        if (k === TILE_CACHE || k === ELEV_CACHE || k === LIB_CACHE) return null;
-        if (k.indexOf(SW_VERSION) === 0) return null;
-        return caches.delete(k);
-      }));
-    }).then(function () { return self.clients.claim(); })
-  );
-});
-
-self.addEventListener('message', function (e) {
-  if (e.data === 'skipWaiting') self.skipWaiting();
-});
-
-self.addEventListener('fetch', function (e) {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-
-  /* 1. Map tiles — cache-first, and store whatever we fetch so panning builds the cache. */
-  if (url.hostname.indexOf('tile.openstreetmap.org') > -1 ||
-      url.hostname.indexOf('arcgisonline.com') > -1) {
-    e.respondWith(
-      caches.open(TILE_CACHE).then(function (c) {
-        return c.match(req).then(function (hit) {
-          if (hit) return hit;
-          return fetch(req).then(function (res) {
-            if (res && (res.ok || res.type === 'opaque')) c.put(req, res.clone());
-            return res;
-          }).catch(function () {
-            return hit || Response.error();
-          });
-        });
-      })
-    );
-    return;
-  }
-
-  /* 1a. On-demand libraries (sql.js for GeoPackage export) — cache-first, so exporting works
-         offline after the first time. URLs are pinned to an exact version, so they never go stale. */
-  if (url.hostname === 'cdnjs.cloudflare.com' && url.pathname.indexOf('/ajax/libs/sql.js/') === 0) {
-    e.respondWith(
-      caches.open(LIB_CACHE).then(function (c) {
-        return c.match(req).then(function (hit) {
-          if (hit) return hit;
-          return fetch(req).then(function (res) {
-            if (res && res.ok) c.put(req, res.clone());
-            return res;
-          });
-        });
-      })
-    );
-    return;
-  }
-
-  /* 1b. Terrain elevation — network-first, cached so a fetched cross-section still
-         draws when you are back offline. Small JSON, safe to keep across versions. */
-  if (url.hostname.indexOf('api.open-meteo.com') > -1) {
-    e.respondWith(
-      fetch(req).then(function (res) {
-        if (res && res.ok) { const copy = res.clone(); caches.open(ELEV_CACHE).then(function (c) { c.put(req, copy); }); }
-        return res;
-      }).catch(function () { return caches.match(req); })
-    );
-    return;
-  }
-
-  /* 2. Satellite analysis layers — never cached (they are large and time-bound). */
-  if (url.hostname.indexOf('sh.dataspace.copernicus.eu') > -1) return;
-
-  /* 3. Navigation requests — serve the app shell offline. */
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).catch(function () {
-        return caches.match('./index.html').then(function (hit) {
-          return hit || caches.match('./');
-        });
-      })
-    );
-    return;
-  }
-
-  /* 4. Everything else — cache-first for the shell, network-first otherwise. */
-  e.respondWith(
-    caches.match(req).then(function (hit) {
+/* Cache-first into a named cache, storing whatever arrives (opaque tiles included). */
+function cacheFirst(cacheName, req, keepOpaque){
+  return caches.open(cacheName).then(function(c){
+    return c.match(req).then(function(hit){
       if (hit) return hit;
-      return fetch(req).then(function (res) {
-        if (res && res.ok && url.origin === self.location.origin) {
-          const copy = res.clone();
-          caches.open(RUNTIME).then(function (c) { c.put(req, copy); });
+      return fetch(req).then(function(res){
+        if (res && (res.ok || (keepOpaque && res.type === "opaque"))) c.put(req, res.clone());
+        return res;
+      });
+    });
+  });
+}
+
+self.addEventListener("fetch", function(e){
+  var req = e.request;
+  if (req.method !== "GET") return;
+  var url;
+  try { url = new URL(req.url); } catch (err) { return; }
+
+  /* Map tiles — cache-first, and store what we fetch so panning builds the offline map. */
+  if (url.hostname.indexOf("tile.openstreetmap.org") > -1 || url.hostname.indexOf("arcgisonline.com") > -1){
+    e.respondWith(cacheFirst(TILE_CACHE, req, true).catch(function(){ return Response.error(); }));
+    return;
+  }
+  /* sql.js for GeoPackage export — pinned version, cache-first so exports work offline. */
+  if (url.hostname === "cdnjs.cloudflare.com" && url.pathname.indexOf("/ajax/libs/sql.js/") === 0){
+    e.respondWith(cacheFirst(LIB_CACHE, req, false));
+    return;
+  }
+  /* Terrain elevation — network-first, cached so a fetched profile still draws offline. */
+  if (url.hostname.indexOf("api.open-meteo.com") > -1){
+    e.respondWith(
+      fetch(req).then(function(res){
+        if (res && res.ok){ var copy = res.clone(); caches.open(ELEV_CACHE).then(function(c){ c.put(req, copy); }); }
+        return res;
+      }).catch(function(){ return caches.match(req); })
+    );
+    return;
+  }
+  /* Leaflet (pinned) — served from the shell cache so the map works offline. */
+  if (CDN.indexOf(req.url) > -1){
+    e.respondWith(caches.match(req.url).then(function(hit){ return hit || fetch(req); }));
+    return;
+  }
+  /* Everything else cross-origin (Copernicus imagery, WhatsApp, Google Maps…) is left alone. */
+  if (url.origin !== self.location.origin) return;
+
+  /* Navigations → the cached app, instantly; the network only if nothing is cached yet.
+     Freshness comes from the page's "check" message, not from here. */
+  if (req.mode === "navigate"){
+    e.respondWith(
+      caches.match(INDEX).then(function(hit){
+        if (hit) return hit;
+        return fetch(req).then(function(res){
+          if (res.ok){ var copy = res.clone(); caches.open(CACHE).then(function(c){ c.put(INDEX, copy); }); }
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  /* Other same-origin files → cache first, then network, keeping good responses. */
+  e.respondWith(
+    caches.match(req).then(function(hit){
+      if (hit) return hit;
+      return fetch(req).then(function(res){
+        if (res && res.status === 200 && res.type === "basic"){
+          var copy = res.clone();
+          caches.open(CACHE).then(function(c){ c.put(req, copy); });
         }
         return res;
-      }).catch(function () { return hit; });
+      });
+    })
+  );
+});
+
+/* "check" from a page: refresh the app files and, if index.html changed, tell every
+   open window so each can offer a reload. ("skipWaiting" is still accepted from pages
+   running the previous build, which used it to activate updates.) */
+self.addEventListener("message", function(e){
+  if (e.data === "skipWaiting"){ self.skipWaiting(); return; }
+  if (e.data !== "check") return;
+  e.waitUntil(
+    refreshShell().then(function(changed){
+      if (!changed) return;
+      return self.clients.matchAll({ type: "window" }).then(function(list){
+        list.forEach(function(c){ c.postMessage("updated"); });
+      });
     })
   );
 });

@@ -163,6 +163,13 @@ nav button.on{color:var(--ore)}
 nav button.on .ic{transform:translateY(-1px)}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel2);color:var(--ore);border:1px solid var(--ore2);padding:12px 20px;border-radius:24px;font-weight:700;font-size:14.5px;opacity:0;transition:.3s;z-index:100;pointer-events:none;box-shadow:var(--shadow);max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+ /* "new version" bar — sits just above the bottom nav */
+.updbar{position:fixed;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:120;display:flex;align-items:center;gap:10px;
+  background:var(--panel2);border:1px solid var(--ore);border-radius:14px;padding:10px 10px 10px 14px;box-shadow:var(--shadow);color:var(--ink);font-weight:600;font-size:14.5px}
+.updbar[hidden]{display:none}
+.updbar span{flex:1}
+.updbar #updGo{background:linear-gradient(180deg,var(--ore),var(--ore2));color:#1a1207;font-weight:800;border-radius:10px;padding:9px 14px;font-size:14px}
+.updbar #updX{background:none;color:var(--ink3);font-size:18px;padding:6px 8px}
  /* first-launch language picker */
 #langpick{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
   padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));text-align:center;overflow-y:auto}
@@ -1138,6 +1145,11 @@ function evaluatePixel(s) {
 <button id="guideClose" onclick="closeGuide()" aria-label="关闭指南" data-zh-al="关闭指南" data-en-al="Close guide" data-ms-al="Tutup panduan">&#215;</button>
 
 <div class="toast" id="toast"></div>
+<div class="updbar" id="updToast" role="status" aria-live="polite" hidden>
+  <span data-zh="🔄 新版本已就绪" data-en="🔄 A new version is ready" data-ms="🔄 Versi baharu sudia">🔄 新版本已就绪</span>
+  <button type="button" id="updGo" data-zh="刷新" data-en="Refresh" data-ms="Muat semula">刷新</button>
+  <button type="button" id="updX" aria-label="✕">✕</button>
+</div>
 <div id="langpick" role="dialog" aria-modal="true" tabindex="-1" aria-label="中文 · English · Bahasa Melayu" hidden>
   <button type="button" class="lpclose" id="lpClose" aria-label="✕" hidden>✕</button>
   <img src="./icon-192.png" alt="">
@@ -4449,50 +4461,47 @@ document.addEventListener('keydown',function(e){
 });
 if(FIRST_LAUNCH)showLangPick(true);
 
-/* ---- PWA service worker ----
-   A blob-URL worker cannot control the page, so offline support needs a real file
-   served from the same origin. Registered after load so it never delays first paint. */
-if('serviceWorker' in navigator){
-  let swReg=null, refreshing=false;
-
-  /* When the new worker takes over, reload once so the user sees the new build. */
-  navigator.serviceWorker.addEventListener('controllerchange',function(){
-    if(refreshing)return;
-    refreshing=true;
-    window.location.reload();
-  });
-
-  function promptUpdate(worker){
-    askConfirm(T('有新版本','A new version is available'),
-      T('已下载新版本。现在更新只需几秒，且不会影响你已保存的样品与轨迹。','A new version has been downloaded. Updating takes a moment and does not affect your saved samples or trail.'),
-      T('立即更新','Update now'),false).then(function(){
-        worker.postMessage('skipWaiting');   // triggers controllerchange -> reload
-      });
+/* ---- PWA service worker: self-updating ----
+   The worker serves the saved app instantly. The page asks it to "check" for a new build
+   on launch and whenever the app comes back to the foreground (installed PWAs stay open
+   for days). If index.html changed, the worker replies "updated" and a bar offers a
+   one-tap Refresh; dismissing it is fine — the new build simply loads next launch.
+   No version number to bump on deploy. Not used from file:// (no service worker there). */
+function hasUnsavedSample(){
+  const note=document.getElementById('sNote'),id=document.getElementById('sId');
+  return !!((note&&note.value.trim())||(typeof pendingPhotos!=='undefined'&&pendingPhotos.length)||
+    (id&&id.value.trim()&&id.value!==id.dataset.auto));
+}
+document.getElementById('updGo').onclick=async function(){
+  // Reloading drops a sample that is being filled in (its text and photos live only in the form)
+  if(hasUnsavedSample()){
+    const go=await askConfirm(T('有未保存的样品','Unsaved sample','Sampel belum disimpan'),
+      T('取样页中还有未保存的内容（备注、照片或编号）。现在刷新会丢失这些内容。先保存样品，或稍后再更新——下次打开应用时会自动使用新版本。',
+        'The Sample tab has something not saved yet (notes, photos or an ID). Refreshing now would lose it. Save the sample first, or update later — the new version also loads by itself next time you open the app.',
+        'Tab Sampel masih ada maklumat yang belum disimpan (catatan, foto atau ID). Jika dimuat semula sekarang, maklumat itu akan hilang. Simpan sampel dahulu, atau kemas kini kemudian — versi baharu juga akan dimuatkan sendiri apabila anda membuka aplikasi lain kali.'),
+      T('仍然刷新','Refresh anyway','Muat semula juga'),true);
+    if(!go)return;
   }
-
-  window.addEventListener('load',function(){
-    navigator.serviceWorker.register('./sw.js').then(function(reg){
-      swReg=reg;
-
-      // a build was already waiting from a previous visit
-      if(reg.waiting&&navigator.serviceWorker.controller)promptUpdate(reg.waiting);
-
-      reg.addEventListener('updatefound',function(){
-        const nw=reg.installing;
-        if(!nw)return;
-        nw.addEventListener('statechange',function(){
-          if(nw.state==='installed'&&navigator.serviceWorker.controller)promptUpdate(nw);
-        });
-      });
-
-      // Check again when the app is reopened or brought back to the foreground, and
-      // hourly while it stays open — otherwise a long-running session never notices.
-      const check=function(){ if(navigator.onLine&&swReg)swReg.update().catch(function(){}); };
-      document.addEventListener('visibilitychange',function(){ if(!document.hidden)check(); });
-      window.addEventListener('online',check);
-      setInterval(check,60*60*1000);
-    }).catch(function(){ /* offline first run, or file:// — app still works */ });
+  location.reload();
+};
+document.getElementById('updX').onclick=function(){document.getElementById('updToast').hidden=true;};
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+  const askForUpdate=function(){
+    if(navigator.onLine===false)return;
+    navigator.serviceWorker.ready.then(function(reg){
+      if(reg.active)reg.active.postMessage('check');
+    }).catch(function(){});
+  };
+  navigator.serviceWorker.addEventListener('message',function(e){
+    if(e.data==='updated')document.getElementById('updToast').hidden=false;
   });
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js').then(askForUpdate).catch(function(){ /* offline first run — app still works */ });
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible')askForUpdate();
+  });
+  window.addEventListener('online',askForUpdate);
 }
 
 /* Install prompt: Android/Chrome fires this; show a subtle button rather than a banner */
