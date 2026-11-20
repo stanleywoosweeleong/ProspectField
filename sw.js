@@ -127,7 +127,7 @@ self.addEventListener("fetch", function(e){
   }
   /* sql.js for GeoPackage export — pinned version, cache-first so exports work offline. */
   if (url.hostname === "cdnjs.cloudflare.com" && url.pathname.indexOf("/ajax/libs/sql.js/") === 0){
-    e.respondWith(cacheFirst(LIB_CACHE, req, false));
+    e.respondWith(cacheFirst(LIB_CACHE, req, false).catch(function(){ return offlineResponse(false); }));
     return;
   }
   /* Terrain elevation — network-first, cached so a fetched profile still draws offline. */
@@ -142,22 +142,27 @@ self.addEventListener("fetch", function(e){
   }
   /* Leaflet (pinned) — served from the shell cache so the map works offline. */
   if (CDN.indexOf(req.url) > -1){
-    e.respondWith(caches.match(req.url).then(function(hit){ return hit || fetch(req); }));
+    e.respondWith(caches.match(req.url).then(function(hit){ return hit || fetch(req); }).catch(function(){ return offlineResponse(false); }));
     return;
   }
   /* Everything else cross-origin (Copernicus imagery, WhatsApp, Google Maps…) is left alone. */
   if (url.origin !== self.location.origin) return;
 
-  /* Navigations → the cached app, instantly; the network only if nothing is cached yet.
-     Freshness comes from the page's "check" message, not from here. */
-  if (req.mode === "navigate"){
+  /* The app itself → the cached copy, instantly; the network only if nothing is cached yet.
+     Freshness comes from the page's "check" message, not from here. "The app itself" means
+     any navigation, and also a plain request for the scope root or index.html (with or
+     without ?query) — Chrome's installability / offline check fetches the start page that
+     way, not as a navigation, and must get the app back even with no network. */
+  var scopePath = new URL("./", self.registration.scope).pathname;
+  var isApp = req.mode === "navigate" || url.pathname === scopePath || url.pathname === scopePath + "index.html";
+  if (isApp){
     e.respondWith(
       caches.match(INDEX).then(function(hit){
         if (hit) return hit;
         return fetch(req).then(function(res){
           if (res.ok){ var copy = res.clone(); caches.open(CACHE).then(function(c){ c.put(INDEX, copy); }); }
           return res;
-        });
+        }).catch(function(){ return offlineResponse(true); });
       })
     );
     return;
@@ -173,10 +178,18 @@ self.addEventListener("fetch", function(e){
           caches.open(CACHE).then(function(c){ c.put(req, copy); });
         }
         return res;
-      });
+      }).catch(function(){ return offlineResponse(false); });
     })
   );
 });
+
+/* Never let a fetch handler reject (that shows up as "Failed to fetch" / "network error
+   response" in the console): answer with a plain offline response instead. */
+function offlineResponse(isPage){
+  return new Response(isPage
+      ? "<!doctype html><meta charset=utf-8><title>ProspectField</title><p style=\"font:16px system-ui;padding:24px\">ProspectField needs to be opened once with internet before it works offline.</p>"
+      : "", {status: 503, statusText: "Offline", headers: {"Content-Type": isPage ? "text/html; charset=utf-8" : "text/plain"}});
+}
 
 /* "check" from a page: refresh the app files and, if index.html changed, tell every
    open window so each can offer a reload. ("skipWaiting" is still accepted from pages
