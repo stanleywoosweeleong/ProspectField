@@ -43,12 +43,13 @@ function sameBytes(a, b){
   return true;
 }
 
-/* Fetch one file past the HTTP cache and store it. Resolves true only when a copy was
-   already cached and the new one differs. Errors and non-200 responses leave the cache
-   alone, so a 404/503 from the host can never replace the offline app. */
+/* Fetch one file past the HTTP cache and store it. Resolves {ok, changed}: ok when the
+   network delivered it, changed when a copy was already cached and the new one differs.
+   Errors and non-200 responses leave the cache alone, so a 404/503 from the host can
+   never replace the offline app. */
 function refresh(url){
   return fetch(url, { cache: "no-cache" }).then(function(res){
-    if (!res || !res.ok) return false;
+    if (!res || !res.ok) return {ok: false, changed: false};
     return caches.open(CACHE).then(function(c){
       return c.match(url).then(function(old){
         return Promise.all([
@@ -56,16 +57,32 @@ function refresh(url){
           res.clone().arrayBuffer()
         ]).then(function(b){
           var changed = !!b[0] && !sameBytes(b[0], b[1]);
-          return c.put(url, res).then(function(){ return changed; });
+          return c.put(url, res).then(function(){ return {ok: true, changed: changed}; });
         });
       });
     });
-  }).catch(function(){ return false; });
+  }).catch(function(){ return {ok: false, changed: false}; });
 }
 
+/* Marker meaning "the cached page was carried over from an older build because the new one
+   could not be downloaded during the upgrade". While it exists, every app launch retries
+   in the background until the real page arrives. */
+var STALE = "./__pf_stale__";
+
+/* Resolves {ok, changed} for index.html; a successful download also clears the marker. */
 function refreshShell(){
-  return Promise.all(SHELL.map(refresh)).then(function(changed){
-    return changed[SHELL.indexOf(INDEX)];
+  return Promise.all(SHELL.map(refresh)).then(function(r){
+    var res = r[SHELL.indexOf(INDEX)];
+    if (!res.ok) return res;
+    return caches.open(CACHE).then(function(c){ return c.delete(STALE); }).then(function(was){
+      // a carried-over page has now been replaced: that is an update for the open windows
+      return {ok: true, changed: res.changed || was};
+    });
+  });
+}
+function tellWindows(){
+  return self.clients.matchAll({ type: "window" }).then(function(list){
+    list.forEach(function(c){ c.postMessage("updated"); });
   });
 }
 
@@ -82,10 +99,47 @@ function fetchCdnOnce(){
   });
 }
 
+/* Older ProspectField caches (e.g. the versioned "pf-v22-shell") that may still hold a
+   working copy of the app. Never another app's caches, never the tile/terrain/library ones. */
+function oldShellCaches(){
+  return caches.keys().then(function(keys){
+    return keys.filter(function(k){ return k.indexOf(CACHE_PREFIX) === 0 && KEEP.indexOf(k) < 0; });
+  });
+}
+/* Make sure the new cache holds a usable app before this worker takes over. Any app file
+   the network could not deliver is copied from an older ProspectField cache (older builds
+   also stored the page under "./"). If index.html is still missing, fail the install: the
+   previous worker and its cached app stay in charge, and the browser retries later. */
+function ensureShell(){
+  return Promise.all([caches.open(CACHE), oldShellCaches()]).then(function(r){
+    var c = r[0], olds = r[1];
+    return Promise.all(SHELL.map(function(url){
+      return c.match(url).then(function(hit){
+        if (hit) return true;
+        var alts = url === INDEX ? [INDEX, "./"] : [url];
+        var tryOld = function(i){
+          if (i >= olds.length) return Promise.resolve(false);
+          return caches.open(olds[i]).then(function(oc){
+            return alts.reduce(function(p, a){ return p.then(function(f){ return f || oc.match(a); }); }, Promise.resolve(null));
+          }).then(function(res){
+            if (!res) return tryOld(i + 1);
+            return c.put(url, res).then(function(){
+              return url === INDEX ? c.put(STALE, new Response("1")).then(function(){ return true; }) : true;
+            });
+          });
+        };
+        return tryOld(0);
+      });
+    })).then(function(){ return c.match(INDEX); }).then(function(ok){
+      if (!ok) throw new Error("app page not cached — keeping the previous version");
+    });
+  });
+}
+
 /* install: precache, then take over at once. Safe because the cache name is stable —
    a new worker never strands an open page on a deleted cache. */
 self.addEventListener("install", function(e){
-  e.waitUntil(Promise.all([refreshShell(), fetchCdnOnce()]).then(function(){ return self.skipWaiting(); }));
+  e.waitUntil(Promise.all([refreshShell(), fetchCdnOnce()]).then(ensureShell).then(function(){ return self.skipWaiting(); }));
 });
 
 /* activate: delete only THIS app's other caches (the old versioned "pf-v22-shell" etc.).
@@ -93,10 +147,10 @@ self.addEventListener("install", function(e){
    project page — so never touch a cache without our prefix. */
 self.addEventListener("activate", function(e){
   e.waitUntil(
-    caches.keys().then(function(keys){
-      return Promise.all(keys.map(function(k){
-        return (k.indexOf(CACHE_PREFIX) === 0 && KEEP.indexOf(k) < 0) ? caches.delete(k) : null;
-      }));
+    // only clear old copies once the current cache really holds the app
+    caches.open(CACHE).then(function(c){ return c.match(INDEX); }).then(function(ok){
+      if (!ok) return;
+      return oldShellCaches().then(function(olds){ return Promise.all(olds.map(function(k){ return caches.delete(k); })); });
     }).then(function(){ return self.clients.claim(); })
   );
 });
@@ -156,6 +210,10 @@ self.addEventListener("fetch", function(e){
   var scopePath = new URL("./", self.registration.scope).pathname;
   var isApp = req.mode === "navigate" || url.pathname === scopePath || url.pathname === scopePath + "index.html";
   if (isApp){
+    e.waitUntil(caches.open(CACHE).then(function(c){ return c.match(STALE); }).then(function(stale){
+      if (!stale) return;
+      return refreshShell().then(function(res){ if (res.ok && res.changed) return tellWindows(); });
+    }));
     e.respondWith(
       caches.match(INDEX).then(function(hit){
         if (hit) return hit;
@@ -198,11 +256,6 @@ self.addEventListener("message", function(e){
   if (e.data === "skipWaiting"){ self.skipWaiting(); return; }
   if (e.data !== "check") return;
   e.waitUntil(
-    refreshShell().then(function(changed){
-      if (!changed) return;
-      return self.clients.matchAll({ type: "window" }).then(function(list){
-        list.forEach(function(c){ c.postMessage("updated"); });
-      });
-    })
+    refreshShell().then(function(res){ if (res.ok && res.changed) return tellWindows(); })
   );
 });

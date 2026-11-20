@@ -5055,12 +5055,17 @@ const TKEY='prospectfield_trail';
 let trail=JSON.parse(localStorage.getItem(TKEY)||'null')||{active:false,start:null,pts:[],startedAt:null};
 let trackWatchId=null,trackTimer=null,trailLayer=null,trailStartMarker=null,retracing=false;
 const MIN_STEP=8; // metres between logged breadcrumbs
-if(!trail.mode)trail.mode='15'; // default sampling mode persists across restarts
+/* Sampling mode: 'continuous' or a number of seconds. Anything else (missing after an
+   old clear, corrupted storage) falls back to 15 s — never NaN, which setInterval treats
+   as 0 and would poll the GPS non-stop, draining the battery. */
+const TRACK_MODES=['continuous','15','30','60'];
+function validTrackMode(m){return TRACK_MODES.indexOf(String(m))>-1?String(m):'15';}
+trail.mode=validTrackMode(trail.mode); // default sampling mode persists across restarts
 
 function saveTrail(){try{localStorage.setItem(TKEY,JSON.stringify(trail));}catch(e){toast(T('轨迹存储已满 — 请导出 GPX 后清除','Trail storage full — export GPX & clear'),true);}}
 
 function changeTrackMode(){
-  trail.mode=document.getElementById('trackMode').value;saveTrail();
+  trail.mode=validTrackMode(document.getElementById('trackMode').value);saveTrail();
   if(trail.active){startTrackWatch();toast(T('采样模式已更改','Sampling mode changed'));}
 }
 
@@ -5137,6 +5142,7 @@ function logFix(p){
 function gpsLost(){document.getElementById('tsSub').textContent=T('GPS 信号丢失 — 请站定或移到开阔处','GPS lost — hold still or move to open sky');}
 function startTrackWatch(){
   stopTrackWatch();
+  trail.mode=validTrackMode(trail.mode);
   if(trail.mode==='continuous'){
     // continuous watch: most detail, radio stays on
     trackWatchId=navigator.geolocation.watchPosition(logFix,gpsLost,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
@@ -5492,7 +5498,8 @@ async function clearTrail(){
   trail.active=false;stopTrackWatch();
   if(trailLayer&&map){map.removeLayer(trailLayer);trailLayer=null;}
   if(trailStartMarker&&map){map.removeLayer(trailStartMarker);trailStartMarker=null;}
-  trail={active:false,start:null,pts:[],startedAt:null};saveTrail();updateTrailUI();
+  // keep the chosen sampling mode: it is a setting, not part of the trail being cleared
+  trail={active:false,start:null,pts:[],startedAt:null,mode:validTrackMode(trail.mode)};saveTrail();updateTrailUI();
   toast(T('轨迹已清除','Trail cleared'));
 }
 
